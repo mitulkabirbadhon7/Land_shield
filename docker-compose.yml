@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: landshield-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./landshield.db
+      - JWT_SECRET=local-dev-jwt-secret-key-32-chars-min
+      - DEMO_MODE=true
+      - ALLOWED_ORIGINS=http://localhost:3000
+      - SIGNING_KEY_PATH=./keys/registrar.key
+    volumes:
+      - ./backend:/app
+      - ./keys:/app/keys
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: landshield-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped

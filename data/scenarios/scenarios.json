@@ -1,0 +1,47 @@
+{
+  "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
+  "scenarios": [
+    {
+      "id": "S1",
+      "name": "Clean Land Deal",
+      "plot_id": 1,
+      "expected_rule": null,
+      "expected_status": "VALID"
+    },
+    {
+      "id": "S2",
+      "name": "Double Sale Attempt",
+      "plot_id": 2,
+      "expected_rule": "R1_DOUBLE_SALE",
+      "expected_status": "BLOCKED"
+    },
+    {
+      "id": "S3",
+      "name": "Seller Not Recorded Owner",
+      "plot_id": 3,
+      "expected_rule": "R2_SELLER_NOT_OWNER",
+      "expected_status": "BLOCKED"
+    },
+    {
+      "id": "S4",
+      "name": "Missing Mutation Over 90 Days",
+      "plot_id": 4,
+      "expected_rule": "R3_MISSING_MUTATION",
+      "expected_status": "MEDIUM_RISK"
+    },
+    {
+      "id": "S5",
+      "name": "Rapid Transfers (3+ within 30 days)",
+      "plot_id": 5,
+      "expected_rule": "R4_RAPID_TRANSFERS",
+      "expected_status": "HIGH_RISK"
+    },
+    {
+      "id": "S6",
+      "name": "Flagged Land (Khas / Disputed)",
+      "plot_id": 6,
+      "expected_rule": "R6_FLAGGED_LAND",
+      "expected_status": "HIGH_RISK"
+    }
+  ]
+}

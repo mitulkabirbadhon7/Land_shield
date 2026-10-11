@@ -1,0 +1,117 @@
+# ==============================================================================
+# LandShield - Git Ignore Configuration
+# Rule Compliance: LandTech 2026 Specification & Security Protocol
+# ==============================================================================
+
+# --- Documentation & Agent Configuration (Private / Excluded) ---
+Docs/
+docs/
+.agents/
+.agent/
+
+# --- Prohibited Trap 1: Secrets, Credentials & Keys (NEVER COMMIT) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+!.env.example
+keys/
+*.pem
+*.key
+*.hex
+*.cert
+*.crt
+*.priv
+*.secret
+
+# --- Prohibited Trap 2: SQLite Databases & Storage Binaries ---
+*.db
+*.sqlite
+*.sqlite3
+landshield.db
+test.db
+*.log
+
+# --- Prohibited Trap 3: ML Model Weights & Large Binaries ---
+*.joblib
+*.pkl
+*.h5
+*.onnx
+app/ml/model.joblib
+backend/app/ml/model.joblib
+
+# --- Python & Backend Environment ---
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# --- Testing, Coverage & Linting ---
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- Node.js & Frontend (Next.js) ---
+node_modules/
+.next/
+out/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Seed & Scenario Working Artifacts ---
+data/seed/*.big.json
+data/scenarios/scratch/
+
+# --- Operating System & Editor Artifacts ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- IDEs & Editors ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+
+# --- Scratch & Temporary Files ---
+scratch/
+tmp/
+temp/
+*.tmp
+*.bak
