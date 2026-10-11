@@ -9,6 +9,7 @@ docs/
 .agents/
 .agent/
 GEMINI.md
+seasonwiseupdate.md
 
 # --- Prohibited Trap 1: Secrets, Credentials & Keys (NEVER COMMIT) ---
 .env
