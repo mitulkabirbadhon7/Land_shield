@@ -8,6 +8,7 @@ Docs/
 docs/
 .agents/
 .agent/
+GEMINI.md
 
 # --- Prohibited Trap 1: Secrets, Credentials & Keys (NEVER COMMIT) ---
 .env
