@@ -1,0 +1,71 @@
+{
+  "nav": {
+    "title": "LandShield",
+    "tagline": "Land Record & Deed Protection Platform",
+    "home": "Home",
+    "check": "Check Plot Risk",
+    "verify": "Verify Deed",
+    "login": "Officer Login",
+    "registrar": "Sub-Registrar",
+    "officer": "Land Officer",
+    "admin": "Admin Panel",
+    "logout": "Logout"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "close": "Close",
+    "back": "Go Back",
+    "details": "Details",
+    "prototype_badge": "PROTOTYPE",
+    "prototype_notice": "Demonstration Prototype • Synthetic Data Only • Not Legal Advice",
+    "rights_reserved": "All rights reserved. LandTech Innovation Hackathon 2026",
+    "language": "Language",
+    "bengali": "বাংলা",
+    "english": "English"
+  },
+  "status": {
+    "VALID": "VALID",
+    "TAMPERED": "TAMPERED / FORGED",
+    "SUPERSEDED": "SUPERSEDED",
+    "CANCELLED": "CANCELLED",
+    "UNKNOWN": "UNKNOWN"
+  },
+  "status_desc": {
+    "VALID": "Deed payload and ledger hash chain are authentic and mathematically valid.",
+    "TAMPERED": "Discrepancy detected in deed payload, SHA-256 hash, or digital signature. High risk of forgery.",
+    "SUPERSEDED": "A subsequent active deed has been registered on this plot. Does not reflect current ownership.",
+    "CANCELLED": "This deed has been formally cancelled due to mutation rejection or authorized administrative order.",
+    "UNKNOWN": "No record or digital signature found in the system for this deed number."
+  },
+  "hero": {
+    "badge": "Transparent & Tamper-Evident Land Governance",
+    "title": "Independent Cryptographic Verification for Bangladesh Land Records",
+    "subtitle": "Stop land disputes and double-selling before closing. Powered by Ed25519 digital signatures, immutable SHA-256 hash chains, and explainable AI fraud detection.",
+    "cta_check": "Check Plot Pre-Purchase",
+    "cta_check_desc": "Inspect plot risk score, ownership chain, and legal flags by Mouza & Dag number",
+    "cta_verify": "Verify Deed / Scan QR",
+    "cta_verify_desc": "Instant verification of digital signature, hash integrity, and ledger status",
+    "cta_login": "Officer Portal",
+    "cta_login_desc": "Secure workspace for Sub-Registrars and AC Land Officers",
+    "trust_heading": "Three Pillars of Defense",
+    "pillar1_title": "Ed25519 Digital Signatures",
+    "pillar1_desc": "Every deed is digitally signed with the Sub-Registrar's secret key. Any alteration breaks the mathematical proof in milliseconds.",
+    "pillar2_title": "Immutable Ledger Chains",
+    "pillar2_desc": "Per-plot SHA-256 blockchain-style chaining prevents retroactive deletion, reordering, or covert insertion of history.",
+    "pillar3_title": "Proactive Fraud Engine",
+    "pillar3_desc": "Pre-registration blocks double sales, impossible overselling, stranger sellers, and unregistered transfers automatically."
+  },
+  "quick_stats": {
+    "deed_verification": "Sub-3s Verification",
+    "deed_verification_sub": "Instant mathematical proof via QR",
+    "tamper_detection": "100% Tamper Catch",
+    "tamper_detection_sub": "Instant alert on payload changes",
+    "bilingual": "Bilingual Explanations",
+    "bilingual_sub": "Clear plain Bangla & English reports"
+  }
+}

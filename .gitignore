@@ -67,9 +67,9 @@ parts/
 var/
 sdist/
 develop-eggs/
-.installed.cfg
-lib/
-lib64/
+/lib/
+/lib64/
+!frontend/src/lib/
 
 # --- Testing, Coverage & Linting ---
 .pytest_cache/

@@ -13,10 +13,10 @@
 | **S06** | Auth + RBAC | Done (47 tests) | Argon2id, JWT HS256 tokens, RBAC deps (admin bypass, registrar, officer), slowapi rate limiting, insecure secret startup refusal |
 | **S07** | Deed, QR and plot API | Done (56 tests) | POST /deeds (registrar), GET /deeds/{no}/verify (public), GET /deeds/{no}/qr (registrar), GET /plots/{id}, GET /plots/{id}/chain, GET /plots/search, name masking, DomainError 422 handler |
 | **S08** | Fraud engine core + R1, R2, R5 + 409 handler | Done (68 tests) | Layered pipeline (engine, base, registry), IntegrityLayer (R5), RulesLayer (R1 oversold, R1 double sale, R2 seller not owner), pre_register_check hook, HTTP 409 FraudBlocked handler |
-| **S09** | Rules R3, R4, R6 + explanations + risk API | Pending | |
-| **S10** | Mutation workflow | Pending | |
-| **S11** | Tamper Lab, audit, masking, hardening | Pending | |
-| **S12** | Frontend foundation | Pending | |
+| **S09** | Rules R3, R4, R6 + explanations + risk API | Done (78 tests) | Rules R3, R4, R6, bilingual explanations (explain.py), public /risk/plot API, officer alerts management |
+| **S10** | Mutation workflow | Done (85 tests) | Mutation FSM workflow, auto-check risk hooks, officer override, deed cancellation on rejection, holdings recomputation |
+| **S11** | Tamper Lab, audit, masking, hardening | Done (91 tests) | Tamper Lab dev endpoints (/dev/tamper, /dev/restore), unified audit logging, security headers, rate limiting |
+| **S12** | Frontend foundation | Done (build ok) | Next.js 16 (App Router, TS, Tailwind v4), Noto Sans Bengali font, custom i18n (BN/EN), typed API wrapper, StatusBadge, Card, Spinner, ErrorBox, landing page, CI frontend job |
 | **S13** | Verify page + QR scanner | Pending | |
 | **S14** | Citizen check page | Pending | |
 | **S15** | Registrar page | Pending | |
@@ -193,11 +193,36 @@
   - `GET /dev/status` returns `{"demo_mode": false}` rather than 404 when demo mode is disabled so the client UI can hide the dev panel cleanly.
   - Generic exception handler intercepts untyped exceptions while explicitly checking and passing through typed domain errors and HTTP exceptions.
 - **Known gaps:**
-  - Frontend Next.js app foundation, layout, and bilingual i18n setup starts in S12.
+  - Frontend foundation implemented in S12.
 - **Next session:** `S12` (`s12-frontend-foundation`)
 
-
-
+### Session S12 Log
+- **What was done:**
+  - Bootstrapped Next.js (TypeScript, Tailwind CSS v4, App Router, `src/` directory) in `frontend/`.
+  - Configured Google Fonts: `Noto_Sans_Bengali` and `Inter` via `next/font/google` with responsive typography.
+  - Implemented bilingual dictionary catalogs in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Implemented lightweight custom i18n subsystem in `frontend/src/lib/i18n.tsx`: `LanguageProvider`, `useLanguage`, and nested key translation helper `t(key, fallback)` persisted in `localStorage`.
+  - Implemented typed backend API client in `frontend/src/lib/api.ts` with error handling (`ApiError`), bearer token management (`localStorage`), and typed methods (`login`, `verifyDeed`, `getPlot`, `getChain`, `getRisk`, `searchPlots`). Types centralized in `frontend/src/lib/types.ts`.
+  - Implemented reusable design system components in `frontend/src/components/`:
+    * `StatusBadge.tsx`: distinct color-coded pill indicators for `VALID` (green), `TAMPERED` (red with pulse), `SUPERSEDED` (amber), `CANCELLED` (strike-through grey), and `UNKNOWN` (neutral grey).
+    * `Card.tsx`: glassmorphic content cards with hover transitions, header actions, and footer slots.
+    * `Spinner.tsx`: accessible animated circular SVG spinner with configurable sizes and labels.
+    * `ErrorBox.tsx`: accessible alert banner with code badges and retry callback.
+    * `Header.tsx`: sticky navigation bar with LandShield logo, links, role status, and interactive language toggle (BN/EN).
+    * `Footer.tsx`: responsive footer with required `"Prototype - synthetic data"` notice.
+  - Implemented comprehensive landing page in `frontend/src/app/page.tsx` featuring the 3 core CTAs ("Check a Plot", "Verify a Deed", "Officer Portal"), proof metrics, and security pillars.
+  - Added route placeholders with responsive UI for `/verify`, `/check`, and `/login`.
+  - Created `frontend/.env.example` and `frontend/.env.local`.
+  - Updated root and frontend `README.md` with setup instructions.
+  - Added `frontend-build` job to GitHub Actions CI (`.github/workflows/ci.yml`) running `npm ci`, `npm run lint`, and `npm run build`.
+  - Verified static generation and production compilation via `npm run build` (all 7 routes prerendered with 0 errors).
+- **Decisions:**
+  - Custom React Context i18n (`src/lib/i18n.tsx`) was chosen over heavy external i18n packages to ensure zero-dependency client bundling and eliminate hydration mismatches.
+  - Bangla (`bn`) is configured as the default locale on first visit to prioritize citizen access for Bangladesh land records.
+  - Font pairing combines `Noto_Sans_Bengali` for Bengali script and `Inter` for Latin script.
+- **Known gaps:**
+  - Deed verification page with HTML5 camera QR scanner will be implemented in S13.
+- **Next session:** `S13` (`s13-verify-page`)
 
 
 
