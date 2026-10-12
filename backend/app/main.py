@@ -7,10 +7,11 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.db import Base, engine
-from app.errors import DomainError, FraudBlocked
+from app.errors import DomainError, FraudBlocked, IllegalTransition
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import alerts, auth, deeds, plots, risk
+from app.api.v1 import alerts, auth, deeds, mutations, plots, risk
 from app.api.v1.auth import limiter
+
 
 
 @asynccontextmanager
@@ -48,6 +49,15 @@ def fraud_blocked_handler(request: Request, exc: FraudBlocked):
     )
 
 
+@app.exception_handler(IllegalTransition)
+def illegal_transition_handler(request: Request, exc: IllegalTransition):
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={"code": "ILLEGAL_TRANSITION", "allowed": exc.allowed},
+    )
+
+
+
 allowed_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 
 app.add_middleware(
@@ -63,10 +73,13 @@ app.include_router(deeds.router, prefix="/api/v1")
 app.include_router(plots.router, prefix="/api/v1")
 app.include_router(risk.router, prefix="/api/v1")
 app.include_router(alerts.router, prefix="/api/v1")
+app.include_router(mutations.router, prefix="/api/v1")
 
-# Also include risk and alerts at root for convenient direct routing
+# Also include risk, alerts, and mutations at root for convenient direct routing
 app.include_router(risk.router)
 app.include_router(alerts.router)
+app.include_router(mutations.router)
+
 
 
 @app.get("/api/v1/health")
