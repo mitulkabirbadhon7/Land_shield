@@ -5,8 +5,9 @@ from fastapi.testclient import TestClient
 
 from app.config import settings
 from app.db import Base, get_db
-from app.main import app
+from app.main import app as fastapi_app
 import app.models  # noqa: F401
+
 
 # Configure high rate limits for test environments
 settings.rate_limit = "100000/minute"
@@ -44,7 +45,7 @@ def client(db_session: Session) -> TestClient:
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+    with TestClient(fastapi_app) as test_client:
         yield test_client
-    app.dependency_overrides.clear()
+    fastapi_app.dependency_overrides.clear()

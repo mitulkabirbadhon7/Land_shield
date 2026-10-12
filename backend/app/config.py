@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:3000"
     frontend_url: str = "http://localhost:3000"
     rate_limit: str = "60/minute"
+    RATE_LIMIT: str | None = None
     mutation_days: int = 90
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
