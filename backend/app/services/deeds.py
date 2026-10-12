@@ -135,7 +135,18 @@ def register_deed(
     append_entry(db, plot_id, deed)
     db.flush()
 
+    from app.services.audit import log
+    log(
+        db,
+        actor=None,
+        action="DEED_REGISTERED",
+        entity="deed",
+        entity_id=deed.id,
+        detail=f"Deed {deed.deed_no} registered on plot {plot_id}",
+    )
+
     return deed
+
 
 
 def verify_deed(

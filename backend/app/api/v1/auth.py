@@ -40,17 +40,37 @@ def login(
     body: LoginRequest,
     db: Session = Depends(get_db),
 ):
-    """Authenticate staff user and return JWT access token with role."""
+    from app.services.audit import log
     user = db.scalars(select(User).where(User.username == body.username)).first()
+
     if user is None or not verify_password(body.password, user.password_hash):
+        log(
+            db,
+            actor=user,
+            action="LOGIN_FAILURE",
+            entity="user",
+            entity_id=user.id if user else None,
+            detail=f"Failed login attempt for username '{body.username}'",
+        )
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
 
     token = create_access_token(sub=user.username, role=user.role)
+    log(
+        db,
+        actor=user,
+        action="LOGIN_SUCCESS",
+        entity="user",
+        entity_id=user.id,
+        detail=f"User '{user.username}' logged in successfully",
+    )
+    db.commit()
     return LoginResponse(
         access_token=token,
         role=user.role,
         name=user.name,
     )
+

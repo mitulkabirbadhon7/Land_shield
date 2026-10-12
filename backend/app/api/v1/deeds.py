@@ -72,8 +72,20 @@ def create_deed(
     )
 
 
+from fastapi import Request
+from app.api.v1.auth import limiter
+
+
+def _public_rate_limit() -> str:
+    if getattr(settings, "RATE_LIMIT", None):
+        return settings.RATE_LIMIT
+    return settings.rate_limit
+
+
 @router.get("/{deed_no}/verify", response_model=VerifyOut)
+@limiter.limit(_public_rate_limit)
 def verify_deed_endpoint(
+    request: Request,
     deed_no: str,
     db: Session = Depends(get_db),
 ):
@@ -83,6 +95,7 @@ def verify_deed_endpoint(
         signer_key = load_or_create_key(settings.signing_key_path)
     except Exception:
         pass
+
 
     result = verify_deed(db, deed_no, configured_key=signer_key)
     return VerifyOut(**result)

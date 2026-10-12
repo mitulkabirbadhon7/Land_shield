@@ -72,30 +72,30 @@ def transition(
     db.add(event)
 
     # Record audit log
-    audit = AuditLog(
-        actor_id=actor_id,
+    from app.services.audit import log
+    log(
+        db,
+        actor=actor,
         action=f"MUTATION_{target_state}",
         entity="mutation",
         entity_id=mutation.id,
         detail=f"State transitioned from {from_state} to {target_state}. Note: {clean_note or ''}",
-        at=datetime.now(timezone.utc),
     )
-    db.add(audit)
 
     # State-specific side effects
     if target_state == "REJECTED":
         deed = db.get(Deed, mutation.deed_id)
         if deed:
             deed.status = "CANCELLED"
-            audit_deed = AuditLog(
-                actor_id=actor_id,
+            log(
+                db,
+                actor=actor,
                 action="DEED_CANCELLED",
                 entity="deed",
                 entity_id=deed.id,
                 detail=f"Deed cancelled due to mutation rejection (Mutation #{mutation.id}). Note: {clean_note or ''}",
-                at=datetime.now(timezone.utc),
             )
-            db.add(audit_deed)
+
 
     elif target_state == "KHATIAN_UPDATED":
         # Flush so MutationEvent is queryable by record_holdings

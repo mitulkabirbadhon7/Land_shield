@@ -52,6 +52,18 @@ def update_alert_status(
         raise HTTPException(status_code=404, detail="Alert not found")
 
     alert.status = target_status
+
+    from app.services.audit import log
+    log(
+        db,
+        actor=current_user,
+        action="ALERT_STATUS_UPDATE",
+        entity="alert",
+        entity_id=alert.id,
+        detail=f"Alert status updated to {target_status}",
+    )
+
     db.commit()
     db.refresh(alert)
     return alert
+
