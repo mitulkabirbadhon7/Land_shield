@@ -1,47 +1,107 @@
 {
   "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
-  "scenarios": [
-    {
+  "reference_date": "2026-10-01T10:00:00+00:00",
+  "scenarios": {
+    "S1": {
       "id": "S1",
-      "name": "Clean Land Deal",
-      "plot_id": 1,
-      "expected_rule": null,
-      "expected_status": "VALID"
-    },
-    {
-      "id": "S2",
       "name": "Double Sale Attempt",
-      "plot_id": 2,
+      "plot_id": 1,
+      "deed_numbers": [
+        "DHAKA-2026-000001",
+        "DHAKA-2026-000002"
+      ],
+      "target_deed_no": "DHAKA-2026-000002",
       "expected_rule": "R1_DOUBLE_SALE",
-      "expected_status": "BLOCKED"
+      "expected_status": "BLOCKED",
+      "description": "Seller A sells 30 decimals to X (unmutated), then sells the same 30 decimals to Y"
     },
-    {
-      "id": "S3",
+    "S2": {
+      "id": "S2",
       "name": "Seller Not Recorded Owner",
-      "plot_id": 3,
+      "plot_id": 2,
+      "deed_numbers": [
+        "DHAKA-2026-000003"
+      ],
+      "target_deed_no": "DHAKA-2026-000003",
       "expected_rule": "R2_SELLER_NOT_OWNER",
-      "expected_status": "BLOCKED"
+      "expected_status": "BLOCKED",
+      "description": "Stranger Z attempts to sell land on Plot 2 without prior holding"
     },
-    {
-      "id": "S4",
+    "S3": {
+      "id": "S3",
       "name": "Missing Mutation Over 90 Days",
-      "plot_id": 4,
+      "plot_id": 3,
+      "deed_numbers": [
+        "DHAKA-2026-000004"
+      ],
+      "target_deed_no": "DHAKA-2026-000004",
       "expected_rule": "R3_MISSING_MUTATION",
-      "expected_status": "MEDIUM_RISK"
+      "expected_status": "MEDIUM_RISK",
+      "description": "Active deed registered 120 days ago with no completed mutation"
     },
-    {
-      "id": "S5",
-      "name": "Rapid Transfers (3+ within 30 days)",
-      "plot_id": 5,
+    "S4": {
+      "id": "S4",
+      "name": "Rapid Transfers (4 deeds within 20 days)",
+      "plot_id": 4,
+      "deed_numbers": [
+        "DHAKA-2026-000005",
+        "DHAKA-2026-000006",
+        "DHAKA-2026-000007",
+        "DHAKA-2026-000008"
+      ],
+      "target_deed_no": "DHAKA-2026-000008",
       "expected_rule": "R4_RAPID_TRANSFERS",
-      "expected_status": "HIGH_RISK"
+      "expected_status": "HIGH_RISK",
+      "description": "4 legitimate sequential transfers on Plot 4 within a 20-day span"
     },
-    {
-      "id": "S6",
-      "name": "Flagged Land (Khas / Disputed)",
-      "plot_id": 6,
+    "S5": {
+      "id": "S5",
+      "name": "Flagged Land (Khas / Disputed with Open Case)",
+      "plot_id": 5,
+      "deed_numbers": [],
+      "target_deed_no": null,
       "expected_rule": "R6_FLAGGED_LAND",
-      "expected_status": "HIGH_RISK"
+      "expected_status": "HIGH_RISK",
+      "description": "Plot 5 is designated as khas and disputed land with an open court case"
+    },
+    "S6": {
+      "id": "S6",
+      "name": "Clean Land Deal",
+      "plot_id": 6,
+      "deed_numbers": [
+        "DHAKA-2026-000009",
+        "DHAKA-2026-000010"
+      ],
+      "target_deed_no": "DHAKA-2026-000010",
+      "expected_rule": null,
+      "expected_status": "VALID",
+      "description": "Happy path: 2 sequential, fully mutated land transfers on Plot 6"
+    },
+    "S7": {
+      "id": "S7",
+      "name": "Legitimate Pending Resale",
+      "plot_id": 7,
+      "deed_numbers": [
+        "DHAKA-2026-000011",
+        "DHAKA-2026-000012"
+      ],
+      "target_deed_no": "DHAKA-2026-000012",
+      "expected_rule": null,
+      "expected_status": "VALID_LEDGER",
+      "description": "Buyer B resells land to C before mutation of A->B completes; valid in ledger"
+    },
+    "S8": {
+      "id": "S8",
+      "name": "Partial Sales by Same Owner",
+      "plot_id": 8,
+      "deed_numbers": [
+        "DHAKA-2026-000013",
+        "DHAKA-2026-000014"
+      ],
+      "target_deed_no": "DHAKA-2026-000014",
+      "expected_rule": null,
+      "expected_status": "VALID",
+      "description": "Owner A sells 10 decimals to B and 10 decimals to C out of 30, keeping 10"
     }
-  ]
+  }
 }
