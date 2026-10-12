@@ -4,8 +4,14 @@
 # ==============================================================================
 
 # --- Documentation & Agent Configuration (Private / Excluded) ---
-Docs/
-docs/
+# ============ PRIVATE PROMPTS ============
+docs/ANTIGRAVITY_PHASE1_PROMPTS.md
+docs/ANTIGRAVITY_PHASE2_PROMPTS.md
+docs/*PROMPTS*.md
+
+# ============ PRIVATE ORGANIZER FILES ============
+docs/RuleBook.pdf
+docs/*.pdf
 .agents/
 .agent/
 GEMINI.md
