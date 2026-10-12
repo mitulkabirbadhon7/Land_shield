@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_Bengali, Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/i18n";
+import { AuthProvider } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -36,9 +37,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-emerald-500 selection:text-white">
         <LanguageProvider>
-          <Header />
-          <main className="flex-1 w-full">{children}</main>
-          <Footer />
+          <AuthProvider>
+            <Header />
+            <main className="flex-1 w-full">{children}</main>
+            <Footer />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

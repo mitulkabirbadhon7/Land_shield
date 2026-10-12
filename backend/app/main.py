@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 
 from app.errors import DomainError, FraudBlocked, IllegalTransition
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import alerts, audit, auth, deeds, dev, mutations, plots, risk
+from app.api.v1 import alerts, audit, auth, deeds, dev, meta, mutations, persons, plots, risk
 from app.api.v1.auth import limiter
 
 
@@ -112,13 +112,17 @@ app.include_router(alerts.router, prefix="/api/v1")
 app.include_router(mutations.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(dev.router, prefix="/api/v1")
+app.include_router(persons.router, prefix="/api/v1")
+app.include_router(meta.router, prefix="/api/v1")
 
-# Also include risk, alerts, mutations, audit, dev at root for convenient direct routing
+# Also include risk, alerts, mutations, audit, dev, persons, meta at root for convenient direct routing
 app.include_router(risk.router)
 app.include_router(alerts.router)
 app.include_router(mutations.router)
 app.include_router(audit.router)
 app.include_router(dev.router)
+app.include_router(persons.router)
+app.include_router(meta.router)
 
 
 

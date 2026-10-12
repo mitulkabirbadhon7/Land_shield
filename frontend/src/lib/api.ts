@@ -1,7 +1,13 @@
 import {
   ApiError as IApiError,
   ChainItem,
+  DeedCreate,
+  DeedRegistrationResponse,
   LoginResponse,
+  MetaOut,
+  MutationCreate,
+  MutationOut,
+  PersonOut,
   PlotOut,
   RiskReportOut,
   UserRole,
@@ -191,3 +197,64 @@ export async function searchPlots(
   const query = params.toString();
   return apiFetch<PlotOut[]>(`/plots/search${query ? `?${query}` : ""}`);
 }
+
+export async function searchPersons(
+  q?: string,
+  limit: number = 20
+): Promise<PersonOut[]> {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (limit) params.set("limit", String(limit));
+  const query = params.toString();
+  return apiFetch<PersonOut[]>(`/persons/search${query ? `?${query}` : ""}`, {
+    requiresAuth: true,
+  });
+}
+
+export async function getMeta(): Promise<MetaOut> {
+  return apiFetch<MetaOut>("/meta", {
+    requiresAuth: true,
+  });
+}
+
+export async function createDeed(
+  payload: DeedCreate
+): Promise<DeedRegistrationResponse> {
+  return apiFetch<DeedRegistrationResponse>("/deeds", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    requiresAuth: true,
+  });
+}
+
+export async function getDeedQrBlob(deedNo: string): Promise<Blob> {
+  const token = getToken();
+  const url = `${API_BASE}/deeds/${encodeURIComponent(deedNo)}/qr`;
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    let errCode = `HTTP_${res.status}`;
+    let errDetail = "Failed to load QR image";
+    try {
+      const errJson = await res.json();
+      if (errJson.code) errCode = errJson.code;
+      if (errJson.detail) errDetail = errJson.detail;
+    } catch {
+      // not JSON
+    }
+    throw new ApiError(res.status, errCode, errDetail);
+  }
+  return res.blob();
+}
+
+export async function startMutation(
+  payload: MutationCreate
+): Promise<MutationOut> {
+  return apiFetch<MutationOut>("/mutations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    requiresAuth: true,
+  });
+}
+

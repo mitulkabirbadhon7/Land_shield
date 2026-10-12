@@ -4,21 +4,16 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
-import { getCurrentUser, logout, StoredUser } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 export function Header() {
   const { lang, toggleLang, t } = useLanguage();
+  const { user, role, logout } = useAuth();
   const pathname = usePathname();
-  const [user, setUser] = useState<StoredUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setUser(getCurrentUser());
-  }, [pathname]);
 
   const handleLogout = () => {
     logout();
-    setUser(null);
     window.location.href = "/";
   };
 
@@ -26,6 +21,9 @@ export function Header() {
     { href: "/", label: t("nav.home") },
     { href: "/check", label: t("nav.check") },
     { href: "/verify", label: t("nav.verify") },
+    ...(user && (role === "registrar" || role === "admin")
+      ? [{ href: "/registrar", label: t("nav.registrar") }]
+      : []),
   ];
 
   return (

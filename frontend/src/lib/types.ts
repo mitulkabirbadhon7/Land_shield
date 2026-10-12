@@ -101,3 +101,94 @@ export interface ApiError {
   report?: unknown;
   status?: number;
 }
+
+export interface PersonOut {
+  id: number;
+  display_name: string;
+  masked_nid_hash?: string | null;
+  is_synthetic: boolean;
+}
+
+export interface SubRegistry {
+  code: string;
+  name: string;
+}
+
+export interface MetaOut {
+  deed_types: string[];
+  sub_registries: SubRegistry[];
+}
+
+export interface DeedCreate {
+  plot_id: number;
+  seller_id: number;
+  buyer_id: number;
+  area_sold: number;
+  deed_type?: string;
+  sub_registry?: string;
+}
+
+export interface DeedOut {
+  id: number;
+  deed_no: string;
+  plot_id: number;
+  seller_id: number;
+  buyer_id: number;
+  seller_name?: string | null;
+  buyer_name?: string | null;
+  area_sold: number;
+  deed_type: string;
+  sub_registry: string;
+  registered_at: string;
+  deed_hash: string;
+  signer_key_id?: string | null;
+  status: string;
+}
+
+export interface DeedRegistrationResponse {
+  deed: DeedOut;
+  verify: VerifyOut;
+}
+
+export interface MutationCreate {
+  deed_id: number;
+  applicant_id?: number | null;
+  auto_check?: boolean;
+}
+
+export interface MutationOut {
+  id: number;
+  deed_id: number;
+  plot_id: number;
+  state: string;
+  applicant_id: number;
+  applicant_name?: string | null;
+  officer_id?: number | null;
+  requires_override: boolean;
+  created_at: string;
+  updated_at: string;
+  events?: unknown[];
+  auto_check_json?: Record<string, unknown> | null;
+}
+
+export interface FraudFinding {
+  rule_id: string;
+  sub_code?: string;
+  layer?: string;
+  severity: string;
+  weight?: number;
+  decisive?: boolean;
+  deed_no?: string | null;
+  reasons?: string[];
+  title?: string;
+  text?: string;
+}
+
+export interface FraudReport {
+  blocked: boolean;
+  score: number;
+  level: string;
+  has_critical: boolean;
+  findings: FraudFinding[];
+}
+

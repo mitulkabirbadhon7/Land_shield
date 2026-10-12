@@ -19,7 +19,7 @@
 | **S12** | Frontend foundation | Done (build ok) | Next.js 16 (App Router, TS, Tailwind v4), Noto Sans Bengali font, custom i18n (BN/EN), typed API wrapper, StatusBadge, Card, Spinner, ErrorBox, landing page, CI frontend job |
 | **S13** | Verify page + QR scanner | Done (build ok) | Public /verify route, URL query (?deed=) autoload, html5-qrcode live camera scanner, StatusBadge, deed & plot details, audit reasons, bilingual bn/en |
 | **S14** | Citizen check page | Done (build ok) | Public /check route, multi-modal search (Dag/Mouza/Plot/Deed), RiskCard with circular gauge (0-100), bilingual findings from /risk/plot, ChainTimeline with masked buyers, badges for flags, mutation summary, benchmark scenarios helper |
-| **S15** | Registrar page | Pending | |
+| **S15** | Registrar page | Done (97 tests, build ok) | Backend GET /meta and GET /persons/search with RBAC; /login route with role redirect; /registrar deed creation portal with pre-registration fraud blocking (HTTP 409), QR generator & downloader, and mutation starter |
 | **S16** | Officer + admin pages | Pending | |
 | **S17** | Docker (local deploy) | Pending | |
 | **S18** | Cloud deploy preparation | Pending | |
@@ -283,6 +283,36 @@
 - **Known gaps:**
   - Protected Sub-Registrar deed creation and staff login portal will be implemented in S15 (`/login`, `/registrar`).
 - **Next session:** `S15` (`s15-registrar-page`)
+
+### Session S15 Log
+- **What was done:**
+  - Backend metadata & directory endpoints:
+    * Implemented `GET /api/v1/meta` returning allowed `deed_types` and `sub_registries` with RBAC for staff roles (`registrar`, `officer`, `admin`).
+    * Implemented `GET /api/v1/persons/search` supporting name substring and numeric ID searches on the synthetic `Person` table with RBAC (`registrar`, `admin`).
+    * Added schemas `MetaOut`, `SubRegistryOut`, and `PersonOut`.
+    * Created unit & integration test suite in `backend/tests/test_api_meta.py` verifying 401 unauthenticated, 403 forbidden role constraints, and query filtering.
+    * Full backend test suite passing: `97 passed in 69.80s`.
+  - Frontend authentication & route guards:
+    * Implemented `AuthProvider`, `useAuth()` hook, and `ProtectedRoute` component in `frontend/src/lib/auth.tsx`.
+    * Implemented `/login` route (`frontend/src/app/login/page.tsx`) with username/password form, 1-click test pills for demo accounts (`registrar1`, `officer1`, `admin1`), Next.js `<Suspense>` query param (`?next=`) handling, and automatic role-based redirect (`/registrar`, `/officer`, `/admin`).
+    * Updated `Header.tsx` to dynamically show staff link (`/registrar`) and user role badge with seamless logout.
+  - Sub-Registrar deed registration portal (`frontend/src/app/registrar/page.tsx`):
+    * Role-protected to `registrar` and `admin`.
+    * Interactive benchmark fast test buttons (`S6` Clean Sale, `S1` Double Sale Block, `S2` Stranger Seller Block).
+    * Searchable plot selector with live summary, Dag/Mouza, total area, and current owner identification.
+    * Searchable seller and buyer select dropdowns from `/persons/search`.
+    * Area sold input with decimals validation; dynamic deed type and sub-registry selects from `/meta`.
+    * Pre-registration fraud blocking: catches `HTTP 409` code `FRAUD_BLOCKED` and displays prominent red alert container with critical findings, rule IDs, and specific reasons without issuing a deed.
+    * On successful registration: renders `VALID` `StatusBadge`, registered deed number, metadata grid, cryptographic QR code preview from `GET /deeds/{no}/qr` with direct PNG download, link to public `/verify`, and in-place "Start Mutation (Namjari)" button calling `POST /api/v1/mutations`.
+  - Added bilingual translations in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Verified Next.js static production build (`npm run build` succeeds in ~5.9s, all 8 routes prerendered).
+- **Decisions:**
+  - `ProtectedRoute` verifies token presence and role authorization, displaying an unauthorized warning with "Switch Account" if role does not match.
+  - QR Code binary fetched directly via `fetch` with `Bearer` token and rendered safely via `URL.createObjectURL(blob)`.
+- **Known gaps:**
+  - AC Land officer mutation review workflow and Admin tamper lab/audit control panel to be implemented in S16 (`/officer`, `/admin`).
+- **Next session:** `S16` (`s16-officer-admin-pages`)
+
 
 
 
