@@ -103,6 +103,49 @@
     "superseded_alert": "NOTE: A subsequent transaction has succeeded this deed on this plot. Does not represent current ownership.",
     "cancelled_alert": "NOTE: This deed has been officially cancelled.",
     "unknown_alert": "WARNING: No deed found with this number in the registry."
+  },
+  "risk_level": {
+    "LOW": "Low Risk (Safe to Transact)",
+    "MEDIUM": "Medium Risk (Caution Advised)",
+    "HIGH": "High Risk (High Danger of Dispute)",
+    "CRITICAL": "Critical Risk (Fraud or Legal Obstacle)"
+  },
+  "check": {
+    "title": "Citizen Pre-Purchase Land Risk Check",
+    "subtitle": "Inspect official ownership, fraud risk score, and historical transfer ledger by Dag number, Mouza, or Plot ID.",
+    "search_label": "Search Plot or Dag",
+    "search_placeholder": "Enter Dag No, Mouza name, Plot ID, or Deed number...",
+    "search_btn": "Search",
+    "try_scenarios": "Try Benchmark Scenarios:",
+    "results_found": "plots found",
+    "no_results": "No plots matched your search. Please check the Dag number or Mouza name.",
+    "select_plot": "Select a plot to inspect details",
+    "plot_info": "Plot Overview",
+    "risk_analysis": "Risk Analysis & Findings",
+    "risk_score": "Risk Score",
+    "ownership_chain": "Ownership Transfer Ledger Timeline",
+    "current_owner": "Current Recorded Owner (Masked)",
+    "initial_owner": "Initial Genesis Owner (Masked)",
+    "area": "Plot Area",
+    "decimals": "Decimals",
+    "land_type": "Land Type",
+    "flags_title": "Government Restrictions & Dispute Status",
+    "flag_clean": "No Restrictions or Open Court Cases (Clean)",
+    "flag_khas": "Government Khas Land",
+    "flag_acquisition": "Under Acquisition Procedure",
+    "flag_disputed": "Active Court Dispute",
+    "cases_count": "active court cases",
+    "mutation_summary": "Mutation (Namjari) Summary",
+    "completed_mutations": "Completed",
+    "pending_mutations": "Pending",
+    "rejected_mutations": "Rejected",
+    "chain_ok": "Ledger Hash Chain Intact",
+    "chain_broken": "Ledger Hash Chain Tampered / Broken!",
+    "no_findings": "No fraud indicators or disputes detected. This plot appears safe for transaction.",
+    "findings_count": "observations identified",
+    "view_deed": "Verify Deed →",
+    "disclaimer": "Demonstration prototype • Synthetic data only • Not legal advice"
   }
 }
+
 

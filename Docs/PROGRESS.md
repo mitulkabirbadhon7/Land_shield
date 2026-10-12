@@ -18,7 +18,7 @@
 | **S11** | Tamper Lab, audit, masking, hardening | Done (91 tests) | Tamper Lab dev endpoints (/dev/tamper, /dev/restore), unified audit logging, security headers, rate limiting |
 | **S12** | Frontend foundation | Done (build ok) | Next.js 16 (App Router, TS, Tailwind v4), Noto Sans Bengali font, custom i18n (BN/EN), typed API wrapper, StatusBadge, Card, Spinner, ErrorBox, landing page, CI frontend job |
 | **S13** | Verify page + QR scanner | Done (build ok) | Public /verify route, URL query (?deed=) autoload, html5-qrcode live camera scanner, StatusBadge, deed & plot details, audit reasons, bilingual bn/en |
-| **S14** | Citizen check page | Pending | |
+| **S14** | Citizen check page | Done (build ok) | Public /check route, multi-modal search (Dag/Mouza/Plot/Deed), RiskCard with circular gauge (0-100), bilingual findings from /risk/plot, ChainTimeline with masked buyers, badges for flags, mutation summary, benchmark scenarios helper |
 | **S15** | Registrar page | Pending | |
 | **S16** | Officer + admin pages | Pending | |
 | **S17** | Docker (local deploy) | Pending | |
@@ -249,8 +249,41 @@
   - If a deed verification returns a `plot_id`, the page asynchronously retrieves plot details without blocking the primary deed validity result.
   - Camera scanner automatically stops video capture and unmounts upon a successful QR decode.
 - **Known gaps:**
-  - Pre-purchase citizen plot search and risk report page will be implemented in S14 (`/check`).
+  - Registrar deed registration page and staff login flow starts in S15.
 - **Next session:** `S14` (`s14-citizen-page`)
+
+### Session S14 Log
+- **What was done:**
+  - Implemented the full public pre-purchase citizen check page in `frontend/src/app/check/page.tsx`:
+    * Wrapped in React `<Suspense>` boundary for static prerendering and error-free client hydration.
+    * Multi-modal search supporting pure Plot ID (e.g. `1`), Mouza / Dag number queries, and Deed numbers (automatically looks up plot via `verifyDeed`).
+    * Displays search result cards when multiple plots match, allowing one-click selection.
+    * Directly loads plot details if visited with `?plot=...` URL parameter (e.g. from `/verify` cross-links).
+  - Implemented interactive benchmark scenario helper:
+    * Copied `data/scenarios/scenarios.json` to `frontend/public/scenarios.json`.
+    * Rendered benchmark scenario buttons (`S1` Double Sale, `S2` Stranger Seller, `S3` Missing Mutation, `S4` Rapid Transfers, `S5` Khas/Disputed, `S6` Clean Deal, `S7` Legit Pending Resale, `S8` Partial Sales) with color-coded risk expectation pills.
+  - Implemented `RiskCard.tsx` (`frontend/src/components/RiskCard.tsx`):
+    * SVG circular progress ring visualizing the 0-100 risk score with dynamic stroke color (emerald, amber, orange, rose).
+    * Large numeric score display and localized risk level banner (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+    * Plain-language citizen risk explanation in Bangla and English.
+    * Government restrictions flags strip (`Khas land`, `Under acquisition`, `Active court cases` count, or `Clean`).
+    * Structured findings list displaying rule ID badges, severity tags, weight contributions, deed references, and bilingual explanation text retrieved from `/risk/plot/{plot_id}?lang={bn|en}`.
+    * Mutation summary progress breakdown (Total, Completed, Pending, Rejected).
+  - Implemented `ChainTimeline.tsx` (`frontend/src/components/ChainTimeline.tsx`):
+    * Chronological vertical ownership ledger line displaying each deed transfer on the plot.
+    * Shows sequence number, timestamp, masked citizen buyer name, chain hash preview, and `StatusBadge`.
+    * Provides direct clickable links to `/verify?deed={deed_no}` for instant cryptographic inspection of any link in the chain.
+  - Added complete bilingual translation keys in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Added prototype disclaimer notice banner on the page.
+  - Verified static generation and production compilation via `npm run build` (all 7 routes prerendered with 0 errors).
+  - Verified backend pytest suite (`91 passed in 136s`).
+- **Decisions:**
+  - Automatic language synchronization re-fetches risk findings from `/risk/plot` when the user toggles between Bangla and English so all findings match the active UI language.
+  - Search query router automatically tries Plot ID, Deed Number, and Mouza/Dag consecutively, providing a frictionless experience for non-technical citizens.
+- **Known gaps:**
+  - Protected Sub-Registrar deed creation and staff login portal will be implemented in S15 (`/login`, `/registrar`).
+- **Next session:** `S15` (`s15-registrar-page`)
+
 
 
 
