@@ -80,6 +80,7 @@ def register_deed(
             "area_sold": area_sold,
             "deed_type": deed_type,
             "sub_registry": sub_registry,
+            "signer_key": signer_key,
         }
         pre_register_check(db, proposed)
 

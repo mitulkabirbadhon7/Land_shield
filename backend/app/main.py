@@ -7,7 +7,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.db import Base, engine
-from app.errors import DomainError
+from app.errors import DomainError, FraudBlocked
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
 from app.api.v1 import auth, deeds, plots
 from app.api.v1.auth import limiter
@@ -37,6 +37,14 @@ def domain_error_handler(request: Request, exc: DomainError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"code": "INVALID", "detail": str(exc.message)},
+    )
+
+
+@app.exception_handler(FraudBlocked)
+def fraud_blocked_handler(request: Request, exc: FraudBlocked):
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={"code": "FRAUD_BLOCKED", "report": exc.report},
     )
 
 
