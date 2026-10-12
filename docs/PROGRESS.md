@@ -21,7 +21,7 @@
 | **S14** | Citizen check page | Done (build ok) | Public /check route, multi-modal search (Dag/Mouza/Plot/Deed), RiskCard with circular gauge (0-100), bilingual findings from /risk/plot, ChainTimeline with masked buyers, badges for flags, mutation summary, benchmark scenarios helper |
 | **S15** | Registrar page | Done (97 tests, build ok) | Backend GET /meta and GET /persons/search with RBAC; /login route with role redirect; /registrar deed creation portal with pre-registration fraud blocking (HTTP 409), QR generator & downloader, and mutation starter |
 | **S16** | Officer + admin pages | Done (97 tests, build ok) | AC Land officer portal (/officer) with mutation review stepper & alerts management; Admin portal (/admin) with Tamper Lab demo and append-only audit trail |
-| **S17** | Docker (local deploy) | Pending | |
+| **S17** | Docker (local deploy) | Done (compose config validated statically; runtime proof skipped — Docker Desktop unavailable on authors' machine) | Multi-stage Dockerfiles, compose stack (db, backend, frontend), healthchecks, SEED_ON_START automated seeding, Makefile targets, LAN/mobile QR guide |
 | **S18** | Cloud deploy preparation | Pending | |
 | **S19** | Docs, README, concept note draft | Pending | |
 | **S20** | Final QA, security sweep, tag | Pending | |
@@ -335,6 +335,79 @@
 - **Known gaps:**
   - Docker packaging and local deploy configurations will be implemented in S17.
 - **Next session:** `S17` (`s17-docker`)
+
+### Session S17 Log
+- **What was done:**
+  - Implemented `backend/Dockerfile`:
+    * Multi-stage-ready python environment using `python:3.11-slim` with system dependencies (`build-essential`, `libpq-dev`, `curl`).
+    * Configured non-root user (`appuser` UID 1000) for container security.
+    * Installed `requirements.txt` with psycopg binary support.
+    * Exposed port 8000 running uvicorn on `0.0.0.0:8000`.
+  - Implemented `backend/.dockerignore` filtering out pycache, venv, databases, git, and ruff caches.
+  - Implemented `frontend/Dockerfile`:
+    * Multi-stage build (`deps` -> `builder` -> `runner`) using `node:20-alpine`.
+    * Build-time argument `ARG NEXT_PUBLIC_API_URL=http://localhost:8000` baked into static Next.js artifacts.
+    * Configured non-root user (`nextjs` UID 1001 / `nodejs` GID 1001).
+    * Exposed port 3000 running `npm run start` on `0.0.0.0`.
+  - Implemented `frontend/.dockerignore` filtering out node_modules, .next, and git files.
+  - Configured `docker-compose.yml`:
+    * `db`: `postgres:15-alpine` with persistent volume `postgres_data`, credentials, port 5432, and healthcheck (`pg_isready`).
+    * `backend`: built from `./backend`, `env_file: .env`, overridden with PostgreSQL `DATABASE_URL` and `SEED_ON_START=true`, persistent volumes for `./keys` and `./data`, depends on `db` (`service_healthy`), and HTTP healthcheck on `/api/v1/health`.
+    * `frontend`: built from `./frontend` with `ARG NEXT_PUBLIC_API_URL=http://localhost:8000`, port 3000, depends on `backend` (`service_healthy`), and HTTP healthcheck.
+  - Implemented `SEED_ON_START` automated seeding:
+    * Added `seed_on_start: bool = False`, `SEED_ON_START: bool | None = None`, and `should_seed_on_start` property to `backend/app/config.py`.
+    * Added idempotent startup check in `backend/app/main.py` lifespan: if `should_seed_on_start` is true and database contains 0 plots, automatically runs `seed_data(check_db)` creating 300 plots, 120 persons, 3 demo staff users, and benchmark scenarios S1–S8.
+    * Added `test_seed_on_start_in_lifespan` in `backend/tests/test_seed.py` (98 tests passing).
+  - Updated `Makefile` with Docker workflow targets: `up`, `down`, `logs`, `reset`, and `seed`.
+  - Updated `README.md` with complete "Run with Docker" documentation, port mapping table, and LAN/mobile phone live QR scanning instructions.
+- **Decisions:**
+  - Non-root users (`appuser` for Python, `nextjs` for Node) used across all containers for container security.
+  - In `docker-compose.yml`, environment variables explicitly override `DATABASE_URL` with postgresql connection while respecting `.env` for local SQLite development.
+  - Build arg `NEXT_PUBLIC_API_URL` ensures client-side bundle inlining while allowing override for local Wi-Fi / LAN testing.
+- **Known gaps:**
+  - Cloud deployment preparation (Vercel, Render/Railway, production secrets, health pingers) to be implemented in S18.
+- **Next session:** `S18` (`s18-cloud-deploy-prep`)
+
+### Session S17-FIX Log
+- **What was done:**
+  - Diagnosed API base path mismatch between frontend client calls (`/auth/login`, `/deeds`, `/plots`) and backend router registrations (mounted strictly under `/api/v1`).
+  - Aligned `NEXT_PUBLIC_API_URL` to `http://localhost:8000/api/v1` across `frontend/src/lib/api.ts` (fallback default), `frontend/Dockerfile` (`ARG NEXT_PUBLIC_API_URL`), `docker-compose.yml` (build arg and runtime environment), `.env.example`, and `README.md`.
+  - Added build-time assertion in `frontend/src/lib/api.ts` throwing an error if `NEXT_PUBLIC_API_URL` is empty in production builds.
+  - Audited Dockerfile paths: confirmed `WORKDIR /app`, `USER appuser` (backend) / `USER nextjs` (frontend), `EXPOSE 8000` / `3000`, `CMD uvicorn ... --host 0.0.0.0 --port 8000`. Resolved `SIGNING_KEY_PATH` inside container to `/app/keys/registrar_ed25519.hex` matching volume mount `./keys:/app/keys`.
+  - Docker execution check: attempted `docker info`; failed with:
+    `docker : The term 'docker' is not recognized as the name of a cmdlet, function, script file, or operable program.`
+    `docker compose config` and `docker compose up` could NOT be executed natively in this environment because Docker Desktop is not installed on the author's machine.
+  - Confirmed test accounting: 98 tests passing in `backend/tests/` (70.51s); verified `test_seed_on_start_in_lifespan` in `backend/tests/test_seed.py` was the test added in S17.
+- **Decisions:**
+  - Base URL contract strictly incorporates `/api/v1` because backend core routers (`auth`, `deeds`, `plots`) and `/health` route are mounted strictly at `/api/v1`.
+  - Client-side build assertion in `api.ts` protects against silent runtime network errors when static bundles are inlined.
+- **Known gaps:**
+  - Docker runtime proof skipped due to missing Docker Desktop.
+- **Next session:** `S18` (`s18-cloud-deploy-prep`)
+
+### Session S17-FIX-2 Log
+- **What was corrected:**
+  - S17 status and S17-FIX documentation updated to provide honest disclosure regarding Docker verification.
+  - Clarified that URL alignment and Dockerfile path audit were completed and verified, but runtime execution (`docker compose up --build`, container startup, healthcheck polling, seed idempotency at runtime, and end-to-end register->verify inside Docker) could NOT be run due to Docker Desktop being unavailable on the author's Windows machine (`docker info` fails with CommandNotFoundException).
+  - Added warning banner in `README.md` "Run with Docker" section stating that local Docker verification was not possible on the author's machine and that the live deployment link is the primary deliverable.
+  - Added operational security note in `docs/SECURITY.md` section 7.
+  - Created `docs/SUBMISSION_CHECKLIST.md` tracking the carryover runtime proof item to be verified on a Docker-enabled machine prior to final submission.
+- **Why:**
+  - Strict compliance with hackathon honesty requirements and transparency: never claim runtime verification that could not be executed on the development machine.
+- **What remains unverified:**
+  - Native `docker compose config` CLI exit code in standard author environment.
+  - Live container startup, healthchecks, and networking.
+  - Runtime automated `SEED_ON_START` idempotency across restart in PostgreSQL container.
+  - End-to-end register and verify deed transaction executed through the Docker container stack.
+- **Next session:** `S18` (`s18-cloud-deploy-prep`)
+
+### Session S17-FIX-3 Log
+- **What was done:**
+  - Fixed top-level directory case mismatch from `Docs/` to `docs/` using two-step `git mv` (`Docs -> Docs__tmp_rename -> docs`).
+  - Windows is case-insensitive so the mismatch was invisible locally, but Linux environments (CI, Vercel, Render) treat them as distinct directories and would break.
+  - Updated hardcoded `Docs/` path references in `README.md`, `GEMINI.md`, and `tools/split_prompts.py` to `docs/`.
+- **Next session:** `S18` (`s18-cloud-deploy-prep`)
+
 
 
 

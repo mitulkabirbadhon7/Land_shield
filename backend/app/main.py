@@ -21,6 +21,24 @@ async def lifespan(app: FastAPI):
     if not settings.demo_mode and settings.jwt_secret in ("change-me", "dev-secret-key-change-in-production-32-bytes"):
         raise RuntimeError("Refusing to run: default JWT_SECRET configured when DEMO_MODE is false")
     Base.metadata.create_all(bind=engine)
+
+    if settings.should_seed_on_start:
+        import sys
+        from pathlib import Path
+        backend_dir = Path(__file__).resolve().parent.parent
+        if str(backend_dir) not in sys.path:
+            sys.path.insert(0, str(backend_dir))
+        from sqlalchemy.orm import Session
+        from sqlalchemy import select
+        from app.models.plot import Plot
+        from scripts.seed import seed_data
+
+        with Session(engine) as check_db:
+            existing = check_db.scalars(select(Plot)).first()
+            if existing is None:
+                seed_data(check_db)
+                check_db.commit()
+
     yield
 
 

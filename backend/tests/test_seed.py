@@ -180,3 +180,22 @@ def test_s8_partial_sales_holdings_conserved(db_session: Session, deterministic_
     initial_owner_id = deeds[0].seller_id
     assert L.get(initial_owner_id, 0.0) == 10.0
 
+
+@pytest.mark.anyio
+async def test_seed_on_start_in_lifespan(monkeypatch):
+    """Verify that lifespan seeds empty database when SEED_ON_START is true."""
+    from app.config import settings
+    from app.main import lifespan
+    from fastapi import FastAPI
+    from sqlalchemy import select
+    from app.models.plot import Plot
+    from app.db import SessionLocal
+
+    monkeypatch.setattr(settings, "SEED_ON_START", True)
+    test_app = FastAPI()
+
+    async with lifespan(test_app):
+        with SessionLocal() as db:
+            plots = db.scalars(select(Plot)).all()
+            assert len(plots) >= 300
+
