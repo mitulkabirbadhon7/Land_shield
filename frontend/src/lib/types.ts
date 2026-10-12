@@ -15,15 +15,16 @@ export interface VerifyOut {
   deed_no: string;
   status: DeedStatus;
   reasons: string[];
-  deed_hash: string | null;
-  key_id: string | null;
-  chain_seq: number | null;
-  chain_ok: boolean;
-  registered_at: string | null;
-  seller_masked: string | null;
-  buyer_masked: string | null;
-  plot_id: number | null;
-  area_sold: number | null;
+  deed_hash?: string | null;
+  key_id?: string | null;
+  chain_seq?: number | null;
+  chain_position?: number | null;
+  chain_ok?: boolean;
+  registered_at?: string | null;
+  seller_masked?: string | null;
+  buyer_masked?: string | null;
+  plot_id?: number | null;
+  area_sold?: number | null;
 }
 
 export interface PlotOut {

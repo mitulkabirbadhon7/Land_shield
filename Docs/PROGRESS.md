@@ -17,7 +17,7 @@
 | **S10** | Mutation workflow | Done (85 tests) | Mutation FSM workflow, auto-check risk hooks, officer override, deed cancellation on rejection, holdings recomputation |
 | **S11** | Tamper Lab, audit, masking, hardening | Done (91 tests) | Tamper Lab dev endpoints (/dev/tamper, /dev/restore), unified audit logging, security headers, rate limiting |
 | **S12** | Frontend foundation | Done (build ok) | Next.js 16 (App Router, TS, Tailwind v4), Noto Sans Bengali font, custom i18n (BN/EN), typed API wrapper, StatusBadge, Card, Spinner, ErrorBox, landing page, CI frontend job |
-| **S13** | Verify page + QR scanner | Pending | |
+| **S13** | Verify page + QR scanner | Done (build ok) | Public /verify route, URL query (?deed=) autoload, html5-qrcode live camera scanner, StatusBadge, deed & plot details, audit reasons, bilingual bn/en |
 | **S14** | Citizen check page | Pending | |
 | **S15** | Registrar page | Pending | |
 | **S16** | Officer + admin pages | Pending | |
@@ -221,8 +221,37 @@
   - Bangla (`bn`) is configured as the default locale on first visit to prioritize citizen access for Bangladesh land records.
   - Font pairing combines `Noto_Sans_Bengali` for Bengali script and `Inter` for Latin script.
 - **Known gaps:**
-  - Deed verification page with HTML5 camera QR scanner will be implemented in S13.
+  - Citizen check page (/check) with Mouza/Dag search and risk breakdown starts in S14.
 - **Next session:** `S13` (`s13-verify-page`)
+
+### Session S13 Log
+- **What was done:**
+  - Implemented the full public `/verify` page in `frontend/src/app/verify/page.tsx`:
+    * Wrapped in React `<Suspense>` boundary for clean App Router static prerendering and hydration.
+    * Automatically parses `?deed=` from URL search parameters (supporting direct QR scan redirection).
+    * Provides an interactive deed number search input with quick sample deed pills (`MIR-2026-000001`, `MIR-2026-000002`, `MIR-2026-000003`).
+    * Displays a prominent status banner using `StatusBadge` (with `VALID`, `TAMPERED`, `SUPERSEDED`, `CANCELLED`, `UNKNOWN`).
+    * Shows plain-language bilingual explanation lines for each deed status.
+    * Displays deed metadata and ledger chain position (`Seq #`).
+    * Integrates plot summary (`Plot #`, Dag number, Mouza, Upazila, District, Area in decimals, Land type).
+    * Lists audit observations and cryptographic failure details when tampered/invalid.
+    * Provides quick action buttons to copy the verification link and navigate directly to the plot's risk analysis page (`/check?plot=...`).
+  - Implemented live camera QR scanning modal in `frontend/src/components/QRScanner.tsx`:
+    * Dynamic client-side import of `html5-qrcode`.
+    * Built robust deed URL/parameter parser (`parseDeedFromQR`) handling full verification URLs (`?deed=...`), JSON payloads, and direct deed numbers.
+    * User-friendly camera permission error handling and device absence messaging.
+  - Added bilingual translation keys for all verification components and scanner prompts to `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Updated `VerifyOut` schema in `frontend/src/lib/types.ts` to support `chain_position` and optional fields.
+  - Verified TypeScript compilation (`npx tsc --noEmit`) and production static build (`npm run build` succeeds in ~2.5s with all 7 routes).
+  - Verified backend pytest suite (`91 passed in 72.52s`).
+- **Decisions:**
+  - Dynamic `html5-qrcode` import prevents SSR window/navigator reference errors during Next.js build.
+  - If a deed verification returns a `plot_id`, the page asynchronously retrieves plot details without blocking the primary deed validity result.
+  - Camera scanner automatically stops video capture and unmounts upon a successful QR decode.
+- **Known gaps:**
+  - Pre-purchase citizen plot search and risk report page will be implemented in S14 (`/check`).
+- **Next session:** `S14` (`s14-citizen-page`)
+
 
 
 
