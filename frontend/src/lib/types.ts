@@ -156,6 +156,20 @@ export interface MutationCreate {
   auto_check?: boolean;
 }
 
+export interface MutationEventOut {
+  id: number;
+  from_state: string;
+  to_state: string;
+  actor_id?: number | null;
+  note?: string | null;
+  at: string;
+}
+
+export interface MutationTransition {
+  to_state: string;
+  note?: string | null;
+}
+
 export interface MutationOut {
   id: number;
   deed_id: number;
@@ -167,8 +181,47 @@ export interface MutationOut {
   requires_override: boolean;
   created_at: string;
   updated_at: string;
-  events?: unknown[];
-  auto_check_json?: Record<string, unknown> | null;
+  events?: MutationEventOut[];
+  auto_check_json?: {
+    blocked?: boolean;
+    score?: number;
+    level?: string;
+    findings?: FraudFinding[];
+    has_critical?: boolean;
+  } | null;
+}
+
+export interface AlertOut {
+  id: number;
+  deed_id?: number | null;
+  plot_id: number;
+  rule_id: string;
+  severity: string;
+  reasons: string[];
+  status: string;
+  created_at: string;
+}
+
+export interface AuditLogOut {
+  id: number;
+  actor_id?: number | null;
+  action: string;
+  entity: string;
+  entity_id?: number | null;
+  at: string;
+  detail?: string | null;
+}
+
+export interface DevStatusOut {
+  demo_mode: boolean;
+}
+
+export interface TamperResult {
+  status: string;
+  deed_no: string;
+  original_area?: number;
+  tampered_area?: number;
+  area_sold?: number;
 }
 
 export interface FraudFinding {
@@ -191,4 +244,5 @@ export interface FraudReport {
   has_critical: boolean;
   findings: FraudFinding[];
 }
+
 

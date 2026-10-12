@@ -20,7 +20,7 @@
 | **S13** | Verify page + QR scanner | Done (build ok) | Public /verify route, URL query (?deed=) autoload, html5-qrcode live camera scanner, StatusBadge, deed & plot details, audit reasons, bilingual bn/en |
 | **S14** | Citizen check page | Done (build ok) | Public /check route, multi-modal search (Dag/Mouza/Plot/Deed), RiskCard with circular gauge (0-100), bilingual findings from /risk/plot, ChainTimeline with masked buyers, badges for flags, mutation summary, benchmark scenarios helper |
 | **S15** | Registrar page | Done (97 tests, build ok) | Backend GET /meta and GET /persons/search with RBAC; /login route with role redirect; /registrar deed creation portal with pre-registration fraud blocking (HTTP 409), QR generator & downloader, and mutation starter |
-| **S16** | Officer + admin pages | Pending | |
+| **S16** | Officer + admin pages | Done (97 tests, build ok) | AC Land officer portal (/officer) with mutation review stepper & alerts management; Admin portal (/admin) with Tamper Lab demo and append-only audit trail |
 | **S17** | Docker (local deploy) | Pending | |
 | **S18** | Cloud deploy preparation | Pending | |
 | **S19** | Docs, README, concept note draft | Pending | |
@@ -312,6 +312,30 @@
 - **Known gaps:**
   - AC Land officer mutation review workflow and Admin tamper lab/audit control panel to be implemented in S16 (`/officer`, `/admin`).
 - **Next session:** `S16` (`s16-officer-admin-pages`)
+
+### Session S16 Log
+- **What was done:**
+  - Implemented the Assistant Commissioner (Land) Officer Portal (`frontend/src/app/officer/page.tsx`):
+    * Role-protected to `officer` and `admin` via `ProtectedRoute`.
+    * **Mutations Tab:** Mutation applications table with state filter (`ALL`, `SUBMITTED`, `AUTO_CHECKED`, `UNDER_REVIEW`, `APPROVED`, `KHATIAN_UPDATED`, `REJECTED`), deed/plot cross-links, applicant identifiers, and `⚠️ OVERRIDE` alert badges.
+    * **Mutation Review Drawer / Modal:** Features 5-stage `StatusStepper` (`SUBMITTED` -> `AUTO_CHECKED` -> `UNDER_REVIEW` -> `APPROVED` -> `KHATIAN_UPDATED`, or `REJECTED` in prominent red), auto-check fraud findings breakdown with severity badges, chronological history events timeline, dynamic legal transition buttons, and an official order/justification note input (strictly enforced for rejections or overriding critical warnings).
+    * **Fraud Alerts Tab:** Real-time alert list with status (`ALL`, `OPEN`, `ACK`, `RESOLVED`, `DISMISSED`) and severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) filters, with instant `ACK` and `RESOLVED` status update actions calling `PATCH /api/v1/alerts/{id}`.
+  - Implemented the System Administration Portal (`frontend/src/app/admin/page.tsx`):
+    * Role-protected strictly to `admin` via `ProtectedRoute`.
+    * **Tamper Lab Panel:** Verifies `GET /api/v1/dev/status` to ensure demo mode is active. Includes target deed input with 1-click sample deed pills (`MIR-2026-000001`, `000002`, `000003`). Tamper simulation button (+1.0 decimal area sold without updating Ed25519 signature) and Restore button with confirmation modals. Inline real-time cryptographic verification demonstrates immediate status flip between `VALID` and `TAMPERED` (`HASH_MISMATCH`).
+    * **Audit Log Trail:** Connects to `GET /api/v1/audit` with server-side pagination, displaying chronological, immutable logs (Action, Entity, Actor, Timestamp, Details).
+  - Updated `Header.tsx` to conditionally expose `/officer` and `/admin` navigation links based on user role (`officer`, `admin`).
+  - Added complete bilingual translations for both portals in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Verified Next.js static production build (`npm run build` succeeds in ~5.5s, all 10 routes prerendered).
+  - Verified backend test suite: all 97 pytest tests pass.
+- **Decisions:**
+  - Tamper Lab is cleanly hidden when `demo_mode` is false, safeguarding against accidental invocation in production environments.
+  - Confirmation modals prevent accidental execution of destructive demo actions.
+  - Officer note validation is enforced client-side before calling transition APIs to provide instant feedback.
+- **Known gaps:**
+  - Docker packaging and local deploy configurations will be implemented in S17.
+- **Next session:** `S17` (`s17-docker`)
+
 
 
 

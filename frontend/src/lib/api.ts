@@ -1,15 +1,20 @@
 import {
+  AlertOut,
   ApiError as IApiError,
+  AuditLogOut,
   ChainItem,
   DeedCreate,
   DeedRegistrationResponse,
+  DevStatusOut,
   LoginResponse,
   MetaOut,
   MutationCreate,
   MutationOut,
+  MutationTransition,
   PersonOut,
   PlotOut,
   RiskReportOut,
+  TamperResult,
   UserRole,
   VerifyOut,
 } from "./types";
@@ -257,4 +262,88 @@ export async function startMutation(
     requiresAuth: true,
   });
 }
+
+export async function listMutations(state?: string): Promise<MutationOut[]> {
+  const params = new URLSearchParams();
+  if (state && state !== "ALL") params.set("state", state);
+  const q = params.toString();
+  return apiFetch<MutationOut[]>(`/mutations${q ? `?${q}` : ""}`, {
+    requiresAuth: true,
+  });
+}
+
+export async function getMutation(id: number): Promise<MutationOut> {
+  return apiFetch<MutationOut>(`/mutations/${id}`, {
+    requiresAuth: true,
+  });
+}
+
+export async function transitionMutation(
+  id: number,
+  payload: MutationTransition
+): Promise<MutationOut> {
+  return apiFetch<MutationOut>(`/mutations/${id}/transition`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    requiresAuth: true,
+  });
+}
+
+export async function getAlerts(
+  status?: string,
+  severity?: string
+): Promise<AlertOut[]> {
+  const params = new URLSearchParams();
+  if (status && status !== "ALL") params.set("status", status);
+  if (severity && severity !== "ALL") params.set("severity", severity);
+  const q = params.toString();
+  return apiFetch<AlertOut[]>(`/alerts${q ? `?${q}` : ""}`, {
+    requiresAuth: true,
+  });
+}
+
+export async function updateAlertStatus(
+  alertId: number,
+  status: string
+): Promise<AlertOut> {
+  return apiFetch<AlertOut>(`/alerts/${alertId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+    requiresAuth: true,
+  });
+}
+
+export async function getDevStatus(): Promise<DevStatusOut> {
+  return apiFetch<DevStatusOut>("/dev/status", {
+    requiresAuth: true,
+  });
+}
+
+export async function tamperDeed(deedNo: string): Promise<TamperResult> {
+  return apiFetch<TamperResult>(`/dev/tamper/${encodeURIComponent(deedNo)}`, {
+    method: "POST",
+    requiresAuth: true,
+  });
+}
+
+export async function restoreDeed(deedNo: string): Promise<TamperResult> {
+  return apiFetch<TamperResult>(`/dev/restore/${encodeURIComponent(deedNo)}`, {
+    method: "POST",
+    requiresAuth: true,
+  });
+}
+
+export async function getAuditLogs(
+  page: number = 1,
+  size: number = 20
+): Promise<AuditLogOut[]> {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  });
+  return apiFetch<AuditLogOut[]>(`/audit?${params.toString()}`, {
+    requiresAuth: true,
+  });
+}
+
 

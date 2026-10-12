@@ -24,6 +24,12 @@ export function Header() {
     ...(user && (role === "registrar" || role === "admin")
       ? [{ href: "/registrar", label: t("nav.registrar") }]
       : []),
+    ...(user && (role === "officer" || role === "admin")
+      ? [{ href: "/officer", label: t("nav.officer") }]
+      : []),
+    ...(user && role === "admin"
+      ? [{ href: "/admin", label: t("nav.admin") }]
+      : []),
   ];
 
   return (
