@@ -1,13 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.db import Base, engine
+from app.errors import DomainError
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import auth
+from app.api.v1 import auth, deeds, plots
 from app.api.v1.auth import limiter
 
 
@@ -29,6 +31,15 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+@app.exception_handler(DomainError)
+def domain_error_handler(request: Request, exc: DomainError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"code": "INVALID", "detail": str(exc.message)},
+    )
+
+
 allowed_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 
 app.add_middleware(
@@ -40,6 +51,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/v1")
+app.include_router(deeds.router, prefix="/api/v1")
+app.include_router(plots.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
