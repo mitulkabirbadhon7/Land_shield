@@ -1,10 +1,24 @@
+from datetime import datetime, timezone
 import json
 from sqlalchemy import select
 
+from app.config import settings
+from app.models.case import Case
 from app.models.deed import Deed
 from app.models.ledger import LedgerEntry
+from app.models.mutation import Mutation
 from app.services.holdings import TOLERANCE, ledger_holdings, record_holdings
 from app.services.pipeline.base import AnalysisContext, DealSubject, Finding, Layer
+
+
+def _to_utc_datetime(val: datetime | str) -> datetime:
+    if isinstance(val, str):
+        dt = datetime.fromisoformat(val)
+    else:
+        dt = val
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 class RulesLayer(Layer):
@@ -13,7 +27,9 @@ class RulesLayer(Layer):
     def analyze(self, ctx: AnalysisContext) -> list[Finding]:
         findings: list[Finding] = []
 
-        # Build subjects based on evaluation mode
+        # ---------------------------------------------------------------------
+        # 1. Subject-level rules: R1 (Oversold / Double Sale), R2 (Seller Not Owner)
+        # ---------------------------------------------------------------------
         subjects: list[DealSubject] = []
         if ctx.mode == "PROPOSED":
             if ctx.proposed is not None:
@@ -66,6 +82,7 @@ class RulesLayer(Layer):
                     Finding(
                         layer="rules",
                         rule_id="R1",
+                        sub_code="OVERSOLD",
                         severity="CRITICAL",
                         weight=60,
                         decisive=True,
@@ -83,6 +100,7 @@ class RulesLayer(Layer):
                     Finding(
                         layer="rules",
                         rule_id="R1",
+                        sub_code="DOUBLE_SALE",
                         severity="CRITICAL",
                         weight=60,
                         decisive=True,
@@ -102,6 +120,7 @@ class RulesLayer(Layer):
                         Finding(
                             layer="rules",
                             rule_id="R2",
+                            sub_code="NOT_OWNER",
                             severity="CRITICAL",
                             weight=60,
                             decisive=True,
@@ -112,5 +131,107 @@ class RulesLayer(Layer):
                             ],
                         )
                     )
+
+        # ---------------------------------------------------------------------
+        # 2. Plot-level rule: R3 (Missing Mutation over N days)
+        # ---------------------------------------------------------------------
+        active_deeds_stmt = select(Deed).where(Deed.plot_id == ctx.plot.id, Deed.status == "ACTIVE")
+        active_deeds = ctx.db.scalars(active_deeds_stmt).all()
+
+        now_utc = _to_utc_datetime(ctx.now)
+        for deed in active_deeds:
+            deed_dt = _to_utc_datetime(deed.registered_at)
+            age_days = (now_utc - deed_dt).total_seconds() / 86400.0
+
+            if age_days > settings.mutation_days:
+                # Check if a completed mutation exists
+                mutation_stmt = select(Mutation).where(
+                    Mutation.deed_id == deed.id,
+                    Mutation.state == "KHATIAN_UPDATED",
+                )
+                has_completed_mutation = ctx.db.scalars(mutation_stmt).first() is not None
+                if not has_completed_mutation:
+                    findings.append(
+                        Finding(
+                            layer="rules",
+                            rule_id="R3",
+                            sub_code="MISSING_MUTATION",
+                            severity="MEDIUM",
+                            weight=25,
+                            decisive=True,
+                            deed_no=deed.deed_no,
+                            reasons=[
+                                f"R3_MISSING_MUTATION: Active deed {deed.deed_no} registered {int(age_days)} days ago has no completed mutation (exceeds {settings.mutation_days} days limit)."
+                            ],
+                        )
+                    )
+
+        # ---------------------------------------------------------------------
+        # 3. Plot-level rule: R4 (Rapid Transfers - sliding window 30 days)
+        # ---------------------------------------------------------------------
+        timestamps: list[datetime] = [_to_utc_datetime(d.registered_at) for d in active_deeds]
+        if ctx.mode == "PROPOSED" and ctx.proposed is not None:
+            timestamps.append(_to_utc_datetime(ctx.proposed.at))
+
+        timestamps.sort()
+        window_seconds = 30 * 86400.0
+        rapid_detected = False
+        for i in range(len(timestamps)):
+            if i + 2 < len(timestamps):
+                if (timestamps[i + 2] - timestamps[i]).total_seconds() <= window_seconds:
+                    rapid_detected = True
+                    break
+
+        if rapid_detected:
+            findings.append(
+                Finding(
+                    layer="rules",
+                    rule_id="R4",
+                    sub_code="RAPID_TRANSFERS",
+                    severity="HIGH",
+                    weight=35,
+                    decisive=True,
+                    deed_no=ctx.proposed.deed_no if ctx.mode == "PROPOSED" and ctx.proposed else None,
+                    reasons=[
+                        "R4_RAPID_TRANSFERS: 3 or more land transfers detected within a 30-day window on this plot."
+                    ],
+                )
+            )
+
+        # ---------------------------------------------------------------------
+        # 4. Plot-level rule: R6 (Flagged Land / Khas / Acquisition / Active Case)
+        # ---------------------------------------------------------------------
+        flags = [f.strip().lower() for f in (ctx.plot.flags or [])]
+        flag_triggers = [f for f in flags if f in ["khas", "acquisition", "disputed"]]
+
+        case_stmt = select(Case).where(
+            Case.plot_id == ctx.plot.id,
+            Case.status.in_(["PENDING", "OPEN", "ACTIVE", "FILED", "HEARING"]),
+        )
+        open_cases = ctx.db.scalars(case_stmt).all()
+
+        if flag_triggers or open_cases:
+            r6_reasons: list[str] = []
+            if flag_triggers:
+                r6_reasons.append(
+                    f"R6_FLAGGED_LAND: Plot has governmental restriction flags: {', '.join(flag_triggers)}"
+                )
+            if open_cases:
+                case_numbers = [c.case_no for c in open_cases]
+                r6_reasons.append(
+                    f"R6_FLAGGED_LAND: Plot has active court dispute case(s): {', '.join(case_numbers)}"
+                )
+
+            findings.append(
+                Finding(
+                    layer="rules",
+                    rule_id="R6",
+                    sub_code="FLAGGED_LAND",
+                    severity="HIGH",
+                    weight=40,
+                    decisive=True,
+                    reasons=r6_reasons,
+                )
+            )
 
         return findings

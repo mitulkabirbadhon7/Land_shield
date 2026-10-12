@@ -9,7 +9,7 @@ from app.config import settings
 from app.db import Base, engine
 from app.errors import DomainError, FraudBlocked
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import auth, deeds, plots
+from app.api.v1 import alerts, auth, deeds, plots, risk
 from app.api.v1.auth import limiter
 
 
@@ -61,9 +61,16 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(deeds.router, prefix="/api/v1")
 app.include_router(plots.router, prefix="/api/v1")
+app.include_router(risk.router, prefix="/api/v1")
+app.include_router(alerts.router, prefix="/api/v1")
+
+# Also include risk and alerts at root for convenient direct routing
+app.include_router(risk.router)
+app.include_router(alerts.router)
 
 
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "ok"}
+
 

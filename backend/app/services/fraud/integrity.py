@@ -21,6 +21,7 @@ class IntegrityLayer(Layer):
                 Finding(
                     layer="integrity",
                     rule_id="R5",
+                    sub_code="INTEGRITY",
                     severity="CRITICAL",
                     weight=100,
                     decisive=True,
@@ -52,6 +53,7 @@ class IntegrityLayer(Layer):
                     Finding(
                         layer="integrity",
                         rule_id="R5",
+                        sub_code="INTEGRITY",
                         severity="CRITICAL",
                         weight=100,
                         decisive=True,
@@ -65,6 +67,7 @@ class IntegrityLayer(Layer):
                     Finding(
                         layer="integrity",
                         rule_id="R5",
+                        sub_code="INTEGRITY",
                         severity="CRITICAL",
                         weight=100,
                         decisive=True,

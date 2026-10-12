@@ -16,6 +16,7 @@ class Finding:
     decisive: bool      # True = affects score and can block; False = advisory
     reasons: list[str] = field(default_factory=list)
     deed_no: str | None = None
+    sub_code: str | None = None
 
 
 @dataclass

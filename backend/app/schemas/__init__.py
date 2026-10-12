@@ -1,5 +1,6 @@
 from app.schemas.deeds import DeedCreate, DeedOut, VerifyOut, DeedRegistrationResponse
 from app.schemas.plots import PlotOut, ChainItem
+from app.schemas.risk import RiskReportOut, RiskFindingOut, MutationSummary, AlertOut, AlertUpdate
 
 __all__ = [
     "DeedCreate",
@@ -8,4 +9,10 @@ __all__ = [
     "DeedRegistrationResponse",
     "PlotOut",
     "ChainItem",
+    "RiskReportOut",
+    "RiskFindingOut",
+    "MutationSummary",
+    "AlertOut",
+    "AlertUpdate",
 ]
+
