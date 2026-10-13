@@ -24,7 +24,7 @@
 | **S17** | Docker (local deploy) | Done (compose config validated statically; runtime proof skipped — Docker Desktop unavailable on authors' machine) | Multi-stage Dockerfiles, compose stack (db, backend, frontend), healthchecks, SEED_ON_START automated seeding, Makefile targets, LAN/mobile QR guide |
 | **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
 | **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
-| **S20** | Final QA, security sweep, tag | Pending | |
+| **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
 
 ### Session S03 Log
 - **What was done:**
@@ -461,6 +461,36 @@
 - **Known gaps:**
   - Student names, emails, live demo video URL, live Vercel URL, and mentor details must be populated by the team before final PDF export and submission.
 - **Next session:** `S20` (`s20-final-qa`)
+
+### Session S20 Log
+- **What was done:**
+  - **Comprehensive Security & Privacy Sweep:**
+    * Executed strict audit of tracked git files: verified zero leakage of `.env`, `keys/`, `*.db`, `*.pem`, `node_modules/`, or private key strings (`BEGIN PRIVATE KEY`).
+    * Verified zero real personal identities, real NIDs, or citizen phone numbers across the repository.
+    * Audited external network requests: verified zero automated web scrapers or unauthorized calls to `.gov.bd` or external portals.
+    * Verified that dev tampering endpoints (`/api/v1/dev/tamper`, `/api/v1/dev/restore`) strictly return `HTTP 404 Not Found` when `DEMO_MODE=false`.
+    * Confirmed zero lingering `TODO` or `FIXME` comments across both backend and frontend codebases.
+  - **Automated End-to-End Smoke Test Suite (`scripts/smoke_test.py`):**
+    * Implemented standalone CLI smoke test utility using `httpx` with `urllib` fallback and console-safe UTF-8 encoding.
+    * Validates full stack lifecycle:
+      1. Infrastructure health: `GET /api/v1/health` (HTTP 200) and `GET /api/v1/health/deep` (Postgres connected, 300 plots, 599 deeds).
+      2. Public verification: `GET /api/v1/deeds/DHAKA-2026-000010/verify` (Status `VALID`, reasons `[]`).
+      3. Public pre-purchase check: `GET /api/v1/plots/1` (Bangla mouza and masked owner) and `GET /api/v1/risk/plot/1` (Risk score 60/100, CRITICAL, Rule R1 Double Sale detected).
+      4. RBAC authentication: `POST /api/v1/auth/login` for both Sub-Registrar and System Admin demo accounts.
+      5. Pre-registration fraud blocker: `POST /api/v1/deeds` with double-sale payload correctly intercepted and blocked with `HTTP 409 FRAUD_BLOCKED`.
+      6. Tamper Lab lifecycle: Admin tampering (+1.0 decimal) triggers immediate status flip to `TAMPERED` (`HASH_MISMATCH`), and subsequent restoration returns deed validity cleanly to `VALID`.
+    * Tested and verified 100% passing (12/12 checks) against the live Render production backend (`https://land-shield.onrender.com`).
+  - **Makefile Integration:**
+    * Added `make smoke` (`python scripts/smoke_test.py --base-url http://localhost:8000`) and `make smoke-live` (`python scripts/smoke_test.py --base-url https://land-shield.onrender.com`).
+  - **Authoritative Submission Checklist (`docs/SUBMISSION_CHECKLIST.md`):**
+    * Formulated complete Round 1 submission checklist aligning with official Rule Book Sections 1 through 12.
+    * Documented all green automated verification audits (105 backend tests, 12 smoke tests, Next.js production build).
+    * Catalogs the 4 core deliverables (Concept Note PDF, GitHub Repo, Demo Video, Live Deployment) and provides an explicit human pre-submission checklist.
+- **Decisions:**
+  - Automated smoke test supports both local stack and live cloud deployment via `--base-url` argument.
+  - Smoke test uses safe stdout encoding fallbacks to ensure compatibility across Windows CP1252/CP437 command prompts.
+- **Status:** Phase 1 (Round 1) Implementation & QA Complete. Ready for PR merge and `v1.0-round1` tag.
+- **Next step:** Run `/phase1-release` workflow (develop -> main PR), tag `v1.0-round1`, and branch `phase2`.
 
 ---
 
