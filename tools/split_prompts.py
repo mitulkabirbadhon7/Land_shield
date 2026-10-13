@@ -2,8 +2,8 @@
 """
 split_prompts.py - Helper script to split session prompts into slash workflow files.
 Usage:
-    python tools/split_prompts.py Docs/ANTIGRAVITY_PHASE1_PROMPTS-2.md .agent/workflows
-    python tools/split_prompts.py Docs/ANTIGRAVITY_PHASE1_PROMPTS-2.md .agents/workflows
+    python tools/split_prompts.py docs/ANTIGRAVITY_PHASE1_PROMPTS-2.md .agent/workflows
+    python tools/split_prompts.py docs/ANTIGRAVITY_PHASE1_PROMPTS-2.md .agents/workflows
 """
 
 import sys

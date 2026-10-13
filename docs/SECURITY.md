@@ -74,6 +74,7 @@ Boundaries: browser <-> API (HTTPS), API <-> database, API <-> LLM provider (out
 - Feature flags allow switching a faulty module off without redeploying code.
 - Backups: local Docker copy, recorded demo video, latest good tag.
 - Incident response (small): if a secret is exposed, rotate keys/tokens, redeploy, note it in the decision log; if a layer misbehaves in the demo, switch it off with its flag.
+- Docker runtime proof (compose config, container startup, seed idempotency, end-to-end verify inside Docker) was NOT executed in S17/S17-FIX due to the authors' environment. Tracked in SUBMISSION_CHECKLIST.md; must be re-verified on a Docker-enabled machine before any claim of local reproducibility.
 
 ## 8. Known limitations (state honestly in the concept note and pitch)
 1. Prototype signing keys; no HSM or multi-signature yet.

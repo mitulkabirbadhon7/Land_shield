@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean
+.PHONY: setup test run seed clean up down logs reset
 
 setup:
 	python -m venv .venv
@@ -12,7 +12,19 @@ run:
 	cd backend && uvicorn app.main:app --reload --port 8000
 
 seed:
-	@echo "Seed script ready for Session S05"
+	cd backend && python scripts/seed.py --reset
+
+up:
+	docker compose up --build -d
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f
+
+reset:
+	docker compose down -v
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

@@ -1,0 +1,298 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
+
+export default function HomePage() {
+  const { t } = useLanguage();
+
+  return (
+    <div className="relative overflow-hidden py-10 sm:py-16">
+      {/* Background radial gradient accent */}
+      <div className="pointer-events-none absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+        <div className="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-emerald-500 to-teal-300 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Hero Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50/90 px-3.5 py-1 text-xs font-semibold text-emerald-800 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{t("hero.badge")}</span>
+          </div>
+
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white leading-tight">
+            {t("hero.title")}
+          </h1>
+
+          <p className="text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+            {t("hero.subtitle")}
+          </p>
+        </div>
+
+        {/* Three Big Interactive Action Buttons */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Button 1: Check a Plot */}
+          <Link
+            href="/check"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/90"
+          >
+            <div className="absolute top-0 right-0 -mr-6 -mt-6 h-24 w-24 rounded-full bg-emerald-500/10 transition-all duration-300 group-hover:scale-150 group-hover:bg-emerald-500/15" />
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/25 transition group-hover:scale-110">
+                  <svg
+                    className="h-7 w-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                    />
+                  </svg>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                  নাগরিক চেক
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition">
+                  {t("hero.cta_check")}
+                </h2>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t("hero.cta_check_desc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              <span>যাচাই শুরু করুন</span>
+              <svg
+                className="h-4 w-4 transition group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </div>
+          </Link>
+
+          {/* Button 2: Verify a Deed */}
+          <Link
+            href="/verify"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-teal-500/60 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/90"
+          >
+            <div className="absolute top-0 right-0 -mr-6 -mt-6 h-24 w-24 rounded-full bg-teal-500/10 transition-all duration-300 group-hover:scale-150 group-hover:bg-teal-500/15" />
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white shadow-md shadow-teal-500/25 transition group-hover:scale-110">
+                  <svg
+                    className="h-7 w-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-bold text-teal-800 dark:bg-teal-950/80 dark:text-teal-300">
+                  QR স্ক্যান
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-teal-600 transition">
+                  {t("hero.cta_verify")}
+                </h2>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t("hero.cta_verify_desc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-teal-600 dark:text-teal-400">
+              <span>দলিল যাচাই করুন</span>
+              <svg
+                className="h-4 w-4 transition group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </div>
+          </Link>
+
+          {/* Button 3: Officer Portal */}
+          <Link
+            href="/login"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-slate-500/60 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/90"
+          >
+            <div className="absolute top-0 right-0 -mr-6 -mt-6 h-24 w-24 rounded-full bg-slate-500/10 transition-all duration-300 group-hover:scale-150 group-hover:bg-slate-500/15" />
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-tr from-slate-900 to-slate-700 text-white shadow-md shadow-slate-900/20 transition group-hover:scale-110 dark:from-slate-700 dark:to-slate-600">
+                  <svg
+                    className="h-7 w-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    />
+                  </svg>
+                </div>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-300">
+                  কর্মকর্তা পোর্টাল
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-slate-800 dark:group-hover:text-slate-200 transition">
+                  {t("hero.cta_login")}
+                </h2>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t("hero.cta_login_desc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-300">
+              <span>লগইন করুন</span>
+              <svg
+                className="h-4 w-4 transition group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </div>
+          </Link>
+        </div>
+
+        {/* Quick Proof Metrics Strip */}
+        <div className="mt-14 rounded-2xl border border-slate-200/80 bg-white/70 p-6 shadow-2xs backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-y-0 sm:divide-x dark:divide-slate-800">
+            <div className="py-2 text-center sm:px-4">
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                &lt; ৩ সেকেন্ড
+              </p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {t("quick_stats.deed_verification")}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("quick_stats.deed_verification_sub")}
+              </p>
+            </div>
+
+            <div className="py-2 text-center sm:px-4">
+              <p className="text-2xl font-black text-rose-600 dark:text-rose-400">
+                ১০০% নির্ভুল
+              </p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {t("quick_stats.tamper_detection")}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("quick_stats.tamper_detection_sub")}
+              </p>
+            </div>
+
+            <div className="py-2 text-center sm:px-4">
+              <p className="text-2xl font-black text-teal-600 dark:text-teal-400">
+                বাংলা + English
+              </p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {t("quick_stats.bilingual")}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("quick_stats.bilingual_sub")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Three Pillars Section */}
+        <div className="mt-16 sm:mt-20">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+              {t("hero.trust_heading")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 mb-4 font-bold text-sm">
+                01
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {t("hero.pillar1_title")}
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                {t("hero.pillar1_desc")}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400 mb-4 font-bold text-sm">
+                02
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {t("hero.pillar2_title")}
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                {t("hero.pillar2_desc")}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200/80 bg-white/80 p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400 mb-4 font-bold text-sm">
+                03
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {t("hero.pillar3_title")}
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                {t("hero.pillar3_desc")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
