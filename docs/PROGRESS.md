@@ -426,7 +426,31 @@
   - Added mock `NEXT_PUBLIC_API_URL` to GitHub Actions CI to satisfy the production build assertion.
 - **Known gaps:**
   - Awaiting PR approval / merge review on GitHub.
-- **Next session:** `PR-MERGE` / `S18`
+- **Next session:** `S18` (`s18-cloud-deploy`)
+
+### Session S18 Log
+- **What was done:**
+  - Deployed LandShield Next.js frontend to Vercel production:
+    * Live URL: `https://landshield-frontend.vercel.app/`
+    * Configured Root Directory in Vercel to `frontend`.
+    * Injected production environment variable `NEXT_PUBLIC_API_URL` pointing to the backend API.
+  - Verified edge HTTPS and mobile camera QR scanning compatibility (HTTPS mandatory on mobile browsers for `navigator.mediaDevices.getUserMedia`).
+  - Verified cross-origin resource sharing (CORS) and origin white-listing on backend for Vercel production domain.
+  - Verified automated GitHub Actions CI checks on Pull Request:
+    * `backend-test`: completed success (98/98 pytest tests passing).
+    * `frontend-build`: completed success (`npm run lint` + `npm run build` passing with 0 errors).
+    * `Vercel Preview`: completed success (preview deployments generated automatically).
+  - Conducted live smoke testing of primary public routes:
+    * Landing page (`/`): responsive bilingual display (Bangla / English).
+    * Citizen pre-purchase check (`/check`): Mouza/Dag search, risk gauge score, scenario benchmark testing (S1–S8).
+    * Deed verification (`/verify`): authentic status badge, ledger chain position, and QR scanner trigger.
+    * Staff login (`/login`): demo account credential autofill and role-based redirects.
+- **Decisions:**
+  - Vercel was selected for the frontend to leverage global CDN caching and out-of-the-box SSL certificate generation.
+  - Retained synthetic data policy notice on all public pages (`X-Data-Policy: synthetic-demo`).
+- **Known gaps:**
+  - Final 3-minute hackathon evaluation video demo recording scheduled for S19.
+- **Next session:** `S19` (`s19-demo-video-prep`)
 
 
 
