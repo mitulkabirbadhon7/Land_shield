@@ -3,6 +3,8 @@ from app.schemas.plots import PlotOut, ChainItem
 from app.schemas.risk import RiskReportOut, RiskFindingOut, MutationSummary, AlertOut, AlertUpdate
 from app.schemas.mutations import MutationCreate, MutationTransition, MutationEventOut, MutationOut
 from app.schemas.audit import AuditLogOut
+from app.schemas.meta import MetaOut, SubRegistryOut
+from app.schemas.persons import PersonOut
 
 __all__ = [
     "DeedCreate",
@@ -21,6 +23,9 @@ __all__ = [
     "MutationEventOut",
     "MutationOut",
     "AuditLogOut",
+    "PersonOut",
+    "MetaOut",
+    "SubRegistryOut",
 ]
 
 

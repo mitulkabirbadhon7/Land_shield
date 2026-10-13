@@ -1,0 +1,328 @@
+"use client";
+
+import React from "react";
+import { RiskReportOut, RiskLevel, FindingSeverity } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
+import { Card } from "./Card";
+
+interface RiskCardProps {
+  report: RiskReportOut;
+  className?: string;
+}
+
+export function RiskCard({ report, className = "" }: RiskCardProps) {
+  const { t } = useLanguage();
+
+  const score = Math.max(0, Math.min(100, Math.round(report.score)));
+  const level = report.level;
+
+  // Level visual themes
+  const levelTheme: Record<
+    RiskLevel,
+    {
+      stroke: string;
+      text: string;
+      bg: string;
+      border: string;
+      pillBg: string;
+    }
+  > = {
+    LOW: {
+      stroke: "#10b981", // emerald-500
+      text: "text-emerald-700 dark:text-emerald-300",
+      bg: "bg-emerald-50/70 dark:bg-emerald-950/30",
+      border: "border-emerald-200 dark:border-emerald-800",
+      pillBg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+    },
+    MEDIUM: {
+      stroke: "#f59e0b", // amber-500
+      text: "text-amber-700 dark:text-amber-300",
+      bg: "bg-amber-50/70 dark:bg-amber-950/30",
+      border: "border-amber-200 dark:border-amber-800",
+      pillBg: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    },
+    HIGH: {
+      stroke: "#f97316", // orange-500
+      text: "text-orange-700 dark:text-orange-300",
+      bg: "bg-orange-50/70 dark:bg-orange-950/30",
+      border: "border-orange-200 dark:border-orange-800",
+      pillBg: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300",
+    },
+    CRITICAL: {
+      stroke: "#f43f5e", // rose-500
+      text: "text-rose-700 dark:text-rose-300",
+      bg: "bg-rose-50/80 dark:bg-rose-950/40",
+      border: "border-rose-300 dark:border-rose-800",
+      pillBg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
+    },
+  };
+
+  const theme = levelTheme[level] || levelTheme.LOW;
+
+  // SVG circular gauge calculations
+  // radius 45 -> circumference = 2 * pi * 45 = 282.74
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+
+  const severityPill = (sev: FindingSeverity) => {
+    switch (sev) {
+      case "CRITICAL":
+        return "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300";
+      case "HIGH":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300";
+      case "MEDIUM":
+        return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300";
+      default:
+        return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300";
+    }
+  };
+
+  const hasFlags =
+    report.flags.is_khas ||
+    report.flags.is_acquisition ||
+    report.flags.is_disputed ||
+    report.flags.active_cases_count > 0;
+
+  return (
+    <div className={`space-y-6 ${className}`}>
+      {/* 1. Primary Risk Card with Circular Ring */}
+      <div
+        className={`rounded-2xl border p-6 sm:p-8 shadow-sm transition-all backdrop-blur-xs ${theme.border} ${theme.bg}`}
+      >
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          {/* Circular SVG Gauge */}
+          <div className="relative flex items-center justify-center shrink-0">
+            <svg className="w-36 h-36 -rotate-90 transform" viewBox="0 0 110 110">
+              {/* Background track circle */}
+              <circle
+                cx="55"
+                cy="55"
+                r={radius}
+                className="text-slate-200 dark:text-slate-800 stroke-current"
+                strokeWidth="10"
+                fill="transparent"
+              />
+              {/* Progress colored circle */}
+              <circle
+                cx="55"
+                cy="55"
+                r={radius}
+                stroke={theme.stroke}
+                strokeWidth="10"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="transparent"
+                className="transition-all duration-1000 ease-out"
+              />
+            </svg>
+
+            {/* Centered Score in the Ring */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
+                {score}
+              </span>
+              <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
+                / 100
+              </span>
+            </div>
+          </div>
+
+          {/* Level Info & Plain Language Summary */}
+          <div className="flex-1 text-center sm:text-left space-y-2">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${theme.pillBg}`}
+              >
+                {t(`risk_level.${level}`, level)}
+              </span>
+
+              {/* Chain OK Badge */}
+              {report.chain_ok ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{t("check.chain_ok")}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>{t("check.chain_broken")}</span>
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              {score === 0
+                ? "জমিতে কোনো জালিয়াতি বা বিরোধের প্রমাণ নেই"
+                : `${t("check.risk_score")}: ${score}/১০০ (${level})`}
+            </h3>
+
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              {level === "LOW" &&
+                "এই প্লটের মালিকানা চেইন এবং রেজিস্ট্রি রেকর্ড সম্পূর্ণ অক্ষত। সরকারি রেকর্ডে কোনো অবৈধ হস্তান্তর বা দ্বৈত বিক্রয়ের ঝুঁকি শনাক্ত হয়নি।"}
+              {level === "MEDIUM" &&
+                "এই প্লটে নামজারি বা হালনাগাদ তথ্যে বিলম্বের মতো সাধারণ সমস্যা পরিলক্ষিত হয়েছে। ক্রয় পূর্বে সংশ্লিষ্ট এসি ল্যান্ড অফিসে খোঁজ নিন।"}
+              {level === "HIGH" &&
+                "এই জমিতে দ্রুত ধারাবাহিক হস্তান্তর অথবা সরকারি মামলা সংক্রান্ত উল্লেখযোগ্য ঝুঁকি বিদ্যমান। চূড়ান্ত চুক্তির পূর্বে বিশেষজ্ঞ মতামত নিন।"}
+              {level === "CRITICAL" &&
+                "সতর্কতা! এই জমিতে দ্বৈত বিক্রয় (Double Sale), স্বত্বহীন বিক্রয় অথবা ক্রিপ্টোগ্রাফিক বিকৃতির মতো মারাত্মক সমস্যা শনাক্ত হয়েছে।"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Government Restrictions & Flags Strip */}
+      <Card title={t("check.flags_title")}>
+        <div className="flex flex-wrap gap-2.5">
+          {!hasFlags ? (
+            <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300">
+              <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t("check.flag_clean")}</span>
+            </div>
+          ) : (
+            <>
+              {report.flags.is_khas && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>{t("check.flag_khas")}</span>
+                </span>
+              )}
+
+              {report.flags.is_acquisition && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-orange-100 border border-orange-300 px-3 py-1.5 text-xs font-bold text-orange-800 dark:bg-orange-950 dark:border-orange-800 dark:text-orange-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{t("check.flag_acquisition")}</span>
+                </span>
+              )}
+
+              {report.flags.is_disputed && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                  </svg>
+                  <span>
+                    {t("check.flag_disputed")} ({report.flags.active_cases_count}{" "}
+                    {t("check.cases_count")})
+                  </span>
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </Card>
+
+      {/* 3. Findings Detailed List */}
+      <Card
+        title={t("check.risk_analysis")}
+        headerAction={
+          report.findings.length > 0 ? (
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              {report.findings.length} {t("check.findings_count")}
+            </span>
+          ) : null
+        }
+      >
+        {report.findings.length === 0 ? (
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <svg className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{t("check.no_findings")}</span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {report.findings.map((finding, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 transition dark:border-slate-800 dark:bg-slate-900/60 space-y-2"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-slate-900 px-2 py-0.5 font-mono text-[11px] font-bold text-white dark:bg-slate-700">
+                      {finding.rule_id}
+                    </span>
+                    <span
+                      className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase ${severityPill(
+                        finding.severity
+                      )}`}
+                    >
+                      {finding.severity}
+                    </span>
+                    {finding.weight > 0 && (
+                      <span className="text-[11px] font-semibold text-slate-500 font-mono">
+                        +{finding.weight} pts
+                      </span>
+                    )}
+                  </div>
+
+                  {finding.deed_no && (
+                    <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                      {finding.deed_no}
+                    </span>
+                  )}
+                </div>
+
+                {/* Natural Bilingual Explanatory Text */}
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
+                  {finding.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* 4. Mutation Status Summary */}
+      <Card title={t("check.mutation_summary")}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <span className="text-xl font-bold text-slate-900 dark:text-white font-mono">
+              {report.mutation_summary.total}
+            </span>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              মোট নামজারি
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900">
+            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+              {report.mutation_summary.completed}
+            </span>
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+              {t("check.completed_mutations")}
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900">
+            <span className="text-xl font-bold text-amber-600 dark:text-amber-400 font-mono">
+              {report.mutation_summary.pending}
+            </span>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+              {t("check.pending_mutations")}
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900">
+            <span className="text-xl font-bold text-rose-600 dark:text-rose-400 font-mono">
+              {report.mutation_summary.rejected}
+            </span>
+            <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">
+              {t("check.rejected_mutations")}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

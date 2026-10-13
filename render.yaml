@@ -1,0 +1,61 @@
+# ==============================================================================
+# OPTIONAL DEPLOYMENT SPECIFICATION (Render Blueprint)
+# ==============================================================================
+# This render.yaml blueprint allows 1-click provisioning of the LandShield backend
+# and a managed PostgreSQL 15 database on Render (https://render.com).
+#
+# USAGE:
+# 1. In Render Dashboard, click "New" -> "Blueprint".
+# 2. Connect your LandShield GitHub repository.
+# 3. Render will automatically detect this render.yaml file and provision:
+#    - landshield-db (Managed PostgreSQL)
+#    - landshield-backend (FastAPI Docker Web Service)
+# 4. In the Web Service Environment Variables, populate SIGNING_KEY_HEX:
+#    Generate using: python -c "import secrets; print(secrets.token_hex(32))"
+# 5. Note: The frontend is recommended to be hosted on Vercel for optimal Next.js SSR.
+# ==============================================================================
+
+version: "1"
+
+services:
+  - type: web
+    name: landshield-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v1/health/deep
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: landshield-db
+          property: connectionString
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: 60
+      - key: DEMO_MODE
+        value: "true"
+      - key: SEED_ON_START
+        value: "true"
+      - key: ALLOWED_ORIGINS
+        value: "http://localhost:3000,https://*.vercel.app"
+      - key: FRONTEND_URL
+        value: "https://landshield.vercel.app"
+      - key: RATE_LIMIT
+        value: "120/minute"
+      - key: MUTATION_DAYS
+        value: "90"
+      - key: SIGNING_KEY_HEX
+        sync: false # Set manually in dashboard to retain consistent keys across deploys
+
+databases:
+  - name: landshield-db
+    plan: free
+    region: oregon
+    databaseName: landshield
+    user: landshield_user

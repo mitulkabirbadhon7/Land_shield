@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 
 from app.errors import DomainError, FraudBlocked, IllegalTransition
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import alerts, audit, auth, deeds, dev, mutations, plots, risk
+from app.api.v1 import alerts, audit, auth, deeds, dev, meta, mutations, persons, plots, risk
 from app.api.v1.auth import limiter
 
 
@@ -21,6 +21,24 @@ async def lifespan(app: FastAPI):
     if not settings.demo_mode and settings.jwt_secret in ("change-me", "dev-secret-key-change-in-production-32-bytes"):
         raise RuntimeError("Refusing to run: default JWT_SECRET configured when DEMO_MODE is false")
     Base.metadata.create_all(bind=engine)
+
+    if settings.should_seed_on_start:
+        import sys
+        from pathlib import Path
+        backend_dir = Path(__file__).resolve().parent.parent
+        if str(backend_dir) not in sys.path:
+            sys.path.insert(0, str(backend_dir))
+        from sqlalchemy.orm import Session
+        from sqlalchemy import select
+        from app.models.plot import Plot
+        from scripts.seed import seed_data
+
+        with Session(engine) as check_db:
+            existing = check_db.scalars(select(Plot)).first()
+            if existing is None:
+                seed_data(check_db)
+                check_db.commit()
+
     yield
 
 
@@ -112,19 +130,77 @@ app.include_router(alerts.router, prefix="/api/v1")
 app.include_router(mutations.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(dev.router, prefix="/api/v1")
+app.include_router(persons.router, prefix="/api/v1")
+app.include_router(meta.router, prefix="/api/v1")
 
-# Also include risk, alerts, mutations, audit, dev at root for convenient direct routing
+# Also include risk, alerts, mutations, audit, dev, persons, meta at root for convenient direct routing
 app.include_router(risk.router)
 app.include_router(alerts.router)
 app.include_router(mutations.router)
 app.include_router(audit.router)
 app.include_router(dev.router)
+app.include_router(persons.router)
+app.include_router(meta.router)
 
 
+
+
+@app.get("/")
+@app.head("/")
+def root_index():
+    return {
+        "name": "LandShield API",
+        "status": "online",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/v1/health",
+        "deep_health": "/api/v1/health/deep",
+    }
 
 
 @app.get("/api/v1/health")
+@app.head("/api/v1/health")
+@app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/api/v1/health/deep")
+@app.head("/api/v1/health/deep")
+@app.get("/health/deep")
+@app.head("/health/deep")
+def deep_health_check():
+    """Deep healthcheck verifying database connectivity and seed presence without exposing secrets."""
+    from sqlalchemy import select, func, text
+    from sqlalchemy.orm import Session
+    from app.models.plot import Plot
+    from app.models.deed import Deed
+
+    try:
+        with Session(engine) as db:
+            db.execute(text("SELECT 1"))
+            plots_count = db.scalar(select(func.count(Plot.id))) or 0
+            deeds_count = db.scalar(select(func.count(Deed.id))) or 0
+
+        is_seeded = plots_count > 0
+        return {
+            "status": "ok",
+            "database": "connected",
+            "seeded": is_seeded,
+            "plots_count": plots_count,
+            "deeds_count": deeds_count,
+        }
+    except Exception:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "status": "unhealthy",
+                "database": "disconnected",
+                "seeded": False,
+                "error": "Database connectivity check failed",
+            },
+        )
+
 
 
