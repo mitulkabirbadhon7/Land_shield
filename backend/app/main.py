@@ -146,6 +146,7 @@ app.include_router(meta.router)
 
 
 @app.get("/")
+@app.head("/")
 def root_index():
     return {
         "name": "LandShield API",
@@ -158,13 +159,17 @@ def root_index():
 
 
 @app.get("/api/v1/health")
+@app.head("/api/v1/health")
 @app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "ok"}
 
 
 @app.get("/api/v1/health/deep")
+@app.head("/api/v1/health/deep")
 @app.get("/health/deep")
+@app.head("/health/deep")
 def deep_health_check():
     """Deep healthcheck verifying database connectivity and seed presence without exposing secrets."""
     from sqlalchemy import select, func, text

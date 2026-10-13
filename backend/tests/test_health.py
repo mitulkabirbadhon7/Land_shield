@@ -11,11 +11,17 @@ def test_root_index():
     assert data["status"] == "online"
     assert data["docs"] == "/docs"
 
+    head_resp = client.head("/")
+    assert head_resp.status_code == 200
+
 
 def test_health_check():
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+    head_health = client.head("/api/v1/health")
+    assert head_health.status_code == 200
 
     # Root alias /health
     resp_alias = client.get("/health")
