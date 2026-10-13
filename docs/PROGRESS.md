@@ -22,7 +22,7 @@
 | **S15** | Registrar page | Done (97 tests, build ok) | Backend GET /meta and GET /persons/search with RBAC; /login route with role redirect; /registrar deed creation portal with pre-registration fraud blocking (HTTP 409), QR generator & downloader, and mutation starter |
 | **S16** | Officer + admin pages | Done (97 tests, build ok) | AC Land officer portal (/officer) with mutation review stepper & alerts management; Admin portal (/admin) with Tamper Lab demo and append-only audit trail |
 | **S17** | Docker (local deploy) | Done (compose config validated statically; runtime proof skipped — Docker Desktop unavailable on authors' machine) | Multi-stage Dockerfiles, compose stack (db, backend, frontend), healthchecks, SEED_ON_START automated seeding, Makefile targets, LAN/mobile QR guide |
-| **S18** | Cloud deploy preparation | Pending | |
+| **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
 | **S19** | Docs, README, concept note draft | Pending | |
 | **S20** | Final QA, security sweep, tag | Pending | |
 
@@ -407,6 +407,23 @@
   - Windows is case-insensitive so the mismatch was invisible locally, but Linux environments (CI, Vercel, Render) treat them as distinct directories and would break.
   - Updated hardcoded `Docs/` path references in `README.md`, `GEMINI.md`, and `tools/split_prompts.py` to `docs/`.
 - **Next session:** `S18` (`s18-cloud-deploy-prep`)
+
+### Session S18 Log
+- **What was done:**
+  - Enabled persistent signing key loading via `SIGNING_KEY_HEX` environment variable / parameter in `backend/app/services/crypto.py` and `backend/app/config.py` when no key file exists on ephemeral cloud storage, with strict 32-byte (64 hex characters) validation and zero key logging.
+  - Implemented automatic PostgreSQL connection normalization in `backend/app/config.py` and `backend/app/db.py`, transforming cloud-provided `postgres://` and `postgresql://` connection strings to `postgresql+psycopg://` required by SQLAlchemy 2.
+  - Updated `backend/Dockerfile` to dynamically respect cloud-assigned `${PORT:-8000}` through shell execution, and added port resolution to `backend/app/config.py`.
+  - Added deep healthcheck endpoint `GET /api/v1/health/deep` (and `/health/deep`) in `backend/app/main.py` testing live database query connectivity and seed presence (`plots_count`, `deeds_count`, `seeded: bool`) without exposing credentials, secrets, or internal paths.
+  - Created optional Render Blueprint specification `render.yaml` configuring 1-click cloud provisioning for the Dockerized backend service and managed PostgreSQL database with automated seeding on first start (`SEED_ON_START=true`).
+  - Authored comprehensive cloud deployment guide in `docs/DEPLOY.md` covering Render/Railway backend setup, managed Postgres provisioning, environment variables table, persistent key generation, Vercel frontend deployment with `NEXT_PUBLIC_API_URL`, CORS linkage, `DEMO_MODE` guidance, free-tier cold start mitigation, and mobile data smoke-test checklist.
+  - Added unit and API tests in `backend/tests/test_crypto.py` and `backend/tests/test_health.py` (all 104 tests passing in backend, frontend production build 10 routes prerendered).
+- **Decisions:**
+  - Kept key file precedence over env var so local development using `./keys/registrar_ed25519.hex` continues without disruption, while cloud containers without persistent volume mounts safely load `SIGNING_KEY_HEX`.
+  - Deep health check returns HTTP 503 with generic error message if the database connection fails, ensuring cloud orchestrators do not route user traffic to degraded instances while concealing database stack traces.
+- **Known gaps:**
+  - Dashboard execution (Render/Railway/Vercel project creation) is performed manually by authors using their personal accounts as documented in `docs/DEPLOY.md`.
+- **Next session:** `S19` (`s19-docs`)
+
 
 
 

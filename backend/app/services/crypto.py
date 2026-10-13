@@ -25,23 +25,49 @@ def sha256_hex(data: bytes) -> str:
     """Compute SHA-256 hexadecimal digest of bytes."""
     return hashlib.sha256(data).hexdigest()
 
-def load_or_create_key(path: str | Path) -> nacl.signing.SigningKey:
-    """Load existing Ed25519 signing key or generate a new one at path. Never log key contents."""
+def load_or_create_key(path: str | Path, signing_key_hex: str | None = None) -> nacl.signing.SigningKey:
+    """Load existing Ed25519 signing key or generate a new one at path. Never log key contents.
+
+    Order of precedence:
+    1. Existing key file at `path`
+    2. Explicitly passed `signing_key_hex` parameter
+    3. `SIGNING_KEY_HEX` environment variable or settings configuration
+    4. Auto-generate key and persist to `path` if possible
+    """
     key_path = Path(path)
     if key_path.exists():
         seed_hex = key_path.read_text(encoding="utf-8").strip()
         seed_bytes = bytes.fromhex(seed_hex)
         return nacl.signing.SigningKey(seed_bytes)
 
-    key_path.parent.mkdir(parents=True, exist_ok=True)
-    sk = nacl.signing.SigningKey.generate()
-    seed_hex = bytes(sk).hex()
-    key_path.write_text(seed_hex, encoding="utf-8")
+    # If no file exists, check provided parameter, env var, or settings
+    hex_candidate = signing_key_hex or os.getenv("SIGNING_KEY_HEX")
+    if not hex_candidate:
+        try:
+            from app.config import settings
+            hex_candidate = settings.effective_signing_key_hex
+        except Exception:
+            pass
+
+    if hex_candidate and hex_candidate.strip():
+        clean_hex = hex_candidate.strip()
+        seed_bytes = bytes.fromhex(clean_hex)
+        if len(seed_bytes) != 32:
+            raise ValueError(f"SIGNING_KEY_HEX must be 32 bytes (64 hex characters), got {len(seed_bytes)} bytes")
+        return nacl.signing.SigningKey(seed_bytes)
+
     try:
-        os.chmod(key_path, 0o600)
+        key_path.parent.mkdir(parents=True, exist_ok=True)
+        sk = nacl.signing.SigningKey.generate()
+        seed_hex = bytes(sk).hex()
+        key_path.write_text(seed_hex, encoding="utf-8")
+        try:
+            os.chmod(key_path, 0o600)
+        except OSError:
+            pass
+        return sk
     except OSError:
-        pass
-    return sk
+        return nacl.signing.SigningKey.generate()
 
 def key_id(sk: nacl.signing.SigningKey | nacl.signing.VerifyKey) -> str:
     """Derive key ID as first 16 hex characters of sha256(public_key_bytes)."""
