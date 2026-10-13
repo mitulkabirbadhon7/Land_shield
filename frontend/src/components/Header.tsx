@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
@@ -10,11 +10,12 @@ export function Header() {
   const { lang, toggleLang, t } = useLanguage();
   const { user, role, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/";
+    router.push("/");
   };
 
   const navLinks = [

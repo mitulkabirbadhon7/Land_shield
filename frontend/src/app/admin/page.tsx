@@ -19,7 +19,7 @@ import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
 
 function AdminPageContent() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   // Active Tab: "tamper" | "audit"
