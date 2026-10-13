@@ -141,15 +141,18 @@ function CitizenCheckContent() {
     setSearched(true);
 
     try {
-      // 1. Is query a pure number (plot ID)?
-      const numericId = parseInt(cleanQuery, 10);
-      if (/^\d+$/.test(cleanQuery) && !isNaN(numericId)) {
-        try {
-          const plotData = await getPlot(numericId);
-          await loadPlotDetails(plotData.id);
-          return;
-        } catch {
-          // If pure ID not found, fallback to search by dag/mouza
+      // 1. Is query a plot ID, 'Plot X', or '#X'?
+      const plotMatch = cleanQuery.match(/^(?:plot|প্লট)?\s*#?\s*(\d+)$/i);
+      if (plotMatch) {
+        const numericId = parseInt(plotMatch[1], 10);
+        if (!isNaN(numericId)) {
+          try {
+            const plotData = await getPlot(numericId);
+            await loadPlotDetails(plotData.id);
+            return;
+          } catch {
+            // If pure ID not found, fallback to search by dag/mouza
+          }
         }
       }
 

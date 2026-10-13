@@ -43,14 +43,17 @@ export interface PlotOut {
 }
 
 export interface ChainItem {
-  seq: number;
+  seq?: number;
   deed_no: string;
-  deed_hash: string;
-  entry_hash: string;
-  timestamp: string;
-  buyer_masked: string;
-  deed_status: string;
-  verify_status: DeedStatus;
+  deed_hash?: string;
+  entry_hash?: string;
+  timestamp?: string;
+  date?: string;
+  buyer_masked?: string;
+  buyer?: string;
+  deed_status?: string;
+  verify_status?: DeedStatus | string;
+  area_sold?: number;
 }
 
 export interface RiskFinding {

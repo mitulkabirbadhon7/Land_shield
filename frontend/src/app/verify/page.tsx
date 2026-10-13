@@ -336,13 +336,13 @@ function VerifyContent() {
                   </div>
                 )}
 
-                {chainItem?.buyer_masked && (
+                {(chainItem?.buyer_masked || chainItem?.buyer) && (
                   <div className="py-2.5 flex justify-between">
                     <dt className="text-slate-500 dark:text-slate-400">
                       {t("verify.buyer")}:
                     </dt>
                     <dd className="font-semibold text-slate-900 dark:text-slate-100">
-                      {chainItem.buyer_masked}
+                      {chainItem?.buyer_masked || chainItem?.buyer}
                     </dd>
                   </div>
                 )}

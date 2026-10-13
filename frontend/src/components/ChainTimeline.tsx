@@ -38,9 +38,17 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
       <div className="relative pl-6 sm:pl-8 space-y-8 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
         {chain.map((item, index) => {
           const isLatest = index === chain.length - 1;
+          const buyerName = item.buyer_masked || item.buyer || "—";
+          const displayDate = item.date
+            ? new Date(item.date).toLocaleDateString("bn-BD", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : item.timestamp || "—";
 
           return (
-            <div key={item.seq} className="relative group">
+            <div key={item.seq ?? index} className="relative group">
               {/* Timeline marker icon/dot */}
               <div
                 className={`absolute -left-6 sm:-left-8 top-1.5 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border-2 transition ${
@@ -50,7 +58,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
                 }`}
               >
                 <span className="text-[10px] sm:text-xs font-bold font-mono">
-                  {item.seq}
+                  {item.seq ?? index + 1}
                 </span>
               </div>
 
@@ -81,31 +89,41 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
                       গ্রহীতা (Buyer):{" "}
                     </span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {item.buyer_masked}
+                      {buyerName}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-500 dark:text-slate-400">
-                      তারিখ ও সময়:{" "}
+                      তারিখ:{" "}
                     </span>
                     <span className="font-mono text-slate-700 dark:text-slate-300">
-                      {item.timestamp}
+                      {displayDate}
                     </span>
                   </div>
                 </div>
 
-                {/* Hash fingerprint & verification link */}
+                {/* Hash fingerprint, area or status & verification link */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-800/80">
                   <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-400">
-                    <span>চেইন হ্যাশ:</span>
-                    <span className="truncate max-w-[140px] sm:max-w-[200px]" title={item.entry_hash}>
-                      {item.entry_hash.slice(0, 16)}...
-                    </span>
+                    {item.entry_hash ? (
+                      <>
+                        <span>চেইন হ্যাশ:</span>
+                        <span className="truncate max-w-[140px] sm:max-w-[200px]" title={item.entry_hash}>
+                          {item.entry_hash.slice(0, 16)}...
+                        </span>
+                      </>
+                    ) : typeof item.area_sold === "number" ? (
+                      <span className="text-slate-600 dark:text-slate-300">
+                        জমির পরিমাণ: <strong className="font-bold">{item.area_sold}</strong> শতাংশ
+                      </span>
+                    ) : (
+                      <span>স্ট্যাটাস: {item.deed_status || "ACTIVE"}</span>
+                    )}
                   </div>
 
                   <Link
-                    href={`/verify?deed=${item.deed_no}`}
+                    href={`/verify?deed=${encodeURIComponent(item.deed_no)}`}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 transition"
                   >
                     <span>{t("check.view_deed")}</span>
