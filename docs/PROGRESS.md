@@ -417,9 +417,13 @@
     * In `frontend/src/app/registrar/page.tsx`: removed unused `useRef` import.
     * In `frontend/src/components/Header.tsx`: removed unused `useEffect` import and replaced `window.location.href = "/"` with client navigation `router.push("/")`.
   - Ran backend test suite verifying 0 regressions (98 passed in 89s).
+  - Fixed `Build frontend` failure in GitHub Actions CI:
+    * In `.github/workflows/ci.yml`: added `NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1` to `frontend-build` step.
+    * In `frontend/src/lib/api.ts`: guarded production assertion so CI builds without live backend URLs do not throw uncaught errors during page prerendering.
 - **Decisions:**
   - Disabled `react-hooks/set-state-in-effect` rule in `eslint.config.mjs` flat config because Next 16's experimental rule flags standard data-fetching patterns on component mount/URL parameter changes.
   - Used Next.js `useRouter().push("/")` in `Header.tsx` logout handler to adhere to Next.js Client Component standards and eliminate `@next/next/no-location-assign-relative-destination`.
+  - Added mock `NEXT_PUBLIC_API_URL` to GitHub Actions CI to satisfy the production build assertion.
 - **Known gaps:**
   - Awaiting PR approval / merge review on GitHub.
 - **Next session:** `PR-MERGE` / `S18`
