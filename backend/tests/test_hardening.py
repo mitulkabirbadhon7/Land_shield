@@ -198,3 +198,28 @@ def test_public_rate_limiting_triggers_429(client: TestClient, monkeypatch: pyte
         assert statuses[-1] == 429
     finally:
         limiter.reset()
+
+
+def test_cors_preflight_allows_vercel_and_localhost(client: TestClient):
+    # Test localhost:3000
+    res_local = client.options(
+        "/api/v1/auth/login",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert res_local.status_code == 200
+    assert res_local.headers.get("access-control-allow-origin") == "http://localhost:3000"
+
+    # Test Vercel production frontend
+    res_vercel = client.options(
+        "/api/v1/auth/login",
+        headers={
+            "Origin": "https://landshield-frontend.vercel.app",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert res_vercel.status_code == 200
+    assert res_vercel.headers.get("access-control-allow-origin") == "https://landshield-frontend.vercel.app"
+

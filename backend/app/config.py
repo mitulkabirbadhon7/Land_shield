@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60
     signing_key_path: str = "./keys/registrar.key"
     demo_mode: bool = True
-    allowed_origins: str = "http://localhost:3000"
+    allowed_origins: str = "http://localhost:3000,https://landshield-frontend.vercel.app"
     frontend_url: str = "http://localhost:3000"
     rate_limit: str = "60/minute"
     RATE_LIMIT: str | None = None
