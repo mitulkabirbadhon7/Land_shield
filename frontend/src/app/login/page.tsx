@@ -11,7 +11,7 @@ import { useLanguage } from "@/lib/i18n";
 import { ApiError } from "@/lib/api";
 
 function LoginForm() {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
   const { user, role, isAuthenticated, login, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -13,8 +13,6 @@ import {
   ApiError,
 } from "@/lib/api";
 import { AlertOut, MutationOut } from "@/lib/types";
-import { Card } from "@/components/Card";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
 

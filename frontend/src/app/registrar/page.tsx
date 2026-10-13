@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
