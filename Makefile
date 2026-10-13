@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean up down logs reset
+.PHONY: setup test run seed smoke smoke-live clean up down logs reset
 
 setup:
 	python -m venv .venv
@@ -7,6 +7,12 @@ setup:
 
 test:
 	cd backend && pytest -v
+
+smoke:
+	python scripts/smoke_test.py --base-url http://localhost:8000
+
+smoke-live:
+	python scripts/smoke_test.py --base-url https://land-shield.onrender.com
 
 run:
 	cd backend && uvicorn app.main:app --reload --port 8000

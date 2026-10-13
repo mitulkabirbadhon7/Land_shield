@@ -119,3 +119,45 @@ def test_build_deed_payload_validation():
             registered_at="2026-10-12T00:00:00Z",
             extra_field="unauthorized"
         )
+
+
+def test_load_key_from_signing_key_hex(tmp_path, monkeypatch):
+    non_existent_key_path = tmp_path / "keys" / "cloud_non_existent.key"
+    known_seed_hex = "4a" * 32  # 32 bytes = 64 hex characters
+
+    # 1. Via explicit parameter
+    sk_param = load_or_create_key(non_existent_key_path, signing_key_hex=known_seed_hex)
+    assert bytes(sk_param).hex() == known_seed_hex
+    assert not non_existent_key_path.exists()
+
+    # 2. Via environment variable SIGNING_KEY_HEX
+    monkeypatch.setenv("SIGNING_KEY_HEX", known_seed_hex)
+    sk_env = load_or_create_key(non_existent_key_path)
+    assert bytes(sk_env).hex() == known_seed_hex
+    assert not non_existent_key_path.exists()
+
+
+def test_load_key_file_takes_precedence_over_env(tmp_path, monkeypatch):
+    key_file = tmp_path / "keys" / "file_wins.key"
+    file_seed_hex = "11" * 32
+    env_seed_hex = "22" * 32
+
+    key_file.parent.mkdir(parents=True, exist_ok=True)
+    key_file.write_text(file_seed_hex, encoding="utf-8")
+
+    monkeypatch.setenv("SIGNING_KEY_HEX", env_seed_hex)
+    sk = load_or_create_key(key_file)
+    assert bytes(sk).hex() == file_seed_hex
+
+
+def test_load_key_invalid_hex_raises(tmp_path):
+    non_existent_key_path = tmp_path / "keys" / "invalid.key"
+
+    # Too short
+    with pytest.raises(ValueError, match="must be 32 bytes"):
+        load_or_create_key(non_existent_key_path, signing_key_hex="abcd")
+
+    # Invalid hex string
+    with pytest.raises(ValueError):
+        load_or_create_key(non_existent_key_path, signing_key_hex="zz" * 32)
+

@@ -22,9 +22,9 @@
 | **S15** | Registrar page | Done (97 tests, build ok) | Backend GET /meta and GET /persons/search with RBAC; /login route with role redirect; /registrar deed creation portal with pre-registration fraud blocking (HTTP 409), QR generator & downloader, and mutation starter |
 | **S16** | Officer + admin pages | Done (97 tests, build ok) | AC Land officer portal (/officer) with mutation review stepper & alerts management; Admin portal (/admin) with Tamper Lab demo and append-only audit trail |
 | **S17** | Docker (local deploy) | Done (compose config validated statically; runtime proof skipped — Docker Desktop unavailable on authors' machine) | Multi-stage Dockerfiles, compose stack (db, backend, frontend), healthchecks, SEED_ON_START automated seeding, Makefile targets, LAN/mobile QR guide |
-| **S18** | Cloud deploy preparation | Pending | |
-| **S19** | Docs, README, concept note draft | Pending | |
-| **S20** | Final QA, security sweep, tag | Pending | |
+| **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
+| **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
+| **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
 
 ### Session S03 Log
 - **What was done:**
@@ -427,6 +427,96 @@
 - **Known gaps:**
   - Awaiting PR approval / merge review on GitHub.
 - **Next session:** `PR-MERGE` / `S18`
+
+
+### Session S18 Log
+- **What was done:**
+  - Enabled persistent signing key loading via `SIGNING_KEY_HEX` environment variable / parameter in `backend/app/services/crypto.py` and `backend/app/config.py` when no key file exists on ephemeral cloud storage, with strict 32-byte (64 hex characters) validation and zero key logging.
+  - Implemented automatic PostgreSQL connection normalization in `backend/app/config.py` and `backend/app/db.py`, transforming cloud-provided `postgres://` and `postgresql://` connection strings to `postgresql+psycopg://` required by SQLAlchemy 2.
+  - Updated `backend/Dockerfile` to dynamically respect cloud-assigned `${PORT:-8000}` through shell execution, and added port resolution to `backend/app/config.py`.
+  - Added deep healthcheck endpoint `GET /api/v1/health/deep` (and `/health/deep`) in `backend/app/main.py` testing live database query connectivity and seed presence (`plots_count`, `deeds_count`, `seeded: bool`) without exposing credentials, secrets, or internal paths.
+  - Created optional Render Blueprint specification `render.yaml` configuring 1-click cloud provisioning for the Dockerized backend service and managed PostgreSQL database with automated seeding on first start (`SEED_ON_START=true`).
+  - Authored comprehensive cloud deployment guide in `docs/DEPLOY.md` covering Render/Railway backend setup, managed Postgres provisioning, environment variables table, persistent key generation, Vercel frontend deployment with `NEXT_PUBLIC_API_URL`, CORS linkage, `DEMO_MODE` guidance, free-tier cold start mitigation, and mobile data smoke-test checklist.
+  - Added unit and API tests in `backend/tests/test_crypto.py` and `backend/tests/test_health.py` (all 104 tests passing in backend, frontend production build 10 routes prerendered).
+- **Decisions:**
+  - Kept key file precedence over env var so local development using `./keys/registrar_ed25519.hex` continues without disruption, while cloud containers without persistent volume mounts safely load `SIGNING_KEY_HEX`.
+  - Deep health check returns HTTP 503 with generic error message if the database connection fails, ensuring cloud orchestrators do not route user traffic to degraded instances while concealing database stack traces.
+- **Known gaps:**
+  - Dashboard execution (Render/Railway/Vercel project creation) is performed manually by authors using their personal accounts as documented in `docs/DEPLOY.md`.
+- **Next session:** `S19` (`s19-docs`)
+
+### Session S19 Log
+- **What was done:**
+  - Authored authoritative `README.md` based on `docs/README_TEMPLATE.md` containing verified reproduction commands for both local virtualenv and Docker Compose, live service links (Render backend and Swagger docs), comprehensive configuration tables, demo account pointers, benchmark scenarios S1–S8 table, AI disclosure table, and honest architectural limitations.
+  - Created `docs/DEMO_SCRIPT.md`: precise 3-minute rehearsed script mapped second-by-second to UI workflows, exact clicks, synthetic credentials (`registrar1`, `officer1`, `admin1`), and evaluation scenarios (S1 Double Sale, S6 Clean Deal, and Tamper Lab demonstration).
+  - Created `docs/AI_USAGE.md`: formal declarative disclosure in compliance with Rule Book Section 9 outlining AI coding assistance (Antigravity with Gemini 3.8 Flash, GitHub Copilot) alongside mandatory human verification and student oral defense certification.
+  - Created `docs/MODULE_OWNERS.md`: explicit responsibility matrix assigning subsystems (Cryptography, Ledger, Fraud Rules, Mutation FSM, Citizen Portal, DevOps) between Student 1 (Team Leader) and Student 2 with mutual peer-review protocol.
+  - Created `docs/CHANGELOG.md`: complete release history for `v1.0-round1` detailing all sessions from S00 through S18 and roadmap for Phase 2.
+  - Created `docs/ARCHITECTURE.md`: comprehensive system architecture guide featuring detailed ASCII component diagram, security boundary definitions, and end-to-end data flow walkthroughs.
+  - Created `docs/concept-note/CONCEPT_NOTE.md`: comprehensive 1,650-word academic and technical draft (targeted for exactly 4 PDF pages) with required sections (P2 primary, P3/P4/P5 supporting, Bangladesh land context, architecture, built vs planned feature matrix, countrywide phased rollout plan, key management, synthetic data statement, and mentorship directory).
+- **Decisions:**
+  - Preserved all citations requiring official verification with explicit `[CITATION NEEDED]` markers rather than fabricating national statistical figures.
+  - Clearly separated built Round 1 capabilities from planned Phase 2 additions to guarantee strict hackathon integrity.
+  - Retained clearly marked placeholders (`[STUDENT NAME]`, `[EMAIL]`, `[LIVE VERCEL URL]`, `[VIDEO URL]`) for final student personalization.
+- **Known gaps:**
+  - Student names, emails, live demo video URL, live Vercel URL, and mentor details must be populated by the team before final PDF export and submission.
+- **Next session:** `S20` (`s20-final-qa`)
+
+### Session S20 Log
+- **What was done:**
+  - **Comprehensive Security & Privacy Sweep:**
+    * Executed strict audit of tracked git files: verified zero leakage of `.env`, `keys/`, `*.db`, `*.pem`, `node_modules/`, or private key strings (`BEGIN PRIVATE KEY`).
+    * Verified zero real personal identities, real NIDs, or citizen phone numbers across the repository.
+    * Audited external network requests: verified zero automated web scrapers or unauthorized calls to `.gov.bd` or external portals.
+    * Verified that dev tampering endpoints (`/api/v1/dev/tamper`, `/api/v1/dev/restore`) strictly return `HTTP 404 Not Found` when `DEMO_MODE=false`.
+    * Confirmed zero lingering `TODO` or `FIXME` comments across both backend and frontend codebases.
+  - **Automated End-to-End Smoke Test Suite (`scripts/smoke_test.py`):**
+    * Implemented standalone CLI smoke test utility using `httpx` with `urllib` fallback and console-safe UTF-8 encoding.
+    * Validates full stack lifecycle:
+      1. Infrastructure health: `GET /api/v1/health` (HTTP 200) and `GET /api/v1/health/deep` (Postgres connected, 300 plots, 599 deeds).
+      2. Public verification: `GET /api/v1/deeds/DHAKA-2026-000010/verify` (Status `VALID`, reasons `[]`).
+      3. Public pre-purchase check: `GET /api/v1/plots/1` (Bangla mouza and masked owner) and `GET /api/v1/risk/plot/1` (Risk score 60/100, CRITICAL, Rule R1 Double Sale detected).
+      4. RBAC authentication: `POST /api/v1/auth/login` for both Sub-Registrar and System Admin demo accounts.
+      5. Pre-registration fraud blocker: `POST /api/v1/deeds` with double-sale payload correctly intercepted and blocked with `HTTP 409 FRAUD_BLOCKED`.
+      6. Tamper Lab lifecycle: Admin tampering (+1.0 decimal) triggers immediate status flip to `TAMPERED` (`HASH_MISMATCH`), and subsequent restoration returns deed validity cleanly to `VALID`.
+    * Tested and verified 100% passing (12/12 checks) against the live Render production backend (`https://land-shield.onrender.com`).
+  - **Makefile Integration:**
+    * Added `make smoke` (`python scripts/smoke_test.py --base-url http://localhost:8000`) and `make smoke-live` (`python scripts/smoke_test.py --base-url https://land-shield.onrender.com`).
+  - **Authoritative Submission Checklist (`docs/SUBMISSION_CHECKLIST.md`):**
+    * Formulated complete Round 1 submission checklist aligning with official Rule Book Sections 1 through 12.
+    * Documented all green automated verification audits (105 backend tests, 12 smoke tests, Next.js production build).
+    * Catalogs the 4 core deliverables (Concept Note PDF, GitHub Repo, Demo Video, Live Deployment) and provides an explicit human pre-submission checklist.
+- **Decisions:**
+  - Automated smoke test supports both local stack and live cloud deployment via `--base-url` argument.
+  - Smoke test uses safe stdout encoding fallbacks to ensure compatibility across Windows CP1252/CP437 command prompts.
+- **Status:** Phase 1 (Round 1) Implementation & QA Complete. Ready for PR merge and `v1.0-round1` tag.
+- **Next step:** Run `/phase1-release` workflow (develop -> main PR), tag `v1.0-round1`, and branch `phase2`.
+
+---
+
+## Placeholders Checklist for Final Submission (Human Tasks Before Oct 16)
+
+The following placeholders have been clearly marked in the documentation pack and require human completion before the Round 1 deadline:
+
+- [ ] **Live Vercel Application URL:**
+  - Replace `[LIVE VERCEL URL — e.g. https://land-shield.vercel.app]` in `README.md`.
+- [ ] **Demo Video URL (3 Minutes max):**
+  - Record the video using OBS Studio following `docs/DEMO_SCRIPT.md`.
+  - Upload to YouTube (Unlisted) or Google Drive (Public view).
+  - Replace `[YOUTUBE / DRIVE 3-MINUTE VIDEO URL]` in `README.md`.
+- [ ] **Team & Mentor Information:**
+  - Fill in Student 1 (Team Leader) full name, DIU email, and GitHub in `README.md`, `docs/MODULE_OWNERS.md`, `docs/AI_USAGE.md`, and `docs/concept-note/CONCEPT_NOTE.md`.
+  - Fill in Student 2 full name, DIU email, and GitHub across the same files.
+  - Fill in Faculty Mentor name, department, and email.
+  - Fill in Industry Mentor name, organization, and email.
+- [ ] **Concept Note PDF Export:**
+  - Review facts and replace `[CITATION NEEDED]` tags with formal academic citations if available.
+  - Convert `docs/concept-note/CONCEPT_NOTE.md` to PDF format (`docs/concept-note/CONCEPT_NOTE.pdf`).
+  - Verify exported PDF is **4 pages or fewer** in length (official hackathon limit).
+- [ ] **UI Screenshots:**
+  - Capture clean screenshots of `/check`, `/verify`, `/registrar`, `/officer`, and `/admin`.
+  - Place screenshots into `docs/screenshots/` (optional visual appendix).
+
 
 
 
