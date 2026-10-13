@@ -23,7 +23,7 @@
 | **S16** | Officer + admin pages | Done (97 tests, build ok) | AC Land officer portal (/officer) with mutation review stepper & alerts management; Admin portal (/admin) with Tamper Lab demo and append-only audit trail |
 | **S17** | Docker (local deploy) | Done (compose config validated statically; runtime proof skipped — Docker Desktop unavailable on authors' machine) | Multi-stage Dockerfiles, compose stack (db, backend, frontend), healthchecks, SEED_ON_START automated seeding, Makefile targets, LAN/mobile QR guide |
 | **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
-| **S19** | Docs, README, concept note draft | Pending | |
+| **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
 | **S20** | Final QA, security sweep, tag | Pending | |
 
 ### Session S03 Log
@@ -444,6 +444,49 @@
 - **Known gaps:**
   - Dashboard execution (Render/Railway/Vercel project creation) is performed manually by authors using their personal accounts as documented in `docs/DEPLOY.md`.
 - **Next session:** `S19` (`s19-docs`)
+
+### Session S19 Log
+- **What was done:**
+  - Authored authoritative `README.md` based on `docs/README_TEMPLATE.md` containing verified reproduction commands for both local virtualenv and Docker Compose, live service links (Render backend and Swagger docs), comprehensive configuration tables, demo account pointers, benchmark scenarios S1–S8 table, AI disclosure table, and honest architectural limitations.
+  - Created `docs/DEMO_SCRIPT.md`: precise 3-minute rehearsed script mapped second-by-second to UI workflows, exact clicks, synthetic credentials (`registrar1`, `officer1`, `admin1`), and evaluation scenarios (S1 Double Sale, S6 Clean Deal, and Tamper Lab demonstration).
+  - Created `docs/AI_USAGE.md`: formal declarative disclosure in compliance with Rule Book Section 9 outlining AI coding assistance (Antigravity with Gemini 3.8 Flash, GitHub Copilot) alongside mandatory human verification and student oral defense certification.
+  - Created `docs/MODULE_OWNERS.md`: explicit responsibility matrix assigning subsystems (Cryptography, Ledger, Fraud Rules, Mutation FSM, Citizen Portal, DevOps) between Student 1 (Team Leader) and Student 2 with mutual peer-review protocol.
+  - Created `docs/CHANGELOG.md`: complete release history for `v1.0-round1` detailing all sessions from S00 through S18 and roadmap for Phase 2.
+  - Created `docs/ARCHITECTURE.md`: comprehensive system architecture guide featuring detailed ASCII component diagram, security boundary definitions, and end-to-end data flow walkthroughs.
+  - Created `docs/concept-note/CONCEPT_NOTE.md`: comprehensive 1,650-word academic and technical draft (targeted for exactly 4 PDF pages) with required sections (P2 primary, P3/P4/P5 supporting, Bangladesh land context, architecture, built vs planned feature matrix, countrywide phased rollout plan, key management, synthetic data statement, and mentorship directory).
+- **Decisions:**
+  - Preserved all citations requiring official verification with explicit `[CITATION NEEDED]` markers rather than fabricating national statistical figures.
+  - Clearly separated built Round 1 capabilities from planned Phase 2 additions to guarantee strict hackathon integrity.
+  - Retained clearly marked placeholders (`[STUDENT NAME]`, `[EMAIL]`, `[LIVE VERCEL URL]`, `[VIDEO URL]`) for final student personalization.
+- **Known gaps:**
+  - Student names, emails, live demo video URL, live Vercel URL, and mentor details must be populated by the team before final PDF export and submission.
+- **Next session:** `S20` (`s20-final-qa`)
+
+---
+
+## Placeholders Checklist for Final Submission (Human Tasks Before Oct 16)
+
+The following placeholders have been clearly marked in the documentation pack and require human completion before the Round 1 deadline:
+
+- [ ] **Live Vercel Application URL:**
+  - Replace `[LIVE VERCEL URL — e.g. https://land-shield.vercel.app]` in `README.md`.
+- [ ] **Demo Video URL (3 Minutes max):**
+  - Record the video using OBS Studio following `docs/DEMO_SCRIPT.md`.
+  - Upload to YouTube (Unlisted) or Google Drive (Public view).
+  - Replace `[YOUTUBE / DRIVE 3-MINUTE VIDEO URL]` in `README.md`.
+- [ ] **Team & Mentor Information:**
+  - Fill in Student 1 (Team Leader) full name, DIU email, and GitHub in `README.md`, `docs/MODULE_OWNERS.md`, `docs/AI_USAGE.md`, and `docs/concept-note/CONCEPT_NOTE.md`.
+  - Fill in Student 2 full name, DIU email, and GitHub across the same files.
+  - Fill in Faculty Mentor name, department, and email.
+  - Fill in Industry Mentor name, organization, and email.
+- [ ] **Concept Note PDF Export:**
+  - Review facts and replace `[CITATION NEEDED]` tags with formal academic citations if available.
+  - Convert `docs/concept-note/CONCEPT_NOTE.md` to PDF format (`docs/concept-note/CONCEPT_NOTE.pdf`).
+  - Verify exported PDF is **4 pages or fewer** in length (official hackathon limit).
+- [ ] **UI Screenshots:**
+  - Capture clean screenshots of `/check`, `/verify`, `/registrar`, `/officer`, and `/admin`.
+  - Place screenshots into `docs/screenshots/` (optional visual appendix).
+
 
 
 
