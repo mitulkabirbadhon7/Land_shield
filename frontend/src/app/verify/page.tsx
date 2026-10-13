@@ -33,19 +33,24 @@ function VerifyContent() {
     { label: "নমুনা ৩ (Plot 3)", deedNo: "MIR-2026-000003" },
   ];
 
+  const lastVerifiedDeed = React.useRef<string | null>(null);
+
   const handleVerify = useCallback(
     async (deedNoToVerify: string) => {
       const cleanDeedNo = deedNoToVerify.trim();
       if (!cleanDeedNo) return;
 
+      lastVerifiedDeed.current = cleanDeedNo;
       setLoading(true);
       setError(null);
       setResult(null);
       setPlot(null);
       setChainItem(null);
 
-      // Update URL search param
-      router.replace(`/verify?deed=${encodeURIComponent(cleanDeedNo)}`);
+      // Only update URL search param if not already set to avoid navigation loops
+      if (searchParams.get("deed") !== cleanDeedNo) {
+        router.replace(`/verify?deed=${encodeURIComponent(cleanDeedNo)}`);
+      }
 
       try {
         const verifyRes = await verifyDeed(cleanDeedNo);
@@ -78,13 +83,14 @@ function VerifyContent() {
         setLoading(false);
       }
     },
-    [router, t]
+    [router, searchParams, t]
   );
 
   // Trigger verify automatically if ?deed= is present in URL
   useEffect(() => {
     const deedParam = searchParams.get("deed");
-    if (deedParam) {
+    if (deedParam && lastVerifiedDeed.current !== deedParam) {
+      lastVerifiedDeed.current = deedParam;
       setInputDeedNo(deedParam);
       handleVerify(deedParam);
     }

@@ -67,15 +67,21 @@ function CitizenCheckContent() {
       });
   }, []);
 
+  const lastLoadedPlotId = React.useRef<number | null>(null);
+
   const loadPlotDetails = useCallback(
     async (plotId: number) => {
+      lastLoadedPlotId.current = plotId;
       setLoading(true);
       setError(null);
       setSearchResults([]);
       setSearched(true);
 
-      // Update URL search query
-      router.replace(`/check?plot=${plotId}`);
+      // Only update URL if plot query is not already present to avoid loop
+      const currentPlot = searchParams.get("plot");
+      if (currentPlot !== String(plotId)) {
+        router.replace(`/check?plot=${plotId}`);
+      }
 
       try {
         const [plotData, riskData, chainData] = await Promise.all([
@@ -97,7 +103,7 @@ function CitizenCheckContent() {
         setLoading(false);
       }
     },
-    [lang, router, t]
+    [lang, router, searchParams, t]
   );
 
   // Handle URL query ?plot=... on mount or change
@@ -105,7 +111,8 @@ function CitizenCheckContent() {
     const plotParam = searchParams.get("plot");
     if (plotParam) {
       const parsedId = parseInt(plotParam, 10);
-      if (!isNaN(parsedId)) {
+      if (!isNaN(parsedId) && lastLoadedPlotId.current !== parsedId) {
+        lastLoadedPlotId.current = parsedId;
         loadPlotDetails(parsedId);
       }
     }

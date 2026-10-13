@@ -6,15 +6,17 @@ import { useLanguage } from "@/lib/i18n";
 import { Card } from "./Card";
 
 interface RiskCardProps {
-  report: RiskReportOut;
+  report: RiskReportOut | null;
   className?: string;
 }
 
 export function RiskCard({ report, className = "" }: RiskCardProps) {
   const { t } = useLanguage();
 
-  const score = Math.max(0, Math.min(100, Math.round(report.score)));
-  const level = report.level;
+  if (!report) return null;
+
+  const score = Math.max(0, Math.min(100, Math.round(report.score ?? 0)));
+  const level: RiskLevel = (report.level as RiskLevel) || "LOW";
 
   // Level visual themes
   const levelTheme: Record<
@@ -78,11 +80,28 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
     }
   };
 
-  const hasFlags =
-    report.flags.is_khas ||
-    report.flags.is_acquisition ||
-    report.flags.is_disputed ||
-    report.flags.active_cases_count > 0;
+  // Resilient flags handling across list[str] and dictionary shapes
+  const rawFlags = report.flags as unknown;
+  const flagsList: string[] = Array.isArray(rawFlags) ? (rawFlags as string[]) : [];
+  const flagsObj =
+    !Array.isArray(rawFlags) && typeof rawFlags === "object" && rawFlags !== null
+      ? (rawFlags as Record<string, unknown>)
+      : {};
+
+  const isKhas = flagsList.includes("khas") || Boolean(flagsObj.is_khas);
+  const isAcquisition = flagsList.includes("acquisition") || Boolean(flagsObj.is_acquisition);
+  const isDisputed = flagsList.includes("disputed") || Boolean(flagsObj.is_disputed);
+  const activeCases = typeof flagsObj.active_cases_count === "number" ? flagsObj.active_cases_count : 0;
+  const hasFlags = isKhas || isAcquisition || isDisputed || activeCases > 0;
+
+  // Resilient mutation summary
+  const mutation = (report.mutation_summary as unknown as Record<string, number | undefined>) || {};
+  const totalMutations = mutation.total ?? mutation.total_deeds ?? 0;
+  const completedMutations = mutation.completed ?? mutation.mutated_deeds ?? 0;
+  const pendingMutations = mutation.pending ?? mutation.pending_mutations ?? 0;
+  const rejectedMutations = mutation.rejected ?? mutation.missing_mutations ?? 0;
+
+  const findings = Array.isArray(report.findings) ? report.findings : [];
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -99,17 +118,17 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                 cx="55"
                 cy="55"
                 r={radius}
-                className="text-slate-200 dark:text-slate-800 stroke-current"
-                strokeWidth="10"
+                className="stroke-slate-200 dark:stroke-slate-800"
+                strokeWidth="9"
                 fill="transparent"
               />
-              {/* Progress colored circle */}
+              {/* Dynamic animated progress circle */}
               <circle
                 cx="55"
                 cy="55"
                 r={radius}
                 stroke={theme.stroke}
-                strokeWidth="10"
+                strokeWidth="9"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
@@ -118,9 +137,9 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
               />
             </svg>
 
-            {/* Centered Score in the Ring */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
+            {/* Score in center of ring */}
+            <div className="absolute flex flex-col items-center justify-center text-center">
+              <span className={`text-3xl font-black tracking-tight font-mono ${theme.text}`}>
                 {score}
               </span>
               <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
@@ -164,9 +183,9 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {level === "LOW" &&
-                "এই প্লটের মালিকানা চেইন এবং রেজিস্ট্রি রেকর্ড সম্পূর্ণ অক্ষত। সরকারি রেকর্ডে কোনো অবৈধ হস্তান্তর বা দ্বৈত বিক্রয়ের ঝুঁকি শনাক্ত হয়নি।"}
+                "এই প্লটের রেকর্ড ও মালিকানা শৃঙ্খল স্বাভাবিক। কোনো ক্রিপ্টোগ্রাফিক বা দ্বৈত বিক্রয়ের ঝুঁকি শনাক্ত হয়নি।"}
               {level === "MEDIUM" &&
-                "এই প্লটে নামজারি বা হালনাগাদ তথ্যে বিলম্বের মতো সাধারণ সমস্যা পরিলক্ষিত হয়েছে। ক্রয় পূর্বে সংশ্লিষ্ট এসি ল্যান্ড অফিসে খোঁজ নিন।"}
+                "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো মধ্যম মাত্রার ঝুঁকি বিদ্যমান।"}
               {level === "HIGH" &&
                 "এই জমিতে দ্রুত ধারাবাহিক হস্তান্তর অথবা সরকারি মামলা সংক্রান্ত উল্লেখযোগ্য ঝুঁকি বিদ্যমান। চূড়ান্ত চুক্তির পূর্বে বিশেষজ্ঞ মতামত নিন।"}
               {level === "CRITICAL" &&
@@ -188,7 +207,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
             </div>
           ) : (
             <>
-              {report.flags.is_khas && (
+              {isKhas && (
                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -197,7 +216,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                 </span>
               )}
 
-              {report.flags.is_acquisition && (
+              {isAcquisition && (
                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-orange-100 border border-orange-300 px-3 py-1.5 text-xs font-bold text-orange-800 dark:bg-orange-950 dark:border-orange-800 dark:text-orange-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -206,14 +225,14 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                 </span>
               )}
 
-              {report.flags.is_disputed && (
+              {isDisputed && (
                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                   </svg>
                   <span>
-                    {t("check.flag_disputed")} ({report.flags.active_cases_count}{" "}
-                    {t("check.cases_count")})
+                    {t("check.flag_disputed")}
+                    {activeCases > 0 ? ` (${activeCases} ${t("check.cases_count")})` : ""}
                   </span>
                 </span>
               )}
@@ -226,14 +245,14 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
       <Card
         title={t("check.risk_analysis")}
         headerAction={
-          report.findings.length > 0 ? (
+          findings.length > 0 ? (
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              {report.findings.length} {t("check.findings_count")}
+              {findings.length} {t("check.findings_count")}
             </span>
           ) : null
         }
       >
-        {report.findings.length === 0 ? (
+        {findings.length === 0 ? (
           <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
             <svg className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -242,7 +261,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {report.findings.map((finding, idx) => (
+            {findings.map((finding, idx) => (
               <div
                 key={idx}
                 className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 transition dark:border-slate-800 dark:bg-slate-900/60 space-y-2"
@@ -259,7 +278,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                     >
                       {finding.severity}
                     </span>
-                    {finding.weight > 0 && (
+                    {typeof finding.weight === "number" && finding.weight > 0 && (
                       <span className="text-[11px] font-semibold text-slate-500 font-mono">
                         +{finding.weight} pts
                       </span>
@@ -288,7 +307,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
             <span className="text-xl font-bold text-slate-900 dark:text-white font-mono">
-              {report.mutation_summary.total}
+              {totalMutations}
             </span>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               মোট নামজারি
@@ -297,7 +316,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
           <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900">
             <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-              {report.mutation_summary.completed}
+              {completedMutations}
             </span>
             <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
               {t("check.completed_mutations")}
@@ -306,7 +325,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
           <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900">
             <span className="text-xl font-bold text-amber-600 dark:text-amber-400 font-mono">
-              {report.mutation_summary.pending}
+              {pendingMutations}
             </span>
             <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
               {t("check.pending_mutations")}
@@ -315,7 +334,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
           <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900">
             <span className="text-xl font-bold text-rose-600 dark:text-rose-400 font-mono">
-              {report.mutation_summary.rejected}
+              {rejectedMutations}
             </span>
             <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">
               {t("check.rejected_mutations")}
