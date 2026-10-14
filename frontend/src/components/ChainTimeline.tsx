@@ -13,13 +13,13 @@ interface ChainTimelineProps {
 }
 
 export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   if (!chain || chain.length === 0) {
     return (
       <Card title={t("check.ownership_chain")} className={className}>
         <p className="py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-          এই প্লটের জন্য এখনো কোনো দলিল লেজার চেইনে নিবন্ধিত হয়নি।
+          {t("check.timeline_empty")}
         </p>
       </Card>
     );
@@ -30,7 +30,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
       title={t("check.ownership_chain")}
       headerAction={
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          {chain.length} টি হস্তান্তর রেকর্ড
+          {chain.length} {t("check.timeline_count")}
         </span>
       }
       className={className}
@@ -40,7 +40,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
           const isLatest = index === chain.length - 1;
           const buyerName = item.buyer_masked || item.buyer || "—";
           const displayDate = item.date
-            ? new Date(item.date).toLocaleDateString("bn-BD", {
+            ? new Date(item.date).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -71,7 +71,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
                     </span>
                     {isLatest && (
                       <span className="rounded bg-teal-100 px-1.5 py-0.5 text-[10px] font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-                        সর্বশেষ দলিল
+                        {t("check.timeline_latest")}
                       </span>
                     )}
                   </div>
@@ -86,7 +86,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div>
                     <span className="text-slate-500 dark:text-slate-400">
-                      গ্রহীতা (Buyer):{" "}
+                      {t("check.timeline_buyer")}{" "}
                     </span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                       {buyerName}
@@ -95,7 +95,7 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
 
                   <div>
                     <span className="text-slate-500 dark:text-slate-400">
-                      তারিখ:{" "}
+                      {t("check.timeline_date")}{" "}
                     </span>
                     <span className="font-mono text-slate-700 dark:text-slate-300">
                       {displayDate}
@@ -108,17 +108,17 @@ export function ChainTimeline({ chain, className = "" }: ChainTimelineProps) {
                   <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-400">
                     {item.entry_hash ? (
                       <>
-                        <span>চেইন হ্যাশ:</span>
+                        <span>{t("check.timeline_hash")}</span>
                         <span className="truncate max-w-[140px] sm:max-w-[200px]" title={item.entry_hash}>
                           {item.entry_hash.slice(0, 16)}...
                         </span>
                       </>
                     ) : typeof item.area_sold === "number" ? (
                       <span className="text-slate-600 dark:text-slate-300">
-                        জমির পরিমাণ: <strong className="font-bold">{item.area_sold}</strong> শতাংশ
+                        {t("check.timeline_area")} <strong className="font-bold">{item.area_sold}</strong> {t("check.decimals")}
                       </span>
                     ) : (
-                      <span>স্ট্যাটাস: {item.deed_status || "ACTIVE"}</span>
+                      <span>{t("check.timeline_status")} {item.deed_status || "ACTIVE"}</span>
                     )}
                   </div>
 

@@ -50,6 +50,17 @@ function CitizenCheckContent() {
     { id: "S8", name: "অংশবিশেষ বিক্রি (Partial)", plot_id: 8, expected_status: "LOW" },
   ]);
 
+  const scenarioNames: Record<string, { bn: string; en: string }> = {
+    S1: { bn: "দ্বৈত বিক্রয় (Double Sale)", en: "Double Sale Attempt" },
+    S2: { bn: "স্বত্বহীন বিক্রি (Not Owner)", en: "Seller Not Owner" },
+    S3: { bn: "নামজারি বাকি >৯০ দিন", en: "Pending Mutation >90d" },
+    S4: { bn: "দ্রুত হস্তান্তর (Rapid)", en: "Rapid Suspicious Transfers" },
+    S5: { bn: "খাস / মামলা বিচারাধীন", en: "Khas / Disputed Land" },
+    S6: { bn: "নিরাপদ জমি (Clean Deal)", en: "Clean Legal Deal" },
+    S7: { bn: "বৈধ পেন্ডিং পুনঃবিক্রয়", en: "Legit Pending Resale" },
+    S8: { bn: "অংশবিশেষ বিক্রি (Partial)", en: "Valid Partial Sale" },
+  };
+
   // Load scenarios from public/scenarios.json if available
   useEffect(() => {
     fetch("/scenarios.json")
@@ -212,7 +223,7 @@ function CitizenCheckContent() {
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>নাগরিক প্রি-পারচেজ ভেরিফিকেশন</span>
+          <span>{t("check.public_badge")}</span>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -281,7 +292,7 @@ function CitizenCheckContent() {
                   )}`}
                 >
                   <span className="font-mono font-bold">{sc.id}:</span>
-                  <span>{sc.name}</span>
+                  <span>{scenarioNames[sc.id] ? (lang === "bn" ? scenarioNames[sc.id].bn : scenarioNames[sc.id].en) : sc.name}</span>
                   <span className="font-mono text-[10px] opacity-75">
                     (#{sc.plot_id})
                   </span>
@@ -380,10 +391,10 @@ function CitizenCheckContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="rounded-xl bg-slate-50 p-3.5 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  অবস্থান (Location)
+                  {t("check.location_label")}
                 </span>
                 <p className="font-bold text-slate-900 dark:text-white mt-1">
-                  মৌজা: {selectedPlot.mouza}
+                  {t("check.mouza_label")} {selectedPlot.mouza}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
                   {selectedPlot.upazila}, {selectedPlot.district}
@@ -398,7 +409,7 @@ function CitizenCheckContent() {
                   {selectedPlot.area_decimal} {t("check.decimals")}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  ধরন: {selectedPlot.land_type}
+                  {t("check.land_type_label")} {selectedPlot.land_type}
                 </p>
               </div>
 
@@ -410,7 +421,7 @@ function CitizenCheckContent() {
                   {selectedPlot.current_owner_masked}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  সর্বশেষ নামজারি অনুযায়ী
+                  {t("check.latest_mutation_badge")}
                 </p>
               </div>
 
@@ -422,7 +433,7 @@ function CitizenCheckContent() {
                   {selectedPlot.initial_owner_masked}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  জেনেসিস রেকর্ড
+                  {t("check.genesis_record_badge")}
                 </p>
               </div>
             </div>

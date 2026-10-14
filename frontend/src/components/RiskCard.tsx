@@ -11,7 +11,7 @@ interface RiskCardProps {
 }
 
 export function RiskCard({ report, className = "" }: RiskCardProps) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   if (!report) return null;
 
@@ -177,19 +177,29 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
               {score === 0
-                ? "জমিতে কোনো জালিয়াতি বা বিরোধের প্রমাণ নেই"
-                : `${t("check.risk_score")}: ${score}/১০০ (${level})`}
+                ? (lang === "bn"
+                    ? "জমিতে কোনো জালিয়াতি বা বিরোধের প্রমাণ নেই"
+                    : "No fraud or legal disputes detected on this plot")
+                : `${t("check.risk_score")}: ${score}/${lang === "bn" ? "১০০" : "100"} (${level})`}
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {level === "LOW" &&
-                "এই প্লটের রেকর্ড ও মালিকানা শৃঙ্খল স্বাভাবিক। কোনো ক্রিপ্টোগ্রাফিক বা দ্বৈত বিক্রয়ের ঝুঁকি শনাক্ত হয়নি।"}
+                (lang === "bn"
+                  ? "এই প্লটের রেকর্ড ও মালিকানা স্বাভাবিক। কোনো ক্রিপ্টোগ্রাফিক বা দ্বৈত বিক্রয়ের ঝুঁকি নেই।"
+                  : "The records and ownership chain on this plot are clean and intact. No double-sale or tampering risks detected.")}
               {level === "MEDIUM" &&
-                "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো মধ্যম মাত্রার ঝুঁকি বিদ্যমান।"}
+                (lang === "bn"
+                  ? "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো ঝুঁকি রয়েছে।"
+                  : "Caution: Moderate risk detected, such as pending mutation beyond the standard time window.")}
               {level === "HIGH" &&
-                "এই জমিতে দ্রুত ধারাবাহিক হস্তান্তর অথবা সরকারি মামলা সংক্রান্ত উল্লেখযোগ্য ঝুঁকি বিদ্যমান। চূড়ান্ত চুক্তির পূর্বে বিশেষজ্ঞ মতামত নিন।"}
+                (lang === "bn"
+                  ? "এই জমিতে দ্রুত মালিকানা পরিবর্তন অথবা আদালতের মামলা সংক্রান্ত ঝুঁকি রয়েছে। যাচাই করে সিদ্ধান্ত নিন।"
+                  : "Elevated risk: Plot has rapid successive transfers or active court disputes. Further review is recommended.")}
               {level === "CRITICAL" &&
-                "সতর্কতা! এই জমিতে দ্বৈত বিক্রয় (Double Sale), স্বত্বহীন বিক্রয় অথবা ক্রিপ্টোগ্রাফিক বিকৃতির মতো মারাত্মক সমস্যা শনাক্ত হয়েছে।"}
+                (lang === "bn"
+                  ? "সতর্কতা! এই জমিতে দ্বৈত বিক্রয় (Double Sale), স্বত্বহীন বিক্রি অথবা দলিলের তথ্যে গরমিল শনাক্ত হয়েছে।"
+                  : "Critical alert! Serious violations detected such as a double-sale attempt, unowned seller, or broken deed integrity.")}
             </p>
           </div>
         </div>
@@ -310,7 +320,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
               {totalMutations}
             </span>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              মোট নামজারি
+              {t("check.total_mutations")}
             </p>
           </div>
 

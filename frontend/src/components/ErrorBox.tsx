@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ErrorBoxProps {
   title?: string;
@@ -11,12 +12,24 @@ interface ErrorBoxProps {
 }
 
 export function ErrorBox({
-  title = "ত্রুটি ঘটেছে (Error)",
-  message = "একটি অপ্রত্যাশিত ত্রুটি দেখা দিয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।",
+  title,
+  message,
   code,
   onRetry,
   className = "",
 }: ErrorBoxProps) {
+  const { lang, t } = useLanguage();
+
+  const displayTitle =
+    title ||
+    (lang === "bn" ? "ত্রুটি ঘটেছে" : "An Error Occurred");
+
+  const displayMessage =
+    message ||
+    (lang === "bn"
+      ? "একটি অপ্রত্যাশিত সমস্যা দেখা দিয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।"
+      : "An unexpected error occurred. Please try again.");
+
   return (
     <div
       role="alert"
@@ -42,7 +55,7 @@ export function ErrorBox({
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between gap-2">
             <h4 className="text-sm font-semibold text-rose-900 dark:text-rose-200">
-              {title}
+              {displayTitle}
             </h4>
             {code && (
               <span className="rounded bg-rose-200/70 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-rose-800 dark:bg-rose-900/80 dark:text-rose-300">
@@ -51,9 +64,9 @@ export function ErrorBox({
             )}
           </div>
 
-          {message && (
+          {displayMessage && (
             <p className="text-xs leading-relaxed text-rose-700 dark:text-rose-300">
-              {message}
+              {displayMessage}
             </p>
           )}
 
@@ -77,7 +90,7 @@ export function ErrorBox({
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                <span>পুনরায় চেষ্টা করুন (Retry)</span>
+                <span>{t("common.retry")}</span>
               </button>
             </div>
           )}

@@ -58,7 +58,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                  নাগরিক চেক
+                  {t("hero.citizen_check_badge")}
                 </span>
               </div>
 
@@ -73,7 +73,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-              <span>যাচাই শুরু করুন</span>
+              <span>{t("hero.start_check")}</span>
               <svg
                 className="h-4 w-4 transition group-hover:translate-x-1"
                 fill="none"
@@ -115,7 +115,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-bold text-teal-800 dark:bg-teal-950/80 dark:text-teal-300">
-                  QR স্ক্যান
+                  {t("hero.qr_scan_badge")}
                 </span>
               </div>
 
@@ -130,7 +130,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-teal-600 dark:text-teal-400">
-              <span>দলিল যাচাই করুন</span>
+              <span>{t("hero.verify_deed_action")}</span>
               <svg
                 className="h-4 w-4 transition group-hover:translate-x-1"
                 fill="none"
@@ -172,7 +172,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-300">
-                  কর্মকর্তা পোর্টাল
+                  {t("hero.officer_portal_badge")}
                 </span>
               </div>
 
@@ -187,7 +187,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-300">
-              <span>লগইন করুন</span>
+              <span>{t("hero.login_action")}</span>
               <svg
                 className="h-4 w-4 transition group-hover:translate-x-1"
                 fill="none"
@@ -210,7 +210,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-y-0 sm:divide-x dark:divide-slate-800">
             <div className="py-2 text-center sm:px-4">
               <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                &lt; ৩ সেকেন্ড
+                {t("hero.sub_3s_num")}
               </p>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("quick_stats.deed_verification")}
@@ -222,7 +222,7 @@ export default function HomePage() {
 
             <div className="py-2 text-center sm:px-4">
               <p className="text-2xl font-black text-rose-600 dark:text-rose-400">
-                ১০০% নির্ভুল
+                {t("hero.tamper_100_num")}
               </p>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("quick_stats.tamper_detection")}
@@ -234,7 +234,7 @@ export default function HomePage() {
 
             <div className="py-2 text-center sm:px-4">
               <p className="text-2xl font-black text-teal-600 dark:text-teal-400">
-                বাংলা + English
+                {t("hero.bilingual_tag_num")}
               </p>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {t("quick_stats.bilingual")}

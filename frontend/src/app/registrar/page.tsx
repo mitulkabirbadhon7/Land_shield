@@ -757,7 +757,9 @@ function RegistrarPageContent() {
                   </div>
 
                   <div className="pt-2">
-                    <span className="text-slate-500">SHA-256 Deed Hash:</span>
+                    <span className="text-slate-500">
+                      {lang === "bn" ? "দলিলের ডিজিটাল হ্যাশ (SHA-256):" : "SHA-256 Deed Hash:"}
+                    </span>
                     <p className="font-mono text-[10px] break-all text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 p-2 rounded-lg mt-0.5">
                       {successData.deed.deed_hash}
                     </p>
@@ -769,16 +771,18 @@ function RegistrarPageContent() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                        Next Step: Mutation (নামজারি প্রক্রিয়া)
+                        {lang === "bn" ? "পরবর্তী ধাপ: নামজারি আবেদন" : "Next Step: Mutation Workflow"}
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Initiate AC Land officer workflow from this registered deed
+                        {lang === "bn"
+                          ? "এই নিবন্ধিত দলিলের ভিত্তিতে সহকারী কমিশনার (ভূমি) এর নামজারি পরিক্রমা শুরু করুন"
+                          : "Initiate AC Land officer workflow from this registered deed"}
                       </p>
                     </div>
 
                     {mutationSuccess ? (
                       <div className="flex items-center gap-2 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
-                        <span>✓ Mutation #{mutationSuccess.id} ({mutationSuccess.state})</span>
+                        <span>✓ {lang === "bn" ? `নামজারি #${mutationSuccess.id} (${mutationSuccess.state})` : `Mutation #${mutationSuccess.id} (${mutationSuccess.state})`}</span>
                       </div>
                     ) : (
                       <button

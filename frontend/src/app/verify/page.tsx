@@ -13,7 +13,7 @@ import { ChainItem, DeedStatus, PlotOut, VerifyOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 
 function VerifyContent() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -28,9 +28,9 @@ function VerifyContent() {
 
   // Sample deeds for testing and demo evaluation
   const sampleDeeds = [
-    { label: "বৈধ দলিল (Valid)", deedNo: "MIR-2026-000001" },
-    { label: "নমুনা ২ (Plot 2)", deedNo: "MIR-2026-000002" },
-    { label: "নমুনা ৩ (Plot 3)", deedNo: "MIR-2026-000003" },
+    { label: lang === "bn" ? "বৈধ দলিল (MIR-1)" : "Valid Deed (MIR-1)", deedNo: "MIR-2026-000001" },
+    { label: lang === "bn" ? "নমুনা ২ (Plot 2)" : "Sample 2 (Plot 2)", deedNo: "MIR-2026-000002" },
+    { label: lang === "bn" ? "নমুনা ৩ (Plot 3)" : "Sample 3 (Plot 3)", deedNo: "MIR-2026-000003" },
   ];
 
   const lastVerifiedDeed = React.useRef<string | null>(null);
@@ -155,7 +155,7 @@ function VerifyContent() {
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>পাবলিক ভেরিফিকেশন সার্ভিস</span>
+          <span>{t("verify.public_badge")}</span>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -295,7 +295,7 @@ function VerifyContent() {
             {/* Plain-Language Explanation Line */}
             <div className="pt-4">
               <p className={`text-base font-semibold leading-relaxed ${currentStyle.titleColor}`}>
-                {t(`status_desc.${status}`, "স্ট্যাটাস বিবরণ পাওয়া যায়নি")}
+                {t(`status_desc.${status}`, lang === "bn" ? "স্ট্যাটাস বিবরণ পাওয়া যায়নি" : "Status description unavailable")}
               </p>
             </div>
           </div>
@@ -369,7 +369,7 @@ function VerifyContent() {
                     href={`/check?plot=${plot.id}`}
                     className="text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 transition"
                   >
-                    ঝুঁকি দেখুন →
+                    {t("verify.see_risk")}
                   </Link>
                 ) : null
               }
@@ -405,7 +405,7 @@ function VerifyContent() {
 
                   <div className="py-2.5 flex justify-between">
                     <dt className="text-slate-500 dark:text-slate-400">
-                      জমির পরিমাণ (Area):
+                      {t("verify.plot_area_label")}
                     </dt>
                     <dd className="font-semibold text-slate-900 dark:text-slate-100">
                       {plot.area_decimal} {t("verify.decimals")} ({plot.land_type})
@@ -415,8 +415,8 @@ function VerifyContent() {
               ) : (
                 <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400">
                   {result.plot_id
-                    ? `প্লট #${result.plot_id} এর বিস্তারিত লোড হচ্ছে...`
-                    : "এই দলিলের জন্য কোনো সক্রিয় প্লট যুক্ত নেই।"}
+                    ? t("verify.plot_loading", "Loading...").replace("{plot_id}", String(result.plot_id))
+                    : t("verify.no_plot_attached")}
                 </div>
               )}
             </Card>
@@ -458,7 +458,7 @@ function VerifyContent() {
               <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
-              <span>{copied ? "লিঙ্ক কপি হয়েছে! ✓" : "যাচাই লিঙ্ক কপি করুন"}</span>
+              <span>{copied ? t("verify.copied") : t("verify.copy_link")}</span>
             </button>
 
             {result.plot_id && (
