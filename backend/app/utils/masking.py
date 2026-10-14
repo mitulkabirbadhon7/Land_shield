@@ -1,29 +1,21 @@
+import re
+
+BANGLA_GRAPHEME = re.compile(r"[\u0980-\u09FF][\u09BE-\u09CD\u09D7\u09E2\u09E3]*|.")
+
+
 def mask_name(name: str | None) -> str:
-    """Mask a person's display name to protect privacy in public outputs.
-
-    Keeps the first and last character of each word with '***' in between.
-    Supports both Bangla and Latin scripts, handling short words gracefully.
-
-    Examples:
-        "রহিম উদ্দিন" -> "র***ম উ***ন"
-        "John Doe"    -> "J***n D***e"
-        "Md Ali"      -> "M***d A***i"
-        "A"           -> "A***"
-    """
+    """Mask a name keeping first + last grapheme of each word."""
     if not name:
         return ""
-
     words = name.strip().split()
     if not words:
         return ""
-
-    masked_words: list[str] = []
+    masked: list[str] = []
     for word in words:
-        if len(word) <= 1:
-            masked_words.append(f"{word}***")
-        elif len(word) == 2:
-            masked_words.append(f"{word[0]}***{word[1]}")
+        graphemes = BANGLA_GRAPHEME.findall(word)
+        if len(graphemes) <= 2:
+            masked.append(word)
         else:
-            masked_words.append(f"{word[0]}***{word[-1]}")
+            masked.append(graphemes[0] + "***" + graphemes[-1])
+    return " ".join(masked)
 
-    return " ".join(masked_words)
