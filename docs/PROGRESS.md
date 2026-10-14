@@ -492,16 +492,31 @@
 - **Status:** Phase 1 (Round 1) Implementation & QA Complete. Ready for PR merge and `v1.0-round1` tag.
 - **Next step:** Run `/phase1-release` workflow (develop -> main PR), tag `v1.0-round1`, and branch `phase2`.
 
+### Session P2-PROMPTS-SPLIT Log
+- **What was done:**
+  - Partitioned the unified Phase 2 prompt pack into two focused, domain-specific instruction guides:
+    1. [`docs/ANTIGRAVITY_PHASE2_BACKEND_PROMPTS.md`](file:///d:/Development/New%20folder/Land_S/docs/ANTIGRAVITY_PHASE2_BACKEND_PROMPTS.md): Covers sessions `P2-B00` through `P2-B14` (Alembic migrations, Khatian & Merkle models, R8 reconciliation layer, R7 survey lineage DAG, offline QR generation & public key registry, LLM client protocol & due-diligence report engine, universal name masking, in-memory attack suite, ML dataset generator, LightGBM training & SHAP explainability, scan-to-ingest vision OCR backend, and deployment/security sweeps).
+    2. [`docs/ANTIGRAVITY_PHASE2_FRONTEND_PROMPTS.md`](file:///d:/Development/New%20folder/Land_S/docs/ANTIGRAVITY_PHASE2_FRONTEND_PROMPTS.md): Covers sessions `P2-F00` through `P2-F12` (runtime feature flag hook `useFeatures()`, layered RiskCard with grouped findings, interactive CS->SA->RS->BS survey lineage timeline, cross-office discrepancy portal `/officer/reconcile`, client-side WebCrypto & TweetNaCl offline verifier `/verify/offline`, due-diligence report UI with 1-click printable PDF, public Merkle transparency explorer `/transparency`, empirical attack metrics dashboard `/metrics`, advisory ML gauge with top-3 SHAP factors, document scan reviewer `/registrar/ingest`, nationwide rollout & interactive cost estimator `/rollout`, pitch deck companion, and mobile QR audit).
+  - Maintained complete traceability to [`docs/TRD.md`](file:///d:/Development/New%20folder/Land_S/docs/TRD.md) section 6C and [`docs/PRD.md`](file:///d:/Development/New%20folder/Land_S/docs/PRD.md).
+  - Executed full test verification: all 106 backend pytest tests passing, Next.js ESLint audit passing with 0 warnings.
+- **Decisions:**
+  - Extracted UI components previously bundled inside backend sessions (e.g. transparency page, metrics dashboard, ML UI block, document review form) into dedicated frontend sessions so frontend and backend work can be implemented independently without cross-concern merge conflicts.
+  - Kept prompt packs under `docs/*PROMPTS*.md` which are gitignored to preserve private prompt development patterns while keeping the public codebase clean.
+- **Next session:** Continue Phase 1 frontend polish / Phase 2 kickoff.
+
 ---
 
-## Placeholders Checklist for Final Submission (Human Tasks Before Oct 16)
 
-The following placeholders have been clearly marked in the documentation pack and require human completion before the Round 1 deadline:
+## Placeholders Checklist for Final Submission (Post-Phase 2)
+
+> **Strategic Schedule Update:** The team will record the 3-minute evaluation video and submit the final hackathon deliverables after completing Phase 2. This guarantees the video demonstrates the full, unified platform (including survey lineage, cross-office reconciliation, offline QR, and AI due diligence).
+
+The following placeholders have been clearly marked in the documentation pack and require human completion before the official hackathon submission:
 
 - [ ] **Live Vercel Application URL:**
   - Replace `[LIVE VERCEL URL — e.g. https://land-shield.vercel.app]` in `README.md`.
-- [ ] **Demo Video URL (3 Minutes max):**
-  - Record the video using OBS Studio following `docs/DEMO_SCRIPT.md`.
+- [ ] **Demo Video URL (3 Minutes max — Recorded after Phase 2):**
+  - Record the video using OBS Studio following `docs/DEMO_SCRIPT.md` (highlighting Phase 1 + Phase 2 features).
   - Upload to YouTube (Unlisted) or Google Drive (Public view).
   - Replace `[YOUTUBE / DRIVE 3-MINUTE VIDEO URL]` in `README.md`.
 - [ ] **Team & Mentor Information:**
