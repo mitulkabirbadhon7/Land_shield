@@ -961,7 +961,7 @@ function RegistrarPageContent() {
                     </span>
                     <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">
                       Total Area: <strong>{selectedPlot.area_decimal} decimals</strong> • Current Recorded Owner:{" "}
-                      <code>{selectedPlot.current_owner_masked || "Genesis Owner"}</code>
+                      <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "Genesis Owner"}</code>
                     </p>
                   </div>
                   {selectedPlot.is_khas && (
