@@ -558,6 +558,7 @@ def seed_data(
 def main():
     parser = argparse.ArgumentParser(description="Seed synthetic data for LandShield")
     parser.add_argument("--reset", action="store_true", help="Wipe and recreate database tables")
+    parser.add_argument("--with-applications", action="store_true", help="Seed with sample applications")
     args = parser.parse_args()
 
     if args.reset:

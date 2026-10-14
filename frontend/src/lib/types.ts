@@ -35,11 +35,16 @@ export interface PlotOut {
   district: string;
   area_decimal: number;
   land_type: string;
-  is_khas: boolean;
-  is_acquisition: boolean;
-  is_disputed: boolean;
-  initial_owner_masked: string;
-  current_owner_masked: string;
+  is_khas?: boolean;
+  is_acquisition?: boolean;
+  is_disputed?: boolean;
+  initial_owner_masked?: string;
+  current_owner_masked?: string;
+  initial_owner_id?: number | null;
+  current_owner_id?: number | null;
+  initial_owner_name?: string | null;
+  current_owner_name?: string | null;
+  flags?: string[];
 }
 
 export interface ChainItem {
