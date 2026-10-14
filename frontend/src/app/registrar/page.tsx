@@ -203,17 +203,26 @@ function RegistrarPageContent() {
 
     try {
       if (scenarioType === "clean") {
-        // Plot 6: Clean Deal (Seller 6, 10.0 decimals)
+        // Plot 6: Clean Deal (Genuine current owner is Person 16 with 35.0 decimals)
         const p = await getPlot(6);
         handleSelectPlot(p);
-        const persons = await searchPersons("", 50);
-        const s = persons.find((x) => x.id === 6) || {
-          id: 6,
-          display_name: "কামাল উদ্দিন (Kamal Uddin)",
-          is_synthetic: true,
-        };
+        const sellerId = p.current_owner_id ?? 16;
+        let s: PersonOut | undefined;
+        try {
+          const sellerResults = await searchPersons(String(sellerId), 5);
+          s = sellerResults.find((x) => x.id === sellerId);
+        } catch {
+          // fallback
+        }
+        if (!s) {
+          s = {
+            id: sellerId,
+            display_name: p.current_owner_name || "আনিস বিশ্বাস (Anis Biswas)",
+            is_synthetic: true,
+          };
+        }
         handleSelectSeller(s);
-        const b = persons.find((x) => x.id === 99) || {
+        const b = {
           id: 99,
           display_name: "মইনুল হাসান (Buyer)",
           is_synthetic: true,

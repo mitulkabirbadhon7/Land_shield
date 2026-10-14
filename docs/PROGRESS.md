@@ -532,12 +532,19 @@ The following placeholders have been clearly marked in the documentation pack an
   - Capture clean screenshots of `/check`, `/verify`, `/registrar`, `/officer`, and `/admin`.
   - Place screenshots into `docs/screenshots/` (optional visual appendix).
 
-
-
-
-
-
-
+### Session FRONTEND-ALL-FIX Log
+- **What was done:**
+  - **Issue 1 (S6 Clean Sale Fix):** Fixed quick-test handler in `frontend/src/app/registrar/page.tsx` so S6 uses Plot 6's genuine mutated owner (Person 16, Anis Biswas) instead of arbitrary Person 6, preventing false `R2_SELLER_NOT_OWNER` fraud block. Updated `frontend/src/lib/types.ts` `PlotOut` interface to expose owner fields. Added `--with-applications` argument to `backend/scripts/seed.py`. Added unit test `test_scenario_s6_clean_sale_mutation_application_recommendation_approves` in `backend/tests/test_mutations.py` validating registration HTTP 201 and clean recommendation.
+  - **Issue 2 (Bangla Grapheme Masking):** Rewrote `mask_name` in `backend/app/utils/masking.py` using `BANGLA_GRAPHEME` regex `r'[\u0980-\u09FF][\u09BE-\u09CD\u09D7\u09E2\u09E3]*|.'` to prevent splitting composite Bangla Unicode codepoints (vowel matras and conjuncts). Updated and expanded unit tests in `backend/tests/test_masking.py`.
+  - **Issue 3 (Bilingual Localization):** Verified and completed full Bengali (`bn.json`) and English (`en.json`) localization across all routes and components with zero code-switching and simple natural terminology.
+  - **Issue 4 (Home Nav Label):** Corrected `"nav.home"` in `frontend/src/locales/bn.json` from `"নীড়পাতা"` to `"হোম"`.
+  - **Verification:** All 107 backend tests passing (`pytest -q`), Next.js production build succeeded with zero errors (`npm run build`), and ESLint passed with 0 errors (`npx eslint src/`).
+- **Decisions:**
+  - Preserved existing database schema, seed scenario definitions, and API response structures.
+  - S6 clean sale dynamically detects `p.current_owner_id` with graceful fallback to Person 16.
+- **Known gaps:**
+  - None within session scope.
+- **Next session:** Complete student personal details in documentation and record demo video.
 
 
 
