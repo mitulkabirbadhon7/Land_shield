@@ -3,18 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
+import InteractiveBackground from "@/components/InteractiveBackground";
 
 export default function HomePage() {
   const { t } = useLanguage();
 
   return (
-    <div className="relative overflow-hidden py-12 sm:py-20">
-      {/* Background radial gradient accent with gentle ambient drift */}
-      <div className="pointer-events-none absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-        <div className="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] bg-gradient-to-tr from-emerald-500 to-teal-300 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] animate-float-slow" />
-      </div>
+    <div className="relative overflow-hidden py-12 sm:py-20 min-h-[calc(100vh-4rem)] flex flex-col justify-center">
+      {/* Interactive Cinematic Video-like Canvas Background with Mouse Interaction */}
+      <InteractiveBackground />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Hero Header */}
         <div className="mx-auto max-w-3xl text-center space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50/90 px-3.5 py-1 text-xs font-semibold text-emerald-800 shadow-2xs animate-fade-in-down dark:border-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
