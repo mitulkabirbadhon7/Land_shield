@@ -25,6 +25,8 @@
 | **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
 | **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
 | **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
+| **S21** | Deed QR upload, area conservation, Bengali UI purity | Done (107 tests, build ok) | Direct QR file upload, partial sale area conservation, Bengali numerals & pure localization |
+| **S22** | Pre-purchase check state isolation & API cache prevention | Done (107 tests, build ok) | Fixed cross-scenario card verdict persistence, no-store fetch cache headers, language toggle ref guard |
 
 ### Session S03 Log
 - **What was done:**
@@ -833,7 +835,38 @@ The following placeholders have been clearly marked in the documentation pack an
   - In mass citizen view, all complex technical terms are translated into natural, formal Bengali directives while retaining full cryptographic auditing for officials.
 - **Known gaps:**
   - None. Both backend (107/107 pytest tests) and frontend (`next build` with Turbopack) pass with 100% success.
-- **Next session:** `S22` (Round 1 Submission Finalization / Pitch Deck preparation)
+- **Next session:** `S22` (Pre-purchase Check State Isolation & API Cache Prevention)
+
+### Session S22 Log (Pre-purchase Check State Isolation & API Cache Prevention)
+- **What was done:**
+  - **Identified & Resolved "All Plots Show Critical" Discrepancy**:
+    - **Frontend State Isolation (`frontend/src/app/check/page.tsx`)**:
+      - Inside `loadPlotDetails`, explicitly reset `setSelectedPlot(null)`, `setRiskReport(null)`, and `setChain([])` synchronously before sending async requests. This eliminates the edge case where navigating from a fraudulent plot (S1/S2/S4) to a safe plot (S6/S7/S8) temporarily displayed the previous critical red warning while the new request was in flight.
+    - **API Fetch Cache Elimination (`frontend/src/lib/api.ts`)**:
+      - Configured `apiFetch` with `cache: "no-store"`, preventing Next.js Turbopack client and browser HTTP caching from serving stale risk reports or plots.
+    - **Language Toggle Deduplication (`frontend/src/app/check/page.tsx`)**:
+      - Introduced `lastRiskLang` ref to guard the language change `useEffect`, preventing an unnecessary duplicate `getRisk` API call upon initial plot load.
+    - **Database State Benchmark Seed Verification**:
+      - Verified that re-running `python backend/scripts/seed.py --reset` clears any residual unregistered test deeds registered during manual testing of `/registrar` or `/officer`, restoring exact scenario outcomes:
+        - Plot 1 (S1): `CRITICAL` (Double Sale)
+        - Plot 2 (S2): `CRITICAL` (Not Owner)
+        - Plot 3 (S3): `MEDIUM` (Pending Mutation >90d)
+        - Plot 4 (S4): `HIGH` (Rapid Transfers)
+        - Plot 5 (S5): `HIGH` (Khas / Disputed Land)
+        - Plot 6 (S6): `LOW` (Clean Deal)
+        - Plot 7 (S7): `LOW` (Legitimate Pending Resale)
+        - Plot 8 (S8): `LOW` (Valid Partial Sale)
+  - **Quality Assurance & Verification**:
+    - **Backend Tests**: 107/107 pytest tests passing in 109s (100% green).
+    - **Frontend Linter**: `npm run lint` passed with 0 errors and 0 warnings.
+    - **Frontend Production Build**: `npm run build` compiled 10/10 routes cleanly with Turbopack.
+- **Decisions:**
+  - Using `cache: "no-store"` across `apiFetch` ensures real-time parity between backend ledger state and citizen pre-purchase checks.
+  - Resetting React state to `null` prior to data fetching enforces clean UI isolation across scenario transitions.
+- **Known gaps:**
+  - None. All pages and test suites are verified clean.
+- **Next session:** `S23` (Round 1 Submission Finalization / Pitch Deck preparation)
+
 
 
 

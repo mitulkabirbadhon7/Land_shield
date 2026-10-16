@@ -135,6 +135,7 @@ export async function apiFetch<T>(
   }
 
   const res = await fetch(url, {
+    cache: "no-store",
     ...rest,
     headers: reqHeaders,
   });

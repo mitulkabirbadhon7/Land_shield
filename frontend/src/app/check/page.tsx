@@ -130,6 +130,9 @@ function CitizenCheckContent() {
       lastLoadedPlotId.current = plotId;
       setLoading(true);
       setError(null);
+      setSelectedPlot(null);
+      setRiskReport(null);
+      setChain([]);
       setSearchResults([]);
       setSearched(true);
 
@@ -175,8 +178,10 @@ function CitizenCheckContent() {
   }, [searchParams, loadPlotDetails]);
 
   // Re-fetch risk report when user toggles language so text matches
+  const lastRiskLang = useRef(lang);
   useEffect(() => {
-    if (selectedPlot) {
+    if (selectedPlot && lastRiskLang.current !== lang) {
+      lastRiskLang.current = lang;
       getRisk(selectedPlot.id, lang)
         .then((data) => setRiskReport(data))
         .catch(() => {});
