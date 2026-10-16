@@ -757,6 +757,84 @@ The following placeholders have been clearly marked in the documentation pack an
   - None. Both servers are verified running and responding on localhost.
 - **Next session:** Demo video recording and final hackathon deliverables submission.
 
+### Session CHECK-PAGE-SIMPLIFY & ILLITERACY-OPTIMIZATION Log
+- **What was done:**
+  - Conducted skeptical review and comprehensive overhaul of the Citizen Pre-Purchase Check page (`/check`) to guarantee maximum accessibility for illiterate and non-technical rural citizens:
+    - **Initial State Spoken Guidance:** Added a prominent, animated audio instruction button right on the empty home search state (🔊 "কীভাবে ব্যবহার করবেন মুখে শুনুন" / "Listen How to Use"), verbally explaining how to check a plot and how to test sample plots.
+    - **4 Big Visual 1-Tap Sample Plot Cards:** Provided large, high-contrast sample cards on the initial screen (🟢 নিরাপদ জমি দাগ ১০১, 🔴 দ্বৈত বিক্রয় জালিয়াতি দাগ ১, 🏛️ সরকারি খাস জমি দাগ ৫, 📜 নামজারি বাকি জমি দাগ ৩) allowing illiterate users to test with 1 tap without typing.
+    - **Bengali Numeral Localization:** Integrated dynamic Bengali numeral conversion (`toBnDigits`) across Dag numbers, plot IDs, decimal areas, transfer steps, and mutation counts when viewed in Bangla.
+    - **Fixed Court Dispute & Khas Detection Bug:** Corrected Card 2 & Card 3 logic to cross-examine both `plot.flags` and rule findings (`R6` / `FLAGGED_LAND`), preventing active court cases and acquisition restrictions from being falsely marked "Safe".
+    - **Individual Card Voice Readout:** Added dedicated audio listen buttons ("🔊") on all 4 visual safety question cards so citizens can hear plain spoken explanations for fraud, government land, court cases, and mutation status individually.
+    - **Robust Web Speech Synthesis:** Added asynchronous voice pre-loading (`onvoiceschanged`), garbage-collection retention ref (`utteranceRef`), and automatic cancellation on language toggle, plot load, or unmount.
+    - **Resolved Pre-existing Backend Unit Test Failure:** Fixed keyword argument override for `PORT` in `backend/app/config.py`, making all 107/107 backend pytest tests pass 100%.
+    - **Preserved 100% of Technical Audit Features:** Kept the circular SVG risk gauge (0-100), rule IDs (R1-R6), weights, mutation summary counters, scenario test drawer (S1-S8), and the complete cryptographic ledger timeline intact via mode switch and in-place expander.
+  - Verified code quality: `npm run lint` passed with 0 errors and 0 warnings.
+  - Verified static compilation: `npm run build` compiled and prerendered 10/10 routes successfully with 0 errors.
+  - Verified backend test suite: `pytest` passed 107/107 tests with 0 failures.
+- **Decisions:**
+  - Audio instructions and 1-tap sample cards on the initial screen bridge the accessibility gap for users who cannot read search placeholders or type numbers.
+  - Bengali numerals provide authentic localization for rural citizens while English numbers remain intact in English mode.
+- **Known gaps:**
+  - None. All features are verified and working across all routes and test suites.
+### Session CHECK-PAGE-REFINEMENT & BUG-FIXES Log
+- **What was done:**
+  - Resolved **"Land Quantity 0" bug**:
+    - Identified that `_to_plot_out` in `backend/app/api/v1/plots.py` looked up holdings for `plot.current_owner_id`. When land was transferred in the ledger, the old owner's balance was 0.0, returning `remaining_decimal=0.0`. In JavaScript, `0.0 ?? 45.0` evaluated to `0`, rendering "০ শতাংশ".
+    - Resolved the active owner in `_to_plot_out` using `largest_holder(holdings)` and defaulted holding to `plot.area_decimal`.
+    - Hardened the frontend UI in `frontend/src/app/check/page.tsx` and the print layout to fall back to `selectedPlot.area_decimal` whenever `remaining_decimal <= 0`, ensuring citizens always see the genuine khatian plot area (e.g. ৪৫ শতাংশ).
+  - Fixed **Missing i18n Key `check.dag_no`**:
+    - Added `"dag_no": "দাগ নম্বর"` in `frontend/src/locales/bn.json` and `"dag_no": "Dag Number"` in `frontend/src/locales/en.json`, eliminating the raw key display.
+  - Simplified **"নামজারি ও রেকর্ড হালনাগাদ" Formatting**:
+    - Replaced the mathematical format `"নামজারি বাকি (>৯০ দিন)"` with clean, plain language: `"নামজারি বাকি রয়েছে"` / `"Mutation pending"`, eliminating all mathematical operators (`>`).
+  - Streamlined **Citizen View vs. Official View**:
+    - For public citizens (`!isOfficial`): Page strictly displays only the **সহজ নাগরিক ভিউ** without mode switches or technical expander clutter.
+    - For officials (`isOfficial`): Preserved the full technical audit view, circular gauge, and view switcher.
+  - Removed Audio Readout & Sample Cards per User Request:
+    - Removed "ফলাফল মুখে শুনুন" and individual card audio buttons for a silent, fast, and dignified interface.
+    - Removed the 1-tap sample cards block while retaining clean quick search pills and the benchmark scenarios drawer.
+  - Dedicated **PDF / Print View**:
+    - Configured `@media print` layout so printing or downloading PDF isolates only the official verification output, land details, 4-point safety status, and deed records, while hiding search bars, chips, buttons, and navigation.
+  - Verified full test matrix:
+    - `npm run lint`: 0 errors, 0 warnings.
+    - `npm run build`: Turbopack compiled successfully, TypeScript passed, 10/10 routes prerendered.
+    - `pytest backend/tests`: 107/107 passed (100% green).
+- **Decisions:**
+  - `_to_plot_out` safely detects active ledger holders without overriding official database foreign keys.
+  - Land quantity is always positive total land quantity; oversold plots display an explicit fraud alert rather than mathematical negative values.
+  - Number formats, gauge scores, and status badges are 100% localized in Bengali mode.
+- **Known gaps:**
+  - None.
+- **Next session:** `S21` (Deed QR Upload, Area Conservation, and Bengali UI Purity)
+
+### Session S21 Log (Deed QR Upload, Area Conservation, and Bengali UI Purity)
+- **What was done:**
+  - **Area Calculation Fix (`_to_plot_out` in `backend/app/api/v1/plots.py`)**:
+    - Fixed holding computation so that for legitimate multi-party transactions, `total_sold` counts only genuine secondary buyer transfers (`pid != active_owner_id`), restoring mathematical conservation: `remaining (15.0) + sold (20.0) = total (35.0)` on Plot 6 instead of erroneously counting 35 decimals sold.
+    - Clamped remaining land to `0.0` when `has_negative` is detected so remaining land is never rendered as negative; oversold quantities trigger prominent critical fraud alerts.
+  - **Bilingual Purity & Bengali Localization**:
+    - Eliminated raw English leaks in Bengali mode across `/officer`, `/registrar`, `/verify`, and header badges.
+    - Exported and integrated `toBnDigits` for Bengali numerals across all table counts, plot IDs, dag numbers, and holding areas.
+    - Updated benchmark S3 scenario description from mathematical syntax `(>৯০ দিন)` to natural Bangla `(৯০ দিনের অধিক)`.
+    - Formatted collapsible action with `সরিয়ে ফেলুন` instead of `লুকান`.
+    - Replaced color-code labels with clear risk directives (`নিরাপদ জমি`, `সতর্কতা প্রয়োজন`, `উচ্চ ঝুঁকিপূর্ণ`, `চরম বিপদজনক`).
+  - **QR Code Image Upload (`/verify` & `QRScanner.tsx`)**:
+    - Added image file upload capability (`📁 কিউআর কোডের ছবি আপলোড করুন`) inside the `QRScanner` modal and directly on the `/verify` page (`📁 ছবি আপলোড`).
+    - Uses `Html5Qrcode.prototype.scanFile` on dedicated engine containers (`html5qr-file-engine` and `verify-direct-qr-engine`), enabling complete desktop and webcam-free deed verification testing.
+  - **Check Page Streamlining (`/check`)**:
+    - Removed redundant quick search chips block (`দ্রুত টেস্ট নমুনা: ...`) per citizen UX request, since canonical benchmark scenarios (`S1-S8`) already provide complete test coverage.
+  - **Validation & Quality Assurance**:
+    - Backend: 107/107 pytest tests passed (100% green).
+    - Frontend: `next build` compiled with Turbopack, TypeScript checked 0 errors, 10/10 routes prerendered.
+    - Frontend: `eslint` passed with 0 errors and 0 warnings.
+- **Decisions:**
+  - `Html5Qrcode.scanFile` requires its scanner instance to be in the `NOT_STARTED` state; separate containers (`html5qr-file-engine` and `verify-direct-qr-engine`) prevent conflicts with active camera streams.
+  - In mass citizen view, all complex technical terms are translated into natural, formal Bengali directives while retaining full cryptographic auditing for officials.
+- **Known gaps:**
+  - None. Both backend (107/107 pytest tests) and frontend (`next build` with Turbopack) pass with 100% success.
+- **Next session:** `S22` (Round 1 Submission Finalization / Pitch Deck preparation)
+
+
+
 
 
 
