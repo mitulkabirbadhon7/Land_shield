@@ -22,8 +22,15 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isRoleAllowed = (path: string, r: string) => {
+    if (path.startsWith("/admin")) return r === "admin";
+    if (path.startsWith("/officer")) return r === "officer" || r === "admin";
+    if (path.startsWith("/registrar")) return r === "registrar" || r === "admin";
+    return true;
+  };
+
   const getDestination = (userRole: string) => {
-    if (nextParam && nextParam.startsWith("/")) {
+    if (nextParam && nextParam.startsWith("/") && isRoleAllowed(nextParam, userRole)) {
       return nextParam;
     }
     switch (userRole) {
@@ -35,6 +42,26 @@ function LoginForm() {
         return "/admin";
       default:
         return "/";
+    }
+  };
+
+  const handleQuickLogin = async (u: string, p: string) => {
+    setUsername(u);
+    setPassword(p);
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await login(u, p);
+      const dest = getDestination(res.role);
+      router.push(dest);
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setError(err.detail || err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,8 +114,8 @@ function LoginForm() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12 sm:px-6">
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-lg shadow-emerald-500/25">
+      <div className="mb-6 text-center animate-fade-in-down">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-lg shadow-emerald-500/25 transition-transform duration-300 hover:scale-110 hover:rotate-3">
           <svg
             className="h-7 w-7 text-white"
             fill="none"
@@ -113,7 +140,7 @@ function LoginForm() {
         </p>
       </div>
 
-      <Card>
+      <Card className="animate-fade-in-up stagger-1">
         {isAuthenticated && user ? (
           <div className="space-y-5 text-center py-4">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
@@ -235,7 +262,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => handleQuickFill("registrar1", "RegistrarPass123!")}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50/50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-xs text-slate-700 transition-all duration-200 hover:scale-[1.01] hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-xs active:scale-98 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
@@ -255,7 +282,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => handleQuickFill("officer1", "OfficerPass123!")}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50/50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-xs text-slate-700 transition-all duration-200 hover:scale-[1.01] hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-xs active:scale-98 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-teal-100 text-[10px] font-bold text-teal-700 dark:bg-teal-900/60 dark:text-teal-300">
@@ -275,7 +302,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => handleQuickFill("admin1", "AdminPass123!")}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50/50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-xs text-slate-700 transition-all duration-200 hover:scale-[1.01] hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-xs active:scale-98 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/30"
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-100 text-[10px] font-bold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">

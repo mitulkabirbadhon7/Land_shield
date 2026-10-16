@@ -33,10 +33,10 @@ export function ErrorBox({
   return (
     <div
       role="alert"
-      className={`rounded-xl border border-rose-200 bg-rose-50/90 p-4 text-rose-900 shadow-xs dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 ${className}`}
+      className={`rounded-xl border border-rose-200 bg-rose-50/90 p-4 text-rose-900 shadow-xs backdrop-blur-xs animate-shake dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 ${className}`}
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400">
+        <div className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400 animate-pulse">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -75,7 +75,7 @@ export function ErrorBox({
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-700 dark:hover:bg-rose-600"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1 text-xs font-semibold text-white shadow-xs transition-all hover:bg-rose-700 active:scale-95 dark:bg-rose-700 dark:hover:bg-rose-600"
               >
                 <svg
                   className="w-3.5 h-3.5"

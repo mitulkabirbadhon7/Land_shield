@@ -9,6 +9,7 @@ from app.models.person import Person
 from app.models.plot import Plot
 from app.schemas.plots import ChainItem, PlotOut
 from app.services.deeds import verify_deed
+from app.services.holdings import ledger_holdings
 from app.utils.masking import mask_name
 
 router = APIRouter(prefix="/plots", tags=["plots"])
@@ -18,6 +19,12 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
     initial_owner = db.get(Person, plot.initial_owner_id) if plot.initial_owner_id else None
     current_owner = db.get(Person, plot.current_owner_id) if plot.current_owner_id else None
 
+    # Calculate live holding balances from ledger
+    holdings = ledger_holdings(db, plot)
+    curr_holding = holdings.get(plot.current_owner_id, 0.0) if plot.current_owner_id else 0.0
+    total_sold = round(sum(area for pid, area in holdings.items() if pid != plot.initial_owner_id and area > 0), 2)
+    remaining = round(curr_holding, 2)
+
     return PlotOut(
         id=plot.id,
         mouza=plot.mouza,
@@ -25,6 +32,8 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
         district=plot.district,
         dag_no=plot.dag_no,
         area_decimal=plot.area_decimal,
+        remaining_decimal=remaining,
+        sold_decimal=total_sold,
         land_type=plot.land_type,
         flags=plot.flags or [],
         initial_owner_id=plot.initial_owner_id,

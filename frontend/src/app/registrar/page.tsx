@@ -222,11 +222,20 @@ function RegistrarPageContent() {
           };
         }
         handleSelectSeller(s);
-        const b = {
-          id: 99,
-          display_name: "মইনুল হাসান (Buyer)",
-          is_synthetic: true,
-        };
+        let b: PersonOut | undefined;
+        try {
+          const buyerResults = await searchPersons("99", 5);
+          b = buyerResults.find((x) => x.id === 99);
+        } catch {
+          // fallback
+        }
+        if (!b) {
+          b = {
+            id: 99,
+            display_name: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
+            is_synthetic: true,
+          };
+        }
         handleSelectBuyer(b);
         setAreaSold("10.0");
         setDeedType("SALE");
@@ -238,13 +247,13 @@ function RegistrarPageContent() {
         const persons = await searchPersons("", 50);
         const s = persons.find((x) => x.id === 1) || {
           id: 1,
-          display_name: "আহমেদ কবির (Ahmed Kabir)",
+          display_name: "মোহাম্মদ রহমান (Mohammad Rahman)",
           is_synthetic: true,
         };
         handleSelectSeller(s);
         const b = persons.find((x) => x.id === 99) || {
           id: 99,
-          display_name: "মইনুল হাসান (Victim Buyer)",
+          display_name: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
           is_synthetic: true,
         };
         handleSelectBuyer(b);
@@ -258,13 +267,13 @@ function RegistrarPageContent() {
         const persons = await searchPersons("", 50);
         const s = persons.find((x) => x.id === 99) || {
           id: 99,
-          display_name: "রহিম শেখ (Stranger Seller)",
+          display_name: "ওয়াহিদুল ভূঁইয়া (Stranger Seller)",
           is_synthetic: true,
         };
         handleSelectSeller(s);
         const b = persons.find((x) => x.id === 20) || {
           id: 20,
-          display_name: "শাহিন আলম (Buyer)",
+          display_name: "রাশেদ মোল্লা (Rashed Molla)",
           is_synthetic: true,
         };
         handleSelectBuyer(b);
@@ -340,6 +349,14 @@ function RegistrarPageContent() {
       });
 
       setSuccessData(response);
+
+      // Refresh plot data to immediately update remaining_decimal & sold_decimal
+      try {
+        const updatedPlot = await getPlot(plotId);
+        setSelectedPlot(updatedPlot);
+      } catch {
+        // Non-fatal
+      }
 
       // Fetch official QR code image with auth
       setQrLoading(true);
@@ -424,7 +441,7 @@ function RegistrarPageContent() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Portal Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80 animate-fade-in-down">
         <div>
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-100/80 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 mb-2">
             <svg
@@ -451,7 +468,7 @@ function RegistrarPageContent() {
         </div>
 
         {/* Current User Badge */}
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-transform duration-200 hover:scale-105 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
             <svg
               className="h-5 w-5"
@@ -484,10 +501,10 @@ function RegistrarPageContent() {
       </div>
 
       {/* Benchmark Fast Test Scenarios */}
-      <div className="mb-8 rounded-2xl border border-slate-200/90 bg-white/70 p-4 shadow-xs backdrop-blur-md dark:border-slate-800/90 dark:bg-slate-900/70">
+      <div className="mb-8 rounded-2xl border border-slate-200/90 bg-white/70 p-4 shadow-xs backdrop-blur-md dark:border-slate-800/90 dark:bg-slate-900/70 animate-fade-in-up stagger-1">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               {t("registrar.quick_scenarios")}
             </h2>
@@ -501,7 +518,7 @@ function RegistrarPageContent() {
           <button
             type="button"
             onClick={() => handleLoadScenario("clean")}
-            className="flex items-center justify-between rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-2.5 text-left transition hover:border-emerald-400 hover:bg-emerald-100/50 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:hover:border-emerald-700"
+            className="flex items-center justify-between rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-2.5 text-left transition-all duration-200 hover:scale-[1.02] hover:border-emerald-400 hover:bg-emerald-100/50 hover:shadow-xs active:scale-98 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:hover:border-emerald-700"
           >
             <div>
               <div className="flex items-center gap-1.5">
@@ -524,7 +541,7 @@ function RegistrarPageContent() {
           <button
             type="button"
             onClick={() => handleLoadScenario("double")}
-            className="flex items-center justify-between rounded-xl border border-rose-200/80 bg-rose-50/50 p-2.5 text-left transition hover:border-rose-400 hover:bg-rose-100/50 dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:border-rose-700"
+            className="flex items-center justify-between rounded-xl border border-rose-200/80 bg-rose-50/50 p-2.5 text-left transition-all duration-200 hover:scale-[1.02] hover:border-rose-400 hover:bg-rose-100/50 hover:shadow-xs active:scale-98 dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:border-rose-700"
           >
             <div>
               <div className="flex items-center gap-1.5">
@@ -547,7 +564,7 @@ function RegistrarPageContent() {
           <button
             type="button"
             onClick={() => handleLoadScenario("stranger")}
-            className="flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/50 p-2.5 text-left transition hover:border-amber-400 hover:bg-amber-100/50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:border-amber-700"
+            className="flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/50 p-2.5 text-left transition-all duration-200 hover:scale-[1.02] hover:border-amber-400 hover:bg-amber-100/50 hover:shadow-xs active:scale-98 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:border-amber-700"
           >
             <div>
               <div className="flex items-center gap-1.5">
@@ -571,7 +588,7 @@ function RegistrarPageContent() {
 
       {/* RESULT STATE A: PRE-REGISTRATION FRAUD BLOCKED (HTTP 409) */}
       {fraudReport && (
-        <div className="mb-8 overflow-hidden rounded-2xl border-2 border-rose-500 bg-rose-50/90 shadow-xl shadow-rose-500/10 dark:border-rose-600 dark:bg-rose-950/40 animate-in fade-in zoom-in-95 duration-200">
+        <div className="mb-8 overflow-hidden rounded-2xl border-2 border-rose-500 bg-rose-50/90 shadow-xl shadow-rose-500/10 dark:border-rose-600 dark:bg-rose-950/40 animate-alert-banner">
           <div className="bg-rose-600 px-6 py-4 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-xs text-white">
@@ -960,8 +977,33 @@ function RegistrarPageContent() {
                       ✓ Selected Plot #{selectedPlot.id}: Dag {selectedPlot.dag_no}, Mouza {selectedPlot.mouza}
                     </span>
                     <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">
-                      Total Area: <strong>{selectedPlot.area_decimal} decimals</strong> • Current Recorded Owner:{" "}
-                      <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "Genesis Owner"}</code>
+                      {lang === "bn" ? (
+                        <>
+                          প্লট মোট: <strong>{selectedPlot.area_decimal} শতক</strong> • অবশিষ্ট প্রাপ্য:{" "}
+                          <strong className="text-emerald-700 dark:text-emerald-400 font-bold">
+                            {selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} শতক
+                          </strong>{" "}
+                          {(selectedPlot.sold_decimal ?? 0) > 0 && (
+                            <span className="text-amber-700 dark:text-amber-400 font-medium">
+                              (বিক্রীত: {selectedPlot.sold_decimal} শতক)
+                            </span>
+                          )}{" "}
+                          • রেকর্ডকৃত খতিয়ানদার: <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "Genesis Owner"}</code>
+                        </>
+                      ) : (
+                        <>
+                          Plot Total: <strong>{selectedPlot.area_decimal} decimals</strong> • Available Balance:{" "}
+                          <strong className="text-emerald-700 dark:text-emerald-400 font-bold">
+                            {selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} dec
+                          </strong>{" "}
+                          {(selectedPlot.sold_decimal ?? 0) > 0 && (
+                            <span className="text-amber-700 dark:text-amber-400 font-medium">
+                              (Sold: {selectedPlot.sold_decimal} dec)
+                            </span>
+                          )}{" "}
+                          • Recorded Owner: <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "Genesis Owner"}</code>
+                        </>
+                      )}
                     </p>
                   </div>
                   {selectedPlot.is_khas && (
@@ -1098,9 +1140,15 @@ function RegistrarPageContent() {
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 shadow-2xs transition focus:border-emerald-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
               />
               {selectedPlot && (
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Plot total: {selectedPlot.area_decimal} decimals
-                </p>
+                <div className="mt-1 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500">
+                    {lang === "bn" ? "প্লট মোট:" : "Plot total:"} {selectedPlot.area_decimal} dec
+                  </span>
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                    {lang === "bn" ? "অবশিষ্ট প্রাপ্য:" : "Available balance:"}{" "}
+                    {selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} dec
+                  </span>
+                </div>
               )}
             </div>
 

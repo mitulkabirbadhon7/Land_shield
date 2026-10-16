@@ -173,7 +173,7 @@ export function ProtectedRoute({
             <button
               onClick={() => {
                 logout();
-                router.push(`/login?next=${encodeURIComponent(pathname)}`);
+                router.push("/login");
               }}
               className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-rose-500"
             >

@@ -1,6 +1,6 @@
 {
   "nav": {
-    "title": "LandShield",
+    "title": "BhumiPrahari",
     "tagline": "Land Record & Deed Protection Platform",
     "home": "Home",
     "check": "Check Plot Risk",
@@ -81,7 +81,7 @@
     "title": "Deed Authenticity & QR Verification",
     "subtitle": "Verify cryptographic Ed25519 digital signatures, hash continuity, and ledger chain status instantly.",
     "input_label": "Enter Deed Number",
-    "input_placeholder": "e.g. MIR-2026-000001",
+    "input_placeholder": "e.g. DHAKA-2026-000010",
     "btn_verify": "Verify Deed",
     "btn_scan_qr": "Scan QR Code",
     "btn_stop_scan": "Stop Scanner",
@@ -269,7 +269,7 @@
     "title": "Frequently Asked Questions & How It Works",
     "subtitle": "Essential knowledge regarding land deed cryptographic verification and fraud prevention",
     "q1": "How does pre-purchase verification prevent double-sale fraud?",
-    "a1": "Ed25519 digital signatures and SHA-256 ledger hash chains verify historical deeds against the plot. If the land was previously transferred to someone else, LandShield instantly flags the double sale before you pay.",
+    "a1": "Ed25519 digital signatures and SHA-256 ledger hash chains verify historical deeds against the plot. If the land was previously transferred to someone else, BhumiPrahari instantly flags the double sale before you pay.",
     "q2": "Why is land mutation critical after deed registration?",
     "a2": "Mutation officially updates the governmental record of rights (Khatian). If a deed remains unmutated beyond 90 days, the AI Rules Engine flags it as a moderate risk to prevent unauthorized secondary resales.",
     "q3": "What happens if deed payload contents are tampered with?",
@@ -278,7 +278,7 @@
     "a4": "Yes, citizen deed verification and plot risk checks are 100% public, instant, and free—no login required. Simply enter a Dag number or scan the QR code printed on the deed."
   },
   "admin": {
-    "title": "LandShield System Administration",
+    "title": "BhumiPrahari System Administration",
     "subtitle": "Tamper Lab cryptographic forgery demonstration & immutable system audit log",
     "tab_tamper": "Tamper Lab (Live Demo)",
     "tab_audit": "Audit Log Trail",
@@ -287,7 +287,7 @@
     "demo_mode_badge": "DEMO MODE ACTIVE",
     "demo_disabled_msg": "Tamper Lab is disabled in production mode (DEMO_MODE=false).",
     "deed_input_label": "Target Deed Number",
-    "deed_input_placeholder": "e.g. MIR-2026-000001",
+    "deed_input_placeholder": "e.g. DHAKA-2026-000010",
     "quick_deeds": "Quick Select Sample Deeds:",
     "tamper_btn": "Simulate Tampering (+1.0 Decimal)",
     "restore_btn": "Restore Authentic Payload",

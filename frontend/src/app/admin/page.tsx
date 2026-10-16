@@ -30,7 +30,7 @@ function AdminPageContent() {
   const [devStatusLoading, setDevStatusLoading] = useState(true);
 
   // Tamper Lab State
-  const [targetDeedNo, setTargetDeedNo] = useState("MIR-2026-000001");
+  const [targetDeedNo, setTargetDeedNo] = useState("DHAKA-2026-000010");
   const [tamperLoading, setTamperLoading] = useState(false);
   const [tamperResult, setTamperResult] = useState<TamperResult | null>(null);
   const [tamperError, setTamperError] = useState<string | null>(null);
@@ -151,7 +151,7 @@ function AdminPageContent() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Admin Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80 animate-fade-in-down">
         <div>
           <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100/80 px-2.5 py-1 text-xs font-bold text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 mb-2">
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ function AdminPageContent() {
         </div>
 
         {/* User Identity */}
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-all duration-300 hover:shadow-md hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700/60">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -196,7 +196,7 @@ function AdminPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("tamper")}
-          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition ${
+          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all duration-200 ${
             activeTab === "tamper"
               ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -211,7 +211,7 @@ function AdminPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("audit")}
-          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition ${
+          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all duration-200 ${
             activeTab === "audit"
               ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -229,13 +229,13 @@ function AdminPageContent() {
 
       {/* TAB 1: TAMPER LAB */}
       {activeTab === "tamper" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up stagger-1">
           {devStatusLoading ? (
             <div className="flex min-h-[300px] items-center justify-center">
               <Spinner size="lg" />
             </div>
           ) : !demoMode ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center dark:border-rose-900/60 dark:bg-rose-950/40">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center dark:border-rose-900/60 dark:bg-rose-950/40 animate-fade-in">
               <p className="text-sm font-bold text-rose-800 dark:text-rose-200">
                 {t("admin.demo_disabled_msg")}
               </p>
@@ -246,7 +246,7 @@ function AdminPageContent() {
           ) : (
             <>
               {/* Tamper Lab Intro Card */}
-              <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-6 shadow-xs dark:border-indigo-900/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+              <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-6 shadow-xs transition-all duration-300 hover:shadow-md dark:border-indigo-900/50 dark:from-indigo-950/20 dark:to-purple-950/20 animate-fade-in-up stagger-1">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-950 dark:text-indigo-200">
                     {t("admin.tamper_title")}
@@ -261,7 +261,7 @@ function AdminPageContent() {
               </div>
 
               {/* Tamper Control Panel */}
-              <Card title="Simulate Database Payload Tampering">
+              <Card title="Simulate Database Payload Tampering" animate>
                 <div className="space-y-5">
                   {/* Deed input and presets */}
                   <div>
@@ -274,13 +274,13 @@ function AdminPageContent() {
                         value={targetDeedNo}
                         onChange={(e) => setTargetDeedNo(e.target.value)}
                         placeholder={t("admin.deed_input_placeholder")}
-                        className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono text-sm text-slate-900 focus:border-indigo-500 focus:outline-hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                        className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white transition-all duration-200"
                       />
                       <button
                         type="button"
                         onClick={() => handleInspectDeed(targetDeedNo)}
                         disabled={verifyLoading}
-                        className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="btn-interactive rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:scale-[1.02] active:scale-[0.98]"
                       >
                         {verifyLoading ? <Spinner size="sm" /> : t("admin.verify_inline_btn")}
                       </button>
@@ -291,7 +291,7 @@ function AdminPageContent() {
                       <span className="text-[11px] text-slate-400 font-semibold">
                         {t("admin.quick_deeds")}
                       </span>
-                      {["MIR-2026-000001", "MIR-2026-000002", "MIR-2026-000003"].map((d) => (
+                      {["DHAKA-2026-000010", "DHAKA-2026-000002", "DHAKA-2026-000014"].map((d) => (
                         <button
                           key={d}
                           type="button"
@@ -299,7 +299,7 @@ function AdminPageContent() {
                             setTargetDeedNo(d);
                             handleInspectDeed(d);
                           }}
-                          className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                          className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 hover:bg-slate-200 hover:scale-105 active:scale-95 transition-all duration-150 dark:bg-slate-800 dark:text-slate-300"
                         >
                           {d}
                         </button>
@@ -313,7 +313,7 @@ function AdminPageContent() {
                       type="button"
                       disabled={tamperLoading}
                       onClick={() => setConfirmModal({ open: true, type: "tamper" })}
-                      className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-500 transition disabled:opacity-50"
+                      className="btn-interactive inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -325,7 +325,7 @@ function AdminPageContent() {
                       type="button"
                       disabled={tamperLoading}
                       onClick={() => setConfirmModal({ open: true, type: "restore" })}
-                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-500 transition disabled:opacity-50"
+                      className="btn-interactive inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -341,7 +341,7 @@ function AdminPageContent() {
 
                   {tamperResult && (
                     <div
-                      className={`rounded-xl border p-4 text-xs font-semibold ${
+                      className={`rounded-xl border p-4 text-xs font-semibold animate-fade-in-down ${
                         tamperResult.status === "tampered"
                           ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
                           : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
@@ -363,7 +363,7 @@ function AdminPageContent() {
 
                   {/* Inline Live Verification Inspection Result */}
                   {verifyResult && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/50 animate-scale-in transition-all duration-300 hover:shadow-md">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                           {t("admin.inline_status")}
@@ -386,7 +386,7 @@ function AdminPageContent() {
                               {verifyResult.reasons.map((r, i) => (
                                 <span
                                   key={i}
-                                  className="rounded bg-rose-100 px-2 py-0.5 font-mono text-[10px] font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                                  className="rounded-md border border-rose-300 bg-rose-100 px-2 py-0.5 font-mono text-[10px] font-bold text-rose-800 transition-transform duration-200 hover:scale-105 cursor-default dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300 animate-fade-in"
                                 >
                                   {r}
                                 </span>
@@ -399,7 +399,7 @@ function AdminPageContent() {
                           <Link
                             href={`/verify?deed=${encodeURIComponent(verifyResult.deed_no)}`}
                             target="_blank"
-                            className="text-indigo-600 hover:underline dark:text-indigo-400 font-bold"
+                            className="text-indigo-600 hover:underline dark:text-indigo-400 font-bold hover:translate-x-1 inline-block transition-transform duration-150"
                           >
                             Open in Citizen Public Verify Page ↗
                           </Link>
@@ -416,7 +416,7 @@ function AdminPageContent() {
 
       {/* TAB 2: AUDIT LOG TRAIL */}
       {activeTab === "audit" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up stagger-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -430,7 +430,7 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => fetchAuditLogs(auditPage)}
-              className="text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-400"
+              className="text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-400 transition-colors"
             >
               ↻ Refresh Logs
             </button>
@@ -441,13 +441,13 @@ function AdminPageContent() {
               <Spinner size="lg" />
             </div>
           ) : auditLogs.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900 animate-fade-in">
               <p className="text-sm font-semibold text-slate-500">
                 {t("admin.no_logs")}
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-shadow duration-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
                 <thead className="bg-slate-50 font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                   <tr>
@@ -463,7 +463,7 @@ function AdminPageContent() {
                   {auditLogs.map((log) => (
                     <tr
                       key={log.id}
-                      className="hover:bg-slate-50/80 transition dark:hover:bg-slate-800/40"
+                      className="hover:bg-indigo-50/30 transition-colors duration-150 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-slate-500">
                         #{log.id}
@@ -510,7 +510,7 @@ function AdminPageContent() {
                     type="button"
                     disabled={auditPage <= 1}
                     onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    className="btn-interactive rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-150 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 hover:scale-105 active:scale-95"
                   >
                     {t("admin.prev_page")}
                   </button>
@@ -518,7 +518,7 @@ function AdminPageContent() {
                     type="button"
                     disabled={auditLogs.length < auditPageSize}
                     onClick={() => setAuditPage((p) => p + 1)}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    className="btn-interactive rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-150 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 hover:scale-105 active:scale-95"
                   >
                     {t("admin.next_page")}
                   </button>
@@ -531,8 +531,8 @@ function AdminPageContent() {
 
       {/* Confirmation Dialog Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-scale-in">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {confirmModal.type === "tamper" ? "Confirm Tamper Simulation" : "Confirm Deed Restore"}
             </h3>
@@ -545,17 +545,17 @@ function AdminPageContent() {
               <button
                 type="button"
                 onClick={() => setConfirmModal({ open: false, type: "tamper" })}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="btn-interactive rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-150 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmModal.type === "tamper" ? executeTamper : executeRestore}
-                className={`rounded-xl px-4 py-2 text-xs font-bold text-white shadow-xs ${
+                className={`btn-interactive rounded-xl px-4 py-2 text-xs font-bold text-white shadow-xs transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
                   confirmModal.type === "tamper"
-                    ? "bg-rose-600 hover:bg-rose-500"
-                    : "bg-emerald-600 hover:bg-emerald-500"
+                    ? "bg-rose-600 hover:bg-rose-500 shadow-rose-600/20"
+                    : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20"
                 }`}
               >
                 Proceed

@@ -31,6 +31,7 @@ class MutationOut(BaseModel):
 
     id: int
     deed_id: int
+    deed_no: str | None = None
     plot_id: int
     state: str
     applicant_id: int

@@ -34,6 +34,8 @@ export interface PlotOut {
   upazila: string;
   district: string;
   area_decimal: number;
+  remaining_decimal?: number;
+  sold_decimal?: number;
   land_type: string;
   is_khas?: boolean;
   is_acquisition?: boolean;
@@ -181,6 +183,7 @@ export interface MutationTransition {
 export interface MutationOut {
   id: number;
   deed_id: number;
+  deed_no?: string | null;
   plot_id: number;
   state: string;
   applicant_id: number;

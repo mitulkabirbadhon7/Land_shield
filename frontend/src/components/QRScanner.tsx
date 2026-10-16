@@ -137,8 +137,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   }, [onScanSuccess, t]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
           <div className="flex items-center gap-2">
@@ -164,7 +164,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors active:scale-95 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             aria-label="Close scanner"
           >
             <svg
@@ -190,17 +190,31 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           </p>
 
           <div className="relative min-h-[280px] w-full overflow-hidden rounded-xl bg-slate-950 flex items-center justify-center">
+            {/* High-tech animated laser scan line */}
+            {!isInitializing && !errorMessage && (
+              <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+                {/* Horizontal scanning laser bar */}
+                <div className="absolute inset-x-8 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-laser-scan" />
+
+                {/* Viewfinder corner brackets */}
+                <div className="absolute top-6 left-6 h-6 w-6 border-t-2 border-l-2 border-emerald-400" />
+                <div className="absolute top-6 right-6 h-6 w-6 border-t-2 border-r-2 border-emerald-400" />
+                <div className="absolute bottom-6 left-6 h-6 w-6 border-b-2 border-l-2 border-emerald-400" />
+                <div className="absolute bottom-6 right-6 h-6 w-6 border-b-2 border-r-2 border-emerald-400" />
+              </div>
+            )}
+
             {isInitializing && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-950/80 text-white">
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-950/80 text-white animate-fade-in">
                 <Spinner size="md" />
                 <span className="text-xs text-slate-300">
-                  ক্যামেরা চালু হচ্ছে...
+                  {t("verify.camera_starting")}
                 </span>
               </div>
             )}
 
             {errorMessage ? (
-              <div className="p-6 text-center text-rose-300 space-y-3">
+              <div className="p-6 text-center text-rose-300 space-y-3 animate-fade-in">
                 <svg
                   className="mx-auto h-10 w-10 text-rose-400"
                   fill="none"
@@ -218,7 +232,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600"
+                  className="rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 transition-colors active:scale-95"
                 >
                   {t("common.close")}
                 </button>
@@ -234,7 +248,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="rounded-lg border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-all active:scale-95 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             {t("verify.btn_stop_scan")}
           </button>

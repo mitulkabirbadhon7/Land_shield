@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import get_current_user, require_role
+from app.models.deed import Deed
 from app.models.mutation import Mutation
 from app.models.mutation_event import MutationEvent
 from app.models.person import Person
@@ -29,6 +30,9 @@ def _build_mutation_out(
     applicant = db.get(Person, mutation.applicant_id)
     applicant_name = mask_name(applicant.display_name) if applicant else None
 
+    deed = db.get(Deed, mutation.deed_id)
+    deed_no = deed.deed_no if deed else None
+
     events = db.scalars(
         select(MutationEvent)
         .where(MutationEvent.mutation_id == mutation.id)
@@ -39,6 +43,7 @@ def _build_mutation_out(
     return MutationOut(
         id=mutation.id,
         deed_id=mutation.deed_id,
+        deed_no=deed_no,
         plot_id=mutation.plot_id,
         state=mutation.state,
         applicant_id=mutation.applicant_id,

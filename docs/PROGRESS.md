@@ -650,6 +650,69 @@ The following placeholders have been clearly marked in the documentation pack an
   - None.
 - **Next session:** Demo video recording and final judge presentation rehearsal.
 
+### Session SYSTEM-WORKFLOW-DOCS Log
+- **What was done:**
+  - Authored comprehensive end-to-end documentation in [`docs/SYSTEM_WORKFLOW_AND_FEATURES.md`](file:///c:/Land%20Project/Land_shield/docs/SYSTEM_WORKFLOW_AND_FEATURES.md):
+    - Detailed real-world problem context (Sub-Registry vs AC Land 30-90 day vulnerability gap).
+    - Step-by-step lifecycle flow with Mermaid sequence diagram (Citizen Pre-Purchase Check -> Sub-Registrar Pre-Registration & Sealing -> Public QR Verification -> Electronic Mutation Workflow -> Admin Tamper Lab).
+    - In-depth technical breakdown of the 5 innovation pillars: Dual-View Holdings Accounting ($L$ vs $R_r$), 6-Rule AI Fraud Detection Engine (R1 to R6), Cryptographic Ledger Model (RFC 8785 Canonical JSON, SHA-256, Ed25519), Privacy-Preserving Grapheme Cluster Name Masking, and Pure Dynamic Bilingualism.
+    - Full reference table of all 8 Hackathon Benchmark Scenarios (S1 to S8).
+    - Role-based access matrix and localhost quickstart/reset guide.
+- **Decisions:**
+  - Maintained structured, accessible markdown for both student interview preparation and judge evaluation.
+  - Zero modifications to backend or frontend application code.
+- **Known gaps:**
+  - None.
+- **Next session:** Demo video recording and final judge presentation rehearsal.
+
+### Session CHECK-SEARCH-AND-OWNER-FIX Log
+- **What was done:**
+  - Fixed masked owner name display on `/check` (`frontend/src/app/check/page.tsx`):
+    - Updated `current_owner_name` and `initial_owner_name` mapping with proper fallbacks so masked names (`আ*** বিশ্বাস`) always render clearly instead of appearing blank.
+  - Improved smart search handling in `handleSearch` (`frontend/src/app/check/page.tsx`):
+    - Entering digits (e.g. `101`) now searches primarily by Dag number (`dag_no`), returning all matching plots across mouzas for user selection, rather than prematurely treating arbitrary numbers as internal Plot primary key IDs.
+    - Explicit syntax like `Plot 6`, `প্লট ৬`, or `#6` correctly loads specific plot IDs directly.
+  - Verified Next.js production build (`npm run build`): 10/10 routes compiled cleanly with zero errors.
+  - Restarted frontend server on localhost port 3000.
+- **Decisions:**
+  - Preserved strict git safety (no commits or pushes without user permission).
+- **Known gaps:**
+  - None.
+- **Next session:** Demo video recording and final judge presentation rehearsal.
+
+### Session UI-FIXES-AND-EDGE-CASES Log
+- **What was done:**
+  - **Officer Deed Link Fix**:
+    - Added `deed_no: str | None = None` to `MutationOut` (`backend/app/schemas/mutations.py`) and populated it from the underlying deed in `backend/app/api/v1/mutations.py`.
+    - Added integer primary-key fallback in `verify_deed` (`backend/app/services/deeds.py`), allowing both canonical deed numbers (`MIR-2026-000001`) and numeric IDs (`601`) to resolve safely.
+    - Updated officer mutation drawer in `frontend/src/app/officer/page.tsx` to link to `m.deed_no`.
+  - **Auth Role Redirection Trap Fix**:
+    - Updated `ProtectedRoute` in `frontend/src/lib/auth.tsx` so "Switch Account" routes to `/login` without stale `nextParam`.
+    - Added `isRoleAllowed` validation in `frontend/src/app/login/page.tsx` to ensure users are never redirected to unauthorized role portals.
+  - **Decimal Area Tracking & Balance Display**:
+    - Updated `PlotOut` schema and `_to_plot_out` endpoint in `backend/app/api/v1/plots.py` to calculate and expose real-time `remaining_decimal` and `sold_decimal` via `ledger_holdings`.
+    - Enhanced `frontend/src/app/registrar/page.tsx` to display available balance, sold area, and plot total in the selection pill and below the area input field, and re-fetch plot balances upon deed registration.
+    - Enhanced `frontend/src/app/check/page.tsx` to display available decimal balance and sold decimal breakdown alongside cadastral plot total.
+  - **Edge-Case Stress Test Suite**:
+    - Authored and executed `backend/scripts/run_edge_cases.py` testing 9 rigorous failure modes and boundary edge cases:
+      - `EC-1`: IEEE 754 Floating-point fractional epsilon split (`11.66666667 + 23.33333333 = 35.0`).
+      - `EC-2`: Zero and negative area exploitation (`area_sold <= 0`).
+      - `EC-3`: Bangla Unicode diacritic normalization (NFC vs NFD canonical hash divergence).
+      - `EC-4`: Self-sale identity loops (`seller_id == buyer_id`).
+      - `EC-5`: Exact boundary exhaustion (100% sale down to 0.0 + 0.001 micro-overdraft).
+      - `EC-6`: Rapid circular conveyance carousel velocity ($A \rightarrow B \rightarrow C \rightarrow A$).
+      - `EC-7`: Duplicate mutation initiation on already completed/mutated deed.
+      - `EC-8`: Cryptographic signature grafting and replay attack.
+      - `EC-9`: Stranger / non-party mutation application.
+    - Test Suite Result: 9 Edge Cases executed | 5 PASSED | 4 ANALYSIS/WARNING | 0 FAILED (0 unhandled exceptions).
+    - Verified full backend pytest suite: 107 passed, 3 warnings in 70s.
+    - Verified frontend build: 10/10 routes compiled and prerendered cleanly.
+- **Decisions:**
+  - Preserved strict git safety (no commits or pushes without user permission).
+- **Known gaps:**
+  - None.
+- **Next session:** Demo video recording and final judge presentation rehearsal.
+
 
 
 

@@ -152,17 +152,18 @@ function CitizenCheckContent() {
     setSearched(true);
 
     try {
-      // 1. Is query a plot ID, 'Plot X', or '#X'?
-      const plotMatch = cleanQuery.match(/^(?:plot|প্লট)?\s*#?\s*(\d+)$/i);
-      if (plotMatch) {
-        const numericId = parseInt(plotMatch[1], 10);
+      // 1. Is query an explicit plot ID? (e.g. 'Plot 6', 'প্লট ৬', '#6')
+      const explicitPlotMatch =
+        cleanQuery.match(/^(?:plot|প্লট)\s*#?\s*(\d+)$/i) || cleanQuery.match(/^#(\d+)$/);
+      if (explicitPlotMatch) {
+        const numericId = parseInt(explicitPlotMatch[1], 10);
         if (!isNaN(numericId)) {
           try {
             const plotData = await getPlot(numericId);
             await loadPlotDetails(plotData.id);
             return;
           } catch {
-            // If pure ID not found, fallback to search by dag/mouza
+            // fall through
           }
         }
       }
@@ -180,8 +181,27 @@ function CitizenCheckContent() {
         }
       }
 
-      // 3. Search by Mouza or Dag number
-      const results = await searchPlots(cleanQuery, cleanQuery);
+      // 3. Search by Dag number or Mouza name
+      const isDigits = /^\d+$/.test(cleanQuery);
+      let results: PlotOut[] = [];
+      if (isDigits) {
+        // Search primarily by dag_no
+        results = await searchPlots(undefined, cleanQuery);
+        // If no plots found by dag, try plot ID as fallback
+        if (results.length === 0) {
+          try {
+            const plotData = await getPlot(parseInt(cleanQuery, 10));
+            await loadPlotDetails(plotData.id);
+            return;
+          } catch {
+            // none
+          }
+        }
+      } else {
+        // Search by mouza name
+        results = await searchPlots(cleanQuery, undefined);
+      }
+
       if (results.length === 1) {
         await loadPlotDetails(results[0].id);
       } else {
@@ -218,7 +238,7 @@ function CitizenCheckContent() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Page Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-2">
+      <div className="text-center max-w-2xl mx-auto space-y-2 animate-fade-in-down">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -235,7 +255,7 @@ function CitizenCheckContent() {
       </div>
 
       {/* Search Bar & Benchmark Scenarios */}
-      <Card className="p-6">
+      <Card className="p-6 animate-fade-in-up stagger-1">
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -249,13 +269,13 @@ function CitizenCheckContent() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("check.search_placeholder")}
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-2xs focus:border-emerald-500 focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-2xs transition-all focus:border-emerald-500 focus:shadow-sm focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -267,7 +287,7 @@ function CitizenCheckContent() {
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition hover:bg-emerald-700 active:scale-95 disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
             >
               {loading ? <Spinner size="sm" /> : <span>{t("check.search_btn")}</span>}
             </button>
@@ -287,7 +307,7 @@ function CitizenCheckContent() {
                     setQuery(`Plot ${sc.plot_id}`);
                     loadPlotDetails(sc.plot_id);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition hover:scale-105 ${getScenarioPillStyle(
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs ${getScenarioPillStyle(
                     sc.expected_status
                   )}`}
                 >
@@ -312,28 +332,39 @@ function CitizenCheckContent() {
         />
       )}
 
-      {/* Loading State */}
+      {/* Loading State with Shimmer Skeleton */}
       {loading && (
-        <div className="py-12 text-center space-y-3">
-          <Spinner size="lg" />
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            {t("common.loading")}
-          </p>
+        <div className="space-y-4 py-4 animate-fade-in">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="pointer-events-none absolute inset-0 animate-shimmer" />
+            <div className="flex items-center gap-4">
+              <Spinner size="md" />
+              <div className="space-y-2 flex-1">
+                <div className="h-4 w-52 rounded-md bg-slate-200 dark:bg-slate-800" />
+                <div className="h-3 w-80 rounded-md bg-slate-100 dark:bg-slate-850" />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Multi-result Plot Selection List */}
       {searchResults.length > 0 && !loading && (
         <Card
-          title={`অনুসন্ধান ফলাফল: ${searchResults.length} ${t("check.results_found")}`}
+          title={
+            lang === "bn"
+              ? `অনুসন্ধান ফলাফল: ${searchResults.length} ${t("check.results_found")}`
+              : `Search Results: ${searchResults.length} ${t("check.results_found")}`
+          }
           subtitle={t("check.select_plot")}
+          className="animate-fade-in-up stagger-2"
         >
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {searchResults.map((p) => (
               <div
                 key={p.id}
                 onClick={() => loadPlotDetails(p.id)}
-                className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer rounded-lg transition"
+                className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer rounded-xl transition-all duration-200 hover:translate-x-1"
               >
                 <div>
                   <div className="flex items-center gap-2">
@@ -360,7 +391,7 @@ function CitizenCheckContent() {
 
       {/* No Results Empty State */}
       {searched && !loading && !selectedPlot && searchResults.length === 0 && !error && (
-        <Card className="text-center py-10">
+        <Card className="text-center py-10 animate-fade-in">
           <p className="text-sm text-slate-600 dark:text-slate-400">
             {t("check.no_results")}
           </p>
@@ -369,7 +400,7 @@ function CitizenCheckContent() {
 
       {/* Selected Plot Full Detail View */}
       {selectedPlot && riskReport && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
           {/* 1. Plot Overview Header Card */}
           <Card
             title={`${t("check.plot_info")}: দাগ #${selectedPlot.dag_no} (প্লট #${selectedPlot.id})`}
@@ -406,10 +437,27 @@ function CitizenCheckContent() {
                   {t("check.area")}
                 </span>
                 <p className="font-bold text-slate-900 dark:text-white mt-1">
-                  {selectedPlot.area_decimal} {t("check.decimals")}
+                  {selectedPlot.remaining_decimal !== undefined && selectedPlot.remaining_decimal !== selectedPlot.area_decimal ? (
+                    <>
+                      <span className="text-emerald-700 dark:text-emerald-400">
+                        {selectedPlot.remaining_decimal} {t("check.decimals")}
+                      </span>{" "}
+                      <span className="text-xs font-normal text-slate-500">
+                        ({lang === "bn" ? "মোট" : "Total"}: {selectedPlot.area_decimal})
+                      </span>
+                    </>
+                  ) : (
+                    <>{selectedPlot.area_decimal} {t("check.decimals")}</>
+                  )}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  {t("check.land_type_label")} {selectedPlot.land_type}
+                  {selectedPlot.sold_decimal && selectedPlot.sold_decimal > 0 ? (
+                    <span className="text-amber-700 dark:text-amber-400 font-medium">
+                      {lang === "bn" ? `বিক্রীত: ${selectedPlot.sold_decimal} শতক` : `Sold: ${selectedPlot.sold_decimal} dec`} • {selectedPlot.land_type}
+                    </span>
+                  ) : (
+                    <>{t("check.land_type_label")} {selectedPlot.land_type}</>
+                  )}
                 </p>
               </div>
 
@@ -418,7 +466,7 @@ function CitizenCheckContent() {
                   {t("check.current_owner")}
                 </span>
                 <p className="font-bold text-emerald-700 dark:text-emerald-400 mt-1 truncate">
-                  {selectedPlot.current_owner_masked}
+                  {selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "—"}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {t("check.latest_mutation_badge")}
@@ -430,7 +478,7 @@ function CitizenCheckContent() {
                   {t("check.initial_owner")}
                 </span>
                 <p className="font-bold text-slate-800 dark:text-slate-200 mt-1 truncate">
-                  {selectedPlot.initial_owner_masked}
+                  {selectedPlot.initial_owner_name || selectedPlot.initial_owner_masked || "—"}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {t("check.genesis_record_badge")}
@@ -460,7 +508,7 @@ export default function CitizenCheckPage() {
     <Suspense
       fallback={
         <div className="py-20 text-center">
-          <Spinner size="lg" label="লোড হচ্ছে..." />
+          <Spinner size="lg" />
         </div>
       }
     >

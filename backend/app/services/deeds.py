@@ -166,13 +166,16 @@ def verify_deed(
       7. SUPERSEDED (newer ledger entry exists on plot)
       8. VALID
     """
-    stmt = select(Deed).where(Deed.deed_no == deed_no)
+    clean_deed_no = deed_no.strip() if isinstance(deed_no, str) else str(deed_no)
+    stmt = select(Deed).where(Deed.deed_no == clean_deed_no)
     deed = db.scalars(stmt).first()
+    if deed is None and clean_deed_no.isdigit():
+        deed = db.get(Deed, int(clean_deed_no))
     if deed is None:
         return {
             "status": "UNKNOWN",
             "reasons": ["UNKNOWN: Deed not found"],
-            "deed_no": deed_no,
+            "deed_no": clean_deed_no,
             "plot_id": None,
             "chain_position": None,
             "registered_at": None,

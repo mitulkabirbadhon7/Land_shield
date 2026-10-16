@@ -37,22 +37,28 @@ function StatusStepper({ currentState }: { currentState: string }) {
 
           return (
             <React.Fragment key={step}>
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center group">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
                     isCurrent
-                      ? "bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950"
+                      ? "bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950/80 animate-pulse-glow scale-110 shadow-md shadow-emerald-600/30"
                       : isDone
-                      ? "bg-emerald-500 text-white"
+                      ? "bg-emerald-500 text-white hover:scale-105 shadow-2xs"
                       : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                   }`}
                 >
-                  {isDone ? "✓" : idx + 1}
+                  {isDone ? (
+                    <svg className="w-4 h-4 animate-scale-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    idx + 1
+                  )}
                 </div>
                 <span
-                  className={`mt-1.5 text-[10px] font-bold uppercase tracking-tight text-center max-w-[70px] ${
+                  className={`mt-2 text-[10px] font-bold uppercase tracking-tight text-center max-w-[70px] transition-colors duration-200 ${
                     isCurrent
-                      ? "text-emerald-700 dark:text-emerald-400"
+                      ? "text-emerald-700 dark:text-emerald-400 font-extrabold"
                       : isDone
                       ? "text-slate-800 dark:text-slate-200"
                       : "text-slate-400 dark:text-slate-500"
@@ -62,13 +68,15 @@ function StatusStepper({ currentState }: { currentState: string }) {
                 </span>
               </div>
               {idx < WORKFLOW_STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 -mt-4 transition ${
-                    !isRejected && currentIndex > idx
-                      ? "bg-emerald-500"
-                      : "bg-slate-200 dark:bg-slate-800"
-                  }`}
-                />
+                <div className="flex-1 h-1 mx-2 -mt-5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+                  <div
+                    className={`h-full transition-all duration-500 ease-out ${
+                      !isRejected && currentIndex > idx
+                        ? "w-full bg-emerald-500"
+                        : "w-0 bg-transparent"
+                    }`}
+                  />
+                </div>
               )}
             </React.Fragment>
           );
@@ -76,7 +84,7 @@ function StatusStepper({ currentState }: { currentState: string }) {
       </div>
 
       {isRejected && (
-        <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs font-bold text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-bold text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200 animate-shake">
           <span>❌ Application Terminated: REJECTED</span>
         </div>
       )}
@@ -231,7 +239,7 @@ function OfficerPageContent() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Officer Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800/80 animate-fade-in-down">
         <div>
           <div className="inline-flex items-center gap-2 rounded-lg bg-teal-100/80 px-2.5 py-1 text-xs font-bold text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 mb-2">
             <svg
@@ -258,7 +266,7 @@ function OfficerPageContent() {
         </div>
 
         {/* User Identity */}
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-all duration-300 hover:shadow-md hover:border-teal-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-700/60">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400">
             <svg
               className="h-5 w-5"
@@ -295,7 +303,7 @@ function OfficerPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("mutations")}
-          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition ${
+          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all duration-200 ${
             activeTab === "mutations"
               ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -313,7 +321,7 @@ function OfficerPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("alerts")}
-          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition ${
+          className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all duration-200 ${
             activeTab === "alerts"
               ? "border-rose-600 text-rose-600 dark:border-rose-400 dark:text-rose-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -331,7 +339,7 @@ function OfficerPageContent() {
 
       {/* TAB 1: MUTATIONS (NAMJARI) */}
       {activeTab === "mutations" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up stagger-1">
           {/* Filter Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2">
@@ -352,9 +360,9 @@ function OfficerPageContent() {
                     key={st}
                     type="button"
                     onClick={() => setMutationFilter(st)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
                       mutationFilter === st
-                        ? "bg-slate-900 text-white dark:bg-teal-600"
+                        ? "bg-slate-900 text-white dark:bg-teal-600 shadow-2xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
@@ -367,7 +375,7 @@ function OfficerPageContent() {
             <button
               type="button"
               onClick={fetchMutations}
-              className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400"
+              className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
             >
               ↻ Refresh
             </button>
@@ -379,13 +387,13 @@ function OfficerPageContent() {
               <Spinner size="lg" />
             </div>
           ) : mutations.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900 animate-fade-in">
               <p className="text-sm font-semibold text-slate-500">
                 {t("officer.no_mutations")}
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-shadow duration-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
                 <thead className="bg-slate-50 font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                   <tr>
@@ -402,17 +410,17 @@ function OfficerPageContent() {
                   {mutations.map((m) => (
                     <tr
                       key={m.id}
-                      className="hover:bg-slate-50/80 transition dark:hover:bg-slate-800/40"
+                      className="hover:bg-teal-50/40 transition-colors duration-150 dark:hover:bg-slate-800/50 group"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-teal-700 dark:text-teal-400">
                         #{m.id}
                       </td>
                       <td className="px-4 py-3 font-mono">
                         <Link
-                          href={`/verify?deed=${m.deed_id}`}
+                          href={`/verify?deed=${encodeURIComponent(m.deed_no || m.deed_id)}`}
                           className="hover:underline text-slate-600 dark:text-slate-300"
                         >
-                          Deed #{m.deed_id}
+                          {m.deed_no || `Deed #${m.deed_id}`}
                         </Link>
                       </td>
                       <td className="px-4 py-3 font-semibold">
@@ -429,7 +437,7 @@ function OfficerPageContent() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                            className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
                               m.state === "KHATIAN_UPDATED"
                                 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                 : m.state === "REJECTED"
@@ -442,7 +450,7 @@ function OfficerPageContent() {
                             {m.state.replace("_", " ")}
                           </span>
                           {m.requires_override && (
-                            <span className="rounded bg-rose-100 px-1.5 py-0.2 text-[9px] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                            <span className="rounded bg-rose-100 px-1.5 py-0.2 text-[9px] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse-alert">
                               ⚠️ OVERRIDE
                             </span>
                           )}
@@ -455,7 +463,7 @@ function OfficerPageContent() {
                         <button
                           type="button"
                           onClick={() => handleOpenMutation(m)}
-                          className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 hover:bg-teal-100 transition dark:bg-teal-950/60 dark:text-teal-300"
+                          className="btn-interactive rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 hover:bg-teal-100 transition-all duration-200 dark:bg-teal-950/60 dark:text-teal-300 shadow-2xs"
                         >
                           {t("officer.review_btn")} →
                         </button>
@@ -471,7 +479,7 @@ function OfficerPageContent() {
 
       {/* TAB 2: ALERTS */}
       {activeTab === "alerts" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up stagger-1">
           {/* Alert Filters */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex flex-wrap items-center gap-4">
@@ -484,9 +492,9 @@ function OfficerPageContent() {
                     key={st}
                     type="button"
                     onClick={() => setAlertStatusFilter(st)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
                       alertStatusFilter === st
-                        ? "bg-slate-900 text-white dark:bg-teal-600"
+                        ? "bg-slate-900 text-white dark:bg-teal-600 shadow-2xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
@@ -504,9 +512,9 @@ function OfficerPageContent() {
                     key={sev}
                     type="button"
                     onClick={() => setAlertSeverityFilter(sev)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
                       alertSeverityFilter === sev
-                        ? "bg-slate-900 text-white dark:bg-teal-600"
+                        ? "bg-slate-900 text-white dark:bg-teal-600 shadow-2xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
@@ -519,7 +527,7 @@ function OfficerPageContent() {
             <button
               type="button"
               onClick={fetchAlerts}
-              className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400"
+              className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
             >
               ↻ Refresh
             </button>
@@ -531,13 +539,13 @@ function OfficerPageContent() {
               <Spinner size="lg" />
             </div>
           ) : alerts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900 animate-fade-in">
               <p className="text-sm font-semibold text-slate-500">
                 {t("officer.no_alerts")}
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-shadow duration-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
                 <thead className="bg-slate-50 font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                   <tr>
@@ -554,7 +562,7 @@ function OfficerPageContent() {
                   {alerts.map((a) => (
                     <tr
                       key={a.id}
-                      className="hover:bg-slate-50/80 transition dark:hover:bg-slate-800/40"
+                      className="hover:bg-rose-50/30 transition-colors duration-150 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-slate-600 dark:text-slate-400">
                         #{a.id}
@@ -610,7 +618,7 @@ function OfficerPageContent() {
                               type="button"
                               disabled={alertActionLoading === a.id}
                               onClick={() => handleUpdateAlert(a.id, "ACK")}
-                              className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-300"
+                              className="btn-interactive rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-all duration-150 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-300"
                             >
                               {t("officer.ack_btn")}
                             </button>
@@ -620,7 +628,7 @@ function OfficerPageContent() {
                               type="button"
                               disabled={alertActionLoading === a.id}
                               onClick={() => handleUpdateAlert(a.id, "RESOLVED")}
-                              className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
+                              className="btn-interactive rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-all duration-150 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
                             >
                               {t("officer.resolve_btn")}
                             </button>
@@ -638,8 +646,8 @@ function OfficerPageContent() {
 
       {/* DETAIL MODAL / DRAWER FOR MUTATION REVIEW */}
       {drawerOpen && selectedMutation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto">
-          <div className="relative w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto animate-fade-in">
+          <div className="relative w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8 overflow-hidden animate-scale-in">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
               <div className="flex items-center gap-3">
@@ -651,7 +659,7 @@ function OfficerPageContent() {
                     {t("officer.drawer_title")} #{selectedMutation.id}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Deed #{selectedMutation.deed_id} • Plot #{selectedMutation.plot_id}
+                    {selectedMutation.deed_no || `Deed #${selectedMutation.deed_id}`} • Plot #{selectedMutation.plot_id}
                   </p>
                 </div>
               </div>
@@ -659,7 +667,7 @@ function OfficerPageContent() {
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 text-sm font-bold"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 hover:rotate-90 transition-all duration-200 dark:hover:bg-slate-800 dark:hover:text-slate-200 text-sm font-bold"
               >
                 ✕
               </button>
@@ -691,11 +699,11 @@ function OfficerPageContent() {
                   </span>
                   <p className="mt-1 font-bold">
                     <Link
-                      href={`/verify?deed=${selectedMutation.deed_id}`}
+                      href={`/verify?deed=${encodeURIComponent(selectedMutation.deed_no || selectedMutation.deed_id)}`}
                       target="_blank"
                       className="text-teal-600 hover:underline dark:text-teal-400"
                     >
-                      Deed #{selectedMutation.deed_id} ↗
+                      {selectedMutation.deed_no || `Deed #${selectedMutation.deed_id}`} ↗
                     </Link>
                   </p>
                 </div>
@@ -819,7 +827,7 @@ function OfficerPageContent() {
                   <ErrorBox title="Transition Error" message={actionError} />
                 )}
                 {actionSuccess && (
-                  <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 animate-fade-in-down">
                     ✓ {actionSuccess}
                   </div>
                 )}
@@ -837,12 +845,13 @@ function OfficerPageContent() {
                     value={actionNote}
                     onChange={(e) => setActionNote(e.target.value)}
                     placeholder={t("officer.note_placeholder")}
-                    className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs text-slate-900 focus:border-teal-500 focus:outline-hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs text-slate-900 focus:border-teal-500 focus:outline-hidden dark:border-slate-700 dark:bg-slate-900 dark:text-white transition-all duration-200"
                   />
                   {selectedMutation.requires_override && (
-                    <p className="mt-1 text-[11px] text-rose-600 font-semibold">
-                      {t("officer.note_required_warning")}
-                    </p>
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-semibold text-rose-700 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-300 animate-fade-in">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+                      <span>{t("officer.note_required_warning")}</span>
+                    </div>
                   )}
                 </div>
 
@@ -860,10 +869,10 @@ function OfficerPageContent() {
                           type="button"
                           disabled={actionLoading}
                           onClick={() => handleTransition(target)}
-                          className={`rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs disabled:opacity-50 ${
+                          className={`btn-interactive rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-200 shadow-xs disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] ${
                             isReject
-                              ? "bg-rose-600 text-white hover:bg-rose-700"
-                              : "bg-teal-600 text-white hover:bg-teal-700"
+                              ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-600/20"
+                              : "bg-teal-600 text-white hover:bg-teal-700 shadow-teal-600/20"
                           }`}
                         >
                           {actionLoading ? (
