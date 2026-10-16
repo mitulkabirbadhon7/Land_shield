@@ -56,31 +56,29 @@ const LanguageContext = createContext<LanguageContextType>({
 const STORAGE_KEY = "landshield_lang";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  // Always default to Bangla ("bn") on initial load as required
   const [lang, setLangState] = useState<Language>("bn");
   const [, startTransition] = useTransition();
 
   useEffect(() => {
+    // When project opens or is loaded, 1st language must always be Bangla ("bn").
+    // Clean up any previously persisted language in storage so it never forces English on reload/open.
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
-      if (saved && (saved === "bn" || saved === "en")) {
-        setLangState(saved);
-        document.documentElement.lang = saved;
-      } else {
-        document.documentElement.lang = "bn";
-      }
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Ignore localStorage errors (e.g. private browsing)
+      // Ignore storage errors (e.g. private browsing)
     }
+    document.documentElement.lang = "bn";
   }, []);
 
   const setLang = (nextLang: Language) => {
     startTransition(() => {
       setLangState(nextLang);
       try {
-        localStorage.setItem(STORAGE_KEY, nextLang);
         document.documentElement.lang = nextLang;
       } catch {
-        // Ignore localStorage errors
+        // Ignore DOM errors
       }
     });
   };

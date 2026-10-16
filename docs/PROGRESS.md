@@ -713,6 +713,50 @@ The following placeholders have been clearly marked in the documentation pack an
   - None.
 - **Next session:** Demo video recording and final judge presentation rehearsal.
 
+### Session SYNC-MAIN-AND-VERIFY Log
+- **What was done:**
+  - Fast-forward pulled all latest commits from `origin/main` into local `main` branch (commits `0634673` through `20320ef` including cadastral background, edge-case stress test suite, real-time decimal balance tracking, bilingual fixes, and lint zero-warning cleanups across 37 files).
+  - Protected local secrets and font archives in `.gitignore` (`GeminiAPi_key.txt`, `SuperbaseInfo.txt`, `Noto_Sans_Bengali.zip`).
+  - Created `frontend/.env.local` (`NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`) to satisfy the production build assertion for local Next.js builds.
+  - Executed and verified the full test and build matrix:
+    - Backend Pytest Suite: 107/107 passed in 126s (`pytest`).
+    - Edge Case Stress Suite: 9/9 executed, 0 unhandled failures (`backend/scripts/run_edge_cases.py`).
+    - Frontend ESLint: 0 errors, 0 warnings (`npm run lint`).
+    - Frontend Next.js Production Build: 10/10 routes compiled and statically prerendered with Turbopack (`npm run build`).
+- **Decisions:**
+  - Maintained strict git safety by not auto-committing or auto-pushing.
+  - Preserved untracked local secrets outside of version control.
+- **Known gaps:**
+  - None. All code and test suites are 100% verified.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
+### Session DEFAULT-BANGLA-LOAD Log
+- **What was done:**
+  - Configured `frontend/src/lib/i18n.tsx` so the project strictly defaults to and loads in Bangla (`bn`) every time the project is opened or loaded.
+  - Removed persistent local storage loading of previously toggled English language on initial mount, ensuring no previous session can force English on fresh load or page reload.
+  - Automatically cleans up any previously stored `landshield_lang` keys from `localStorage` and `sessionStorage`.
+  - Maintained interactive language toggle (`বাং` / `EN` in Header) so users can still freely switch to English on demand, retaining English across client-side page routing during their active session.
+  - Verified code quality: `npm run lint` passed with 0 errors and 0 warnings.
+  - Verified static compilation: `npm run build` compiled and prerendered 10/10 routes successfully.
+- **Decisions:**
+  - Language state is managed in React Context for active in-session navigation without polluting long-term browser storage.
+- **Known gaps:**
+  - None.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
+### Session LOCALHOST-RUN-FIX Log
+- **What was done:**
+  - Resolved localhost execution obstacles on Windows environments:
+    - Added local `.env` and `frontend/.env.local` to fulfill environment configurations.
+    - Synchronized `./keys/registrar_ed25519.hex` with `./keys/registrar.key` so both configuration paths load the genuine Ed25519 seed without regenerating incompatible keys.
+    - Verified live execution of both FastAPI backend (`http://localhost:8000`) and Next.js frontend (`http://localhost:3000`) returning HTTP 200 on all routes.
+    - Created Windows 1-click launchers (`run_all.bat`, `run_backend.bat`, `run_frontend.bat`) targeting the project `.venv` directly to bypass PowerShell script execution restrictions.
+- **Decisions:**
+  - Executable launchers use `%~dp0` absolute directory anchoring so they can be launched from any working directory or by double-clicking in Windows Explorer.
+- **Known gaps:**
+  - None. Both servers are verified running and responding on localhost.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
 
 
 

@@ -16,6 +16,9 @@ docs/*.pdf
 .agent/
 GEMINI.md
 seasonwiseupdate.md
+GeminiAPi_key.txt
+SuperbaseInfo.txt
+Noto_Sans_Bengali.zip
 
 # --- Prohibited Trap 1: Secrets, Credentials & Keys (NEVER COMMIT) ---
 .env
