@@ -822,6 +822,8 @@ The following placeholders have been clearly marked in the documentation pack an
     - Uses `Html5Qrcode.prototype.scanFile` on dedicated engine containers (`html5qr-file-engine` and `verify-direct-qr-engine`), enabling complete desktop and webcam-free deed verification testing.
   - **Check Page Streamlining (`/check`)**:
     - Removed redundant quick search chips block (`দ্রুত টেস্ট নমুনা: ...`) per citizen UX request, since canonical benchmark scenarios (`S1-S8`) already provide complete test coverage.
+  - **Seed CLI Direct Execution (`backend/scripts/seed.py`)**:
+    - Anchored `sys.path` to backend root so `python backend/scripts/seed.py --reset` can be executed cleanly from any directory without manual `PYTHONPATH` environment variable exports.
   - **Validation & Quality Assurance**:
     - Backend: 107/107 pytest tests passed (100% green).
     - Frontend: `next build` compiled with Turbopack, TypeScript checked 0 errors, 10/10 routes prerendered.

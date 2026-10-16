@@ -29,7 +29,13 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import random
+import sys
 from typing import Any
+
+# Ensure backend root is on sys.path when executed directly
+_backend_root = Path(__file__).resolve().parent.parent
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
 
 from argon2 import PasswordHasher
 from faker import Faker
