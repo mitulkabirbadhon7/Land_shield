@@ -109,6 +109,18 @@ def test_dev_routes_rbac_and_demo_mode_false(client: TestClient, seeded_db: Sess
     # All other dev endpoints return 404
     assert client.post("/api/v1/dev/tamper/DHAKA-2026-000009", headers=admin_headers).status_code == 404
     assert client.post("/api/v1/dev/restore/DHAKA-2026-000009", headers=admin_headers).status_code == 404
+    assert client.post("/api/v1/dev/reseed", headers=admin_headers).status_code == 404
+
+
+def test_dev_reseed_endpoint(client: TestClient, tokens: dict, monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", True)
+    admin_headers = {"Authorization": f"Bearer {tokens['admin']}"}
+    res = client.post("/api/v1/dev/reseed", headers=admin_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "reseeded"
+    assert "plots" in data["detail"]
+
 
 
 # -----------------------------------------------------------------------------

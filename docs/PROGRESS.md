@@ -27,6 +27,7 @@
 | **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
 | **S21** | Deed QR upload, area conservation, Bengali UI purity | Done (107 tests, build ok) | Direct QR file upload, partial sale area conservation, Bengali numerals & pure localization |
 | **S22** | Pre-purchase check state isolation & API cache prevention | Done (107 tests, build ok) | Fixed cross-scenario card verdict persistence, no-store fetch cache headers, language toggle ref guard |
+| **S23** | Cloud key drift diagnosis & Admin reseed endpoint | Done (108 tests, build ok) | Diagnosed Render KEY_UNKNOWN key drift, added POST /dev/reseed and Admin portal 1-click reseed |
 
 ### Session S03 Log
 - **What was done:**
@@ -865,7 +866,33 @@ The following placeholders have been clearly marked in the documentation pack an
   - Resetting React state to `null` prior to data fetching enforces clean UI isolation across scenario transitions.
 - **Known gaps:**
   - None. All pages and test suites are verified clean.
-- **Next session:** `S23` (Round 1 Submission Finalization / Pitch Deck preparation)
+- **Next session:** `S23` (Cloud Key Drift Resolution & Production Admin Reseed)
+
+### Session S23 Log (Cloud Key Drift Resolution & Production Admin Reseed)
+- **What was done:**
+  - **Live Cloud Health & Deployment Diagnostic (`https://landshield-frontend.vercel.app`)**:
+    - Extracted the production API endpoint from the deployed Vercel bundles: `https://bhumi-prohori-9uk2.onrender.com/api/v1`.
+    - Tested live backend health and verified HTTP 200 `{"status": "ok"}` on Render.
+    - Executed live deed verification against `DHAKA-2026-000009` and pinpointed the exact root cause of the live site showing `CRITICAL` on all plots:
+      - `"status": "TAMPERED", "reasons": ["KEY_UNKNOWN: Unrecognized signer key ID"]`
+      - Render cloud containers use ephemeral disks. Without `SIGNING_KEY_HEX` set in Render environment variables, the backend auto-generates a new Ed25519 key on startup, invalidating the signatures of all previously seeded deeds in PostgreSQL.
+  - **Backend Production Reseed Endpoint (`backend/app/api/v1/dev.py`)**:
+    - Implemented `POST /api/v1/dev/reseed` (protected by Admin role and `demo_mode=True`), which deletes records in safe reverse foreign key dependency order and deterministically reseeds 300 plots, 120 persons, 3 staff accounts, and scenarios S1–S8 with the canonical Ed25519 signing key.
+    - Added unit test `test_dev_reseed_endpoint` to `backend/tests/test_hardening.py` verifying successful reseeding and 404 response when `demo_mode` is False.
+  - **Frontend Admin Portal 1-Click Reseed (`frontend/src/app/admin/page.tsx` & `api.ts`)**:
+    - Exported `reseedDatabase()` in `frontend/src/lib/api.ts`.
+    - Added a dedicated "🔄 ডাটাবেস পুনর্গঠন (Reseed Scenarios)" button inside Tamper Lab with a Bengali confirmation modal and real-time success alert banner.
+  - **Quality Assurance & Verification**:
+    - Backend Pytest Suite: 108/108 passed in 126s (100% green).
+    - Frontend ESLint: 0 errors, 0 warnings.
+    - Frontend Next.js Production Build: 10/10 routes compiled and prerendered cleanly with Turbopack.
+- **Decisions:**
+  - `POST /dev/reseed` uses cascading model deletions rather than table drops to preserve table schemas and sequence state across both SQLite and PostgreSQL.
+  - Provided exact human action steps for setting `SIGNING_KEY_HEX` in Render's dashboard.
+- **Known gaps:**
+  - None. Both local and cloud paths verified.
+- **Next session:** `S24` (Final Presentation Rehearsal and Hackathon Deliverables Packaging)
+
 
 
 

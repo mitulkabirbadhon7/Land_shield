@@ -8,6 +8,7 @@ import {
   getAuditLogs,
   getDevStatus,
   restoreDeed,
+  reseedDatabase,
   tamperDeed,
   verifyDeed,
   ApiError,
@@ -145,6 +146,35 @@ function AdminPageContent() {
       }
     } finally {
       setTamperLoading(false);
+    }
+  };
+
+  // Run Reseed Action
+  const [reseedLoading, setReseedLoading] = useState(false);
+  const [reseedSuccess, setReseedSuccess] = useState<string | null>(null);
+
+  const handleReseed = async () => {
+    if (!window.confirm("আপনি কি নিশ্চিত যে সম্পূর্ণ ডাটাবেস রিসেট করে ৩০০ প্লট এবং ৮টি সিনারিও নতুন করে প্রস্তুত করতে চান?")) {
+      return;
+    }
+    setReseedLoading(true);
+    setTamperError(null);
+    setReseedSuccess(null);
+    try {
+      const res = await reseedDatabase();
+      setReseedSuccess(res.detail || "ডাটাবেস সফলভাবে পুনর্গঠিত হয়েছে।");
+      handleInspectDeed(targetDeedNo.trim());
+      if (activeTab === "audit") {
+        fetchAuditLogs(1);
+      }
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setTamperError(err.detail || err.message);
+      } else {
+        setTamperError("Failed to reseed database");
+      }
+    } finally {
+      setReseedLoading(false);
     }
   };
 
@@ -332,9 +362,32 @@ function AdminPageContent() {
                       </svg>
                       <span>{t("admin.restore_btn")}</span>
                     </button>
+
+                    <button
+                      type="button"
+                      disabled={reseedLoading}
+                      onClick={handleReseed}
+                      className="btn-interactive inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {reseedLoading ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      )}
+                      <span>ডাটাবেস পুনর্গঠন (Reseed Scenarios)</span>
+                    </button>
                   </div>
 
                   {/* Operation Results / Errors */}
+                  {reseedSuccess && (
+                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200 animate-fade-in-down">
+                      <p className="font-bold">✓ ডাটাবেস সফলভাবে পুনর্গঠিত হয়েছে</p>
+                      <p className="mt-1 font-mono text-[11px]">{reseedSuccess}</p>
+                    </div>
+                  )}
+
                   {tamperError && (
                     <ErrorBox title="Operation Failed" message={tamperError} />
                   )}

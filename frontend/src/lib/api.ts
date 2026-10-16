@@ -342,6 +342,13 @@ export async function restoreDeed(deedNo: string): Promise<TamperResult> {
   });
 }
 
+export async function reseedDatabase(): Promise<{ status: string; detail: string }> {
+  return apiFetch<{ status: string; detail: string }>("/dev/reseed", {
+    method: "POST",
+    requiresAuth: true,
+  });
+}
+
 export async function getAuditLogs(
   page: number = 1,
   size: number = 20

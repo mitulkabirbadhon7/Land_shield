@@ -126,3 +126,66 @@ def restore_deed(
         "deed_no": deed.deed_no,
         "area_sold": deed.area_sold,
     }
+
+
+@router.post("/reseed")
+def reseed_database(
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """Tamper Lab: reseed database with canonical synthetic scenarios (Admin + Demo Mode only)."""
+    if not settings.demo_mode:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dev endpoints disabled when DEMO_MODE is false",
+        )
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+
+    from sqlalchemy import delete
+    from app.models.audit import AuditLog
+    from app.models.alert import Alert
+    from app.models.mutation_event import MutationEvent
+    from app.models.mutation import Mutation
+    from app.models.ledger import LedgerEntry
+    from app.models.deed import Deed
+    from app.models.case import Case
+    from app.models.plot import Plot
+    from app.models.person import Person
+    from app.models.user import User
+    from scripts.seed import seed_data
+
+    # Clear in reverse foreign key order
+    db.execute(delete(AuditLog))
+    db.execute(delete(Alert))
+    db.execute(delete(MutationEvent))
+    db.execute(delete(Mutation))
+    db.execute(delete(LedgerEntry))
+    db.execute(delete(Deed))
+    db.execute(delete(Case))
+    db.execute(delete(Plot))
+    db.execute(delete(Person))
+    db.execute(delete(User))
+    db.flush()
+
+    res = seed_data(db, reset=True)
+    db.commit()
+
+    log(
+        db,
+        actor=current_user,
+        action="DEMO_RESEED",
+        entity="database",
+        entity_id=None,
+        detail="reseeded canonical scenarios S1-S8",
+    )
+    db.commit()
+
+    return {
+        "status": "reseeded",
+        "detail": f"Database reseeded successfully with {len(res['plots'])} plots and {len(res['scenarios'])} scenarios",
+    }
+
