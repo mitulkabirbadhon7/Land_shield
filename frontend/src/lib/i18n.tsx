@@ -6,6 +6,12 @@ import enDict from "../locales/en.json";
 
 export type Language = "bn" | "en";
 
+export function toBnDigits(val: number | string | undefined | null): string {
+  if (val === undefined || val === null || val === "") return "";
+  const bn = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+  return String(val).replace(/[0-9]/g, (d) => bn[parseInt(d, 10)]);
+}
+
 type Dictionary = Record<string, unknown>;
 
 const dictionaries: Record<Language, Dictionary> = {

@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,6 +19,13 @@ class Settings(BaseSettings):
     SEED_ON_START: bool | None = None
     port: int = 8000
     PORT: int | None = None
+
+    def __init__(self, **values: Any):
+        super().__init__(**values)
+        if "PORT" in values and values["PORT"] is not None:
+            self.PORT = int(values["PORT"])
+        elif "port" in values and values["port"] is not None:
+            self.port = int(values["port"])
 
     @field_validator("database_url", mode="before")
     @classmethod

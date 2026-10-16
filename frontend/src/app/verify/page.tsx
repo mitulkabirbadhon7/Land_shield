@@ -7,7 +7,7 @@ import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
-import { QRScanner } from "@/components/QRScanner";
+import { QRScanner, parseDeedFromQR } from "@/components/QRScanner";
 import { getChain, getPlot, verifyDeed } from "@/lib/api";
 import { ChainItem, DeedStatus, PlotOut, VerifyOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
@@ -25,6 +25,8 @@ function VerifyContent() {
   const [chainItem, setChainItem] = useState<ChainItem | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDirectUploading, setIsDirectUploading] = useState(false);
+  const fileInputDirectRef = React.useRef<HTMLInputElement>(null);
 
   // Sample deeds for testing and demo evaluation (from deterministic seed benchmarks)
   const sampleDeeds = [
@@ -101,6 +103,35 @@ function VerifyContent() {
     setShowScanner(false);
     setInputDeedNo(scannedDeed);
     handleVerify(scannedDeed);
+  };
+
+  const handleDirectFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsDirectUploading(true);
+    setError(null);
+
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const fileScanner = new Html5Qrcode("verify-direct-qr-engine");
+      const decodedText = await fileScanner.scanFile(file, false);
+      const parsedDeed = parseDeedFromQR(decodedText);
+      try {
+        fileScanner.clear();
+      } catch {
+        // ignore cleanup error
+      }
+      setInputDeedNo(parsedDeed);
+      handleVerify(parsedDeed);
+    } catch {
+      setError(t("verify.upload_qr_error"));
+    } finally {
+      setIsDirectUploading(false);
+      if (fileInputDirectRef.current) {
+        fileInputDirectRef.current.value = "";
+      }
+    }
   };
 
   const handleCopyLink = () => {
@@ -204,7 +235,7 @@ function VerifyContent() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="submit"
                 disabled={loading || !inputDeedNo.trim()}
@@ -230,7 +261,33 @@ function VerifyContent() {
                 </svg>
                 <span className="hidden sm:inline">{t("verify.btn_scan_qr")}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputDirectRef.current?.click()}
+                disabled={isDirectUploading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-400 hover:-translate-y-0.5 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
+              >
+                {isDirectUploading ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <svg className="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                )}
+                <span>{t("verify.btn_upload_qr")}</span>
+              </button>
             </div>
+
+            {/* Hidden File Engine & File Input for Direct Upload */}
+            <div id="verify-direct-qr-engine" className="hidden" />
+            <input
+              ref={fileInputDirectRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleDirectFileUpload}
+            />
           </div>
 
           {/* Quick Demo Sample Deed Pills */}

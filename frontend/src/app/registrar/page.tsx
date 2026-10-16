@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, toBnDigits } from "@/lib/i18n";
 import {
   createDeed,
   getDeedQrBlob,
@@ -457,7 +457,7 @@ function RegistrarPageContent() {
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-            <span>Ed25519 Cryptographic Registration</span>
+            <span>{lang === "bn" ? "এড২৫৫১৯ ক্রিপ্টোগ্রাফিক নিবন্ধন" : "Ed25519 Cryptographic Registration"}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {t("registrar.title")}
@@ -487,14 +487,24 @@ function RegistrarPageContent() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-900 dark:text-white">
-                {user?.name || "Sub-Registrar"}
+                {user?.name || (lang === "bn" ? "সাব-রেজিস্ট্রার" : "Sub-Registrar")}
               </span>
               <span className="rounded bg-emerald-100 px-1.5 py-0.2 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 uppercase">
-                {user?.role || "registrar"}
+                {lang === "bn"
+                  ? user?.role === "registrar"
+                    ? "সাব-রেজিস্ট্রার"
+                    : user?.role === "officer"
+                    ? "ভূমি কর্মকর্তা"
+                    : user?.role === "admin"
+                    ? "অ্যাডমিন"
+                    : user?.role
+                  : user?.role || "registrar"}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Sub-Registry: Mirpur (MIR) • Key ID: #88c67a73
+              {lang === "bn"
+                ? "সাব-রেজিস্ট্রি: মিরপুর (MIR) • সাইনার কী: #৮৮c৬৭a৭৩"
+                : "Sub-Registry: Mirpur (MIR) • Key ID: #88c67a73"}
             </p>
           </div>
         </div>
@@ -510,7 +520,9 @@ function RegistrarPageContent() {
             </h2>
           </div>
           <span className="text-[11px] text-slate-400">
-            Pre-fills form with hackathon test dataset
+            {lang === "bn"
+              ? "হ্যাকাথন টেস্ট ডেটাসেট অনুযায়ী ফরম স্বয়ংক্রিয় পূরণ"
+              : "Pre-fills form with hackathon test dataset"}
           </span>
         </div>
 
@@ -530,7 +542,9 @@ function RegistrarPageContent() {
                 </span>
               </div>
               <p className="mt-0.5 text-[10px] text-emerald-700/80 dark:text-emerald-300/80">
-                Plot 6 • Genuine owner • Expect 201 Success
+                {lang === "bn"
+                  ? "প্লট ৬ • প্রকৃত খতিয়ানদার • প্রত্যাশিত: বৈধ নিবন্ধন (201)"
+                  : "Plot 6 • Genuine owner • Expect 201 Success"}
               </p>
             </div>
             <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -553,7 +567,9 @@ function RegistrarPageContent() {
                 </span>
               </div>
               <p className="mt-0.5 text-[10px] text-rose-700/80 dark:text-rose-300/80">
-                Plot 1 • Seller 1 reselling • Expect 409 Block (R1)
+                {lang === "bn"
+                  ? "প্লট ১ • দ্বৈত বিক্রয় অপচেষ্টা • প্রত্যাশিত: রুল R1 বাতিল (409)"
+                  : "Plot 1 • Seller 1 reselling • Expect 409 Block (R1)"}
               </p>
             </div>
             <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
@@ -576,7 +592,9 @@ function RegistrarPageContent() {
                 </span>
               </div>
               <p className="mt-0.5 text-[10px] text-amber-700/80 dark:text-amber-300/80">
-                Plot 2 • Seller 99 not owner • Expect 409 Block (R2)
+                {lang === "bn"
+                  ? "প্লট ২ • স্বত্বহীন ব্যক্তি • প্রত্যাশিত: রুল R2 বাতিল (409)"
+                  : "Plot 2 • Seller 99 not owner • Expect 409 Block (R2)"}
               </p>
             </div>
             <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
@@ -974,21 +992,23 @@ function RegistrarPageContent() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="font-bold text-emerald-950 dark:text-emerald-100">
-                      ✓ Selected Plot #{selectedPlot.id}: Dag {selectedPlot.dag_no}, Mouza {selectedPlot.mouza}
+                      {lang === "bn"
+                        ? `✓ নির্বাচিত প্লট #${toBnDigits(selectedPlot.id)}: দাগ ${toBnDigits(selectedPlot.dag_no)}, মৌজা ${selectedPlot.mouza}`
+                        : `✓ Selected Plot #${selectedPlot.id}: Dag ${selectedPlot.dag_no}, Mouza ${selectedPlot.mouza}`}
                     </span>
                     <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">
                       {lang === "bn" ? (
                         <>
-                          প্লট মোট: <strong>{selectedPlot.area_decimal} শতক</strong> • অবশিষ্ট প্রাপ্য:{" "}
+                          প্লট মোট: <strong>{toBnDigits(selectedPlot.area_decimal)} শতক</strong> • অবশিষ্ট প্রাপ্য:{" "}
                           <strong className="text-emerald-700 dark:text-emerald-400 font-bold">
-                            {selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} শতক
+                            {toBnDigits(selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal)} শতক
                           </strong>{" "}
                           {(selectedPlot.sold_decimal ?? 0) > 0 && (
                             <span className="text-amber-700 dark:text-amber-400 font-medium">
-                              (বিক্রীত: {selectedPlot.sold_decimal} শতক)
+                              (বিক্রীত: {toBnDigits(selectedPlot.sold_decimal)} শতক)
                             </span>
                           )}{" "}
-                          • রেকর্ডকৃত খতিয়ানদার: <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "Genesis Owner"}</code>
+                          • রেকর্ডকৃত খতিয়ানদার: <code>{selectedPlot.current_owner_name || selectedPlot.current_owner_masked || "মূল মালিক"}</code>
                         </>
                       ) : (
                         <>
@@ -1221,7 +1241,9 @@ function RegistrarPageContent() {
               )}
             </button>
             <p className="mt-2 text-center text-[11px] text-slate-400">
-              ⚡ Pre-registration verification engine checks for double-selling and title conflicts before issuance.
+              {lang === "bn"
+                ? "⚡ নিবন্ধন-পূর্ব যাচাই ইঞ্জিন দ্বৈত বিক্রয় ও স্বত্বহীনতা স্বয়ংক্রিয়ভাবে শনাক্ত করে দলিল জারি আটকে দেয়।"
+                : "⚡ Pre-registration verification engine checks for double-selling and title conflicts before issuance."}
             </p>
           </div>
         </form>

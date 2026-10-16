@@ -101,6 +101,14 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
   const pendingMutations = mutation.pending ?? mutation.pending_mutations ?? 0;
   const rejectedMutations = mutation.rejected ?? mutation.missing_mutations ?? 0;
 
+  const toBnDigits = (num: number | string | undefined | null): string => {
+    if (num === undefined || num === null) return "—";
+    const str = String(num);
+    if (lang !== "bn") return str;
+    const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return str.replace(/[0-9]/g, (d) => bnDigits[parseInt(d, 10)]);
+  };
+
   const findings = Array.isArray(report.findings) ? report.findings : [];
 
   return (
@@ -141,10 +149,10 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
             {/* Score in center of ring */}
             <div className="absolute flex flex-col items-center justify-center text-center">
               <span className={`text-3xl font-black tracking-tight font-mono ${theme.text}`}>
-                {score}
+                {toBnDigits(score)}
               </span>
               <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
-                / 100
+                / {toBnDigits(100)}
               </span>
             </div>
           </div>
@@ -181,7 +189,9 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                 ? (lang === "bn"
                     ? "জমিতে কোনো জালিয়াতি বা বিরোধের প্রমাণ নেই"
                     : "No fraud or legal disputes detected on this plot")
-                : `${t("check.risk_score")}: ${score}/${lang === "bn" ? "১০০" : "100"} (${level})`}
+                : lang === "bn"
+                ? `${t("check.risk_score")}: ${toBnDigits(score)}/${toBnDigits(100)} (${t(`risk_level.${level}`, level)})`
+                : `${t("check.risk_score")}: ${score}/100 (${level})`}
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -258,7 +268,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
         headerAction={
           findings.length > 0 ? (
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              {findings.length} {t("check.findings_count")}
+              {toBnDigits(findings.length)} {t("check.findings_count")}
             </span>
           ) : null
         }
@@ -291,7 +301,7 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                     </span>
                     {typeof finding.weight === "number" && finding.weight > 0 && (
                       <span className="text-[11px] font-semibold text-slate-500 font-mono">
-                        +{finding.weight} pts
+                        +{toBnDigits(finding.weight)} {lang === "bn" ? "পয়েন্ট" : "pts"}
                       </span>
                     )}
                   </div>

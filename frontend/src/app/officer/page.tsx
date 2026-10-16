@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, toBnDigits } from "@/lib/i18n";
 import {
   getAlerts,
   getMutation,
@@ -24,7 +24,80 @@ const WORKFLOW_STEPS = [
   "KHATIAN_UPDATED",
 ];
 
-function StatusStepper({ currentState }: { currentState: string }) {
+function formatMutationState(state: string, lang: string): string {
+  if (lang !== "bn") {
+    if (state === "ALL") return "All States";
+    return state.replace("_", " ");
+  }
+  switch (state) {
+    case "ALL":
+      return "সকল পর্যায়";
+    case "SUBMITTED":
+      return "দাখিলকৃত";
+    case "AUTO_CHECKED":
+      return "স্বয়ংক্রিয় যাচাইকৃত";
+    case "UNDER_REVIEW":
+      return "পর্যালোচনাধীন";
+    case "APPROVED":
+      return "অনুমোদিত";
+    case "KHATIAN_UPDATED":
+      return "খতিয়ান হালনাগাদ";
+    case "REJECTED":
+      return "বাতিলকৃত";
+    default:
+      return state;
+  }
+}
+
+function formatAlertStatus(status: string, lang: string): string {
+  if (lang !== "bn") return status;
+  switch (status) {
+    case "ALL":
+      return "সকল";
+    case "OPEN":
+      return "উন্মুক্ত";
+    case "ACK":
+      return "স্বীকৃত";
+    case "RESOLVED":
+      return "নিষ্পন্ন";
+    case "DISMISSED":
+      return "বাতিল";
+    default:
+      return status;
+  }
+}
+
+function formatAlertSeverity(severity: string, lang: string): string {
+  if (lang !== "bn") return severity;
+  switch (severity) {
+    case "ALL":
+      return "সকল";
+    case "CRITICAL":
+      return "চরম";
+    case "HIGH":
+      return "উচ্চ";
+    case "MEDIUM":
+      return "মাঝারি";
+    case "LOW":
+      return "সাধারণ";
+    default:
+      return severity;
+  }
+}
+
+function formatDate(isoString: string, lang: string): string {
+  const d = new Date(isoString);
+  const formatted = d.toLocaleDateString("en-GB");
+  return lang === "bn" ? toBnDigits(formatted) : formatted;
+}
+
+function formatDateTime(isoString: string, lang: string): string {
+  const d = new Date(isoString);
+  const formatted = d.toLocaleString("en-GB");
+  return lang === "bn" ? toBnDigits(formatted) : formatted;
+}
+
+function StatusStepper({ currentState, lang }: { currentState: string; lang: string }) {
   const isRejected = currentState === "REJECTED";
   const currentIndex = WORKFLOW_STEPS.indexOf(currentState);
 
@@ -52,7 +125,7 @@ function StatusStepper({ currentState }: { currentState: string }) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    idx + 1
+                    lang === "bn" ? toBnDigits(idx + 1) : idx + 1
                   )}
                 </div>
                 <span
@@ -64,7 +137,7 @@ function StatusStepper({ currentState }: { currentState: string }) {
                       : "text-slate-400 dark:text-slate-500"
                   }`}
                 >
-                  {step.replace("_", " ")}
+                  {formatMutationState(step, lang)}
                 </span>
               </div>
               {idx < WORKFLOW_STEPS.length - 1 && (
@@ -85,7 +158,7 @@ function StatusStepper({ currentState }: { currentState: string }) {
 
       {isRejected && (
         <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-bold text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200 animate-shake">
-          <span>❌ Application Terminated: REJECTED</span>
+          <span>❌ {lang === "bn" ? "আবেদন বাতিলকৃত (REJECTED)" : "Application Terminated: REJECTED"}</span>
         </div>
       )}
     </div>
@@ -255,7 +328,7 @@ function OfficerPageContent() {
                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
               />
             </svg>
-            <span>AC Land Officer Workspace</span>
+            <span>{t("officer.workspace_badge")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {t("officer.title")}
@@ -285,14 +358,22 @@ function OfficerPageContent() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-900 dark:text-white">
-                {user?.name || "Land Officer"}
+                {user?.name || (lang === "bn" ? "ভূমি কর্মকর্তা" : "Land Officer")}
               </span>
               <span className="rounded bg-teal-100 px-1.5 py-0.2 text-[10px] font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-300 uppercase">
-                {user?.role || "officer"}
+                {lang === "bn"
+                  ? user?.role === "officer"
+                    ? t("officer.role_officer")
+                    : user?.role === "registrar"
+                    ? t("officer.role_registrar")
+                    : user?.role === "admin"
+                    ? t("officer.role_admin")
+                    : user?.role
+                  : user?.role || "officer"}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Upazila Land Office • Dhaka Division
+              {t("officer.office_location")}
             </p>
           </div>
         </div>
@@ -314,7 +395,7 @@ function OfficerPageContent() {
           </svg>
           <span>{t("officer.tab_mutations")}</span>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            {mutations.length}
+            {lang === "bn" ? toBnDigits(mutations.length) : mutations.length}
           </span>
         </button>
 
@@ -332,7 +413,9 @@ function OfficerPageContent() {
           </svg>
           <span>{t("officer.tab_alerts")}</span>
           <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-bold">
-            {alerts.filter((a) => a.status === "OPEN").length} open
+            {lang === "bn"
+              ? `${toBnDigits(alerts.filter((a) => a.status === "OPEN").length)} ${t("officer.open_count")}`
+              : `${alerts.filter((a) => a.status === "OPEN").length} ${t("officer.open_count")}`}
           </span>
         </button>
       </div>
@@ -344,7 +427,7 @@ function OfficerPageContent() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                State:
+                {t("officer.filter_state")}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {[
@@ -366,7 +449,7 @@ function OfficerPageContent() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    {st === "ALL" ? t("officer.filter_all") : st.replace("_", " ")}
+                    {formatMutationState(st, lang)}
                   </button>
                 ))}
               </div>
@@ -377,7 +460,7 @@ function OfficerPageContent() {
               onClick={fetchMutations}
               className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
             >
-              ↻ Refresh
+              ↻ {t("officer.refresh_btn")}
             </button>
           </div>
 
@@ -413,14 +496,14 @@ function OfficerPageContent() {
                       className="hover:bg-teal-50/40 transition-colors duration-150 dark:hover:bg-slate-800/50 group"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-teal-700 dark:text-teal-400">
-                        #{m.id}
+                        #{lang === "bn" ? toBnDigits(m.id) : m.id}
                       </td>
                       <td className="px-4 py-3 font-mono">
                         <Link
                           href={`/verify?deed=${encodeURIComponent(m.deed_no || m.deed_id)}`}
                           className="hover:underline text-slate-600 dark:text-slate-300"
                         >
-                          {m.deed_no || `Deed #${m.deed_id}`}
+                          {m.deed_no || (lang === "bn" ? `দলিল #${toBnDigits(m.deed_id)}` : `Deed #${m.deed_id}`)}
                         </Link>
                       </td>
                       <td className="px-4 py-3 font-semibold">
@@ -428,11 +511,11 @@ function OfficerPageContent() {
                           href={`/check?plot=${m.plot_id}`}
                           className="hover:underline text-emerald-700 dark:text-emerald-400"
                         >
-                          Plot #{m.plot_id}
+                          {lang === "bn" ? `প্লট #${toBnDigits(m.plot_id)}` : `Plot #${m.plot_id}`}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        {m.applicant_name || `Person #${m.applicant_id}`}
+                        {m.applicant_name || (lang === "bn" ? `নাগরিক #${toBnDigits(m.applicant_id)}` : `Person #${m.applicant_id}`)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
@@ -447,17 +530,17 @@ function OfficerPageContent() {
                                 : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             }`}
                           >
-                            {m.state.replace("_", " ")}
+                            {formatMutationState(m.state, lang)}
                           </span>
                           {m.requires_override && (
                             <span className="rounded bg-rose-100 px-1.5 py-0.2 text-[9px] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse-alert">
-                              ⚠️ OVERRIDE
+                              {t("officer.state_override_req")}
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-slate-500 font-mono text-[11px]">
-                        {new Date(m.created_at).toLocaleDateString()}
+                        {formatDate(m.created_at, lang)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -485,7 +568,7 @@ function OfficerPageContent() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Status:
+                  {t("officer.filter_status")}
                 </span>
                 {["ALL", "OPEN", "ACK", "RESOLVED", "DISMISSED"].map((st) => (
                   <button
@@ -498,14 +581,14 @@ function OfficerPageContent() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    {st}
+                    {formatAlertStatus(st, lang)}
                   </button>
                 ))}
               </div>
 
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Severity:
+                  {t("officer.filter_severity")}
                 </span>
                 {["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map((sev) => (
                   <button
@@ -518,7 +601,7 @@ function OfficerPageContent() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    {sev}
+                    {formatAlertSeverity(sev, lang)}
                   </button>
                 ))}
               </div>
@@ -529,7 +612,7 @@ function OfficerPageContent() {
               onClick={fetchAlerts}
               className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
             >
-              ↻ Refresh
+              ↻ {t("officer.refresh_btn")}
             </button>
           </div>
 
@@ -565,7 +648,7 @@ function OfficerPageContent() {
                       className="hover:bg-rose-50/30 transition-colors duration-150 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-slate-600 dark:text-slate-400">
-                        #{a.id}
+                        #{lang === "bn" ? toBnDigits(a.id) : a.id}
                       </td>
                       <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-white">
                         [{a.rule_id}]
@@ -575,7 +658,7 @@ function OfficerPageContent() {
                           href={`/check?plot=${a.plot_id}`}
                           className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
                         >
-                          Plot #{a.plot_id}
+                          {lang === "bn" ? `প্লট #${toBnDigits(a.plot_id)}` : `Plot #${a.plot_id}`}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
@@ -590,13 +673,13 @@ function OfficerPageContent() {
                               : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                           }`}
                         >
-                          {a.severity}
+                          {formatAlertSeverity(a.severity, lang)}
                         </span>
                       </td>
                       <td className="px-4 py-3 max-w-xs truncate text-[11px] text-slate-600 dark:text-slate-300">
                         {a.reasons && a.reasons.length > 0
                           ? a.reasons.join(" • ")
-                          : "Violation logged by fraud engine"}
+                          : (lang === "bn" ? "জালিয়াতি শনাক্তকরণ ব্যবস্থা দ্বারা পর্যবেক্ষণ সংরক্ষিত" : "Violation logged by fraud engine")}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -608,7 +691,7 @@ function OfficerPageContent() {
                               : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                           }`}
                         >
-                          {a.status}
+                          {formatAlertStatus(a.status, lang)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -652,14 +735,14 @@ function OfficerPageContent() {
             <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 font-mono text-sm font-bold text-white shadow-md shadow-teal-600/20">
-                  #{selectedMutation.id}
+                  #{lang === "bn" ? toBnDigits(selectedMutation.id) : selectedMutation.id}
                 </span>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {t("officer.drawer_title")} #{selectedMutation.id}
+                    {t("officer.drawer_title")} #{lang === "bn" ? toBnDigits(selectedMutation.id) : selectedMutation.id}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedMutation.deed_no || `Deed #${selectedMutation.deed_id}`} • Plot #{selectedMutation.plot_id}
+                    {selectedMutation.deed_no || (lang === "bn" ? `দলিল #${toBnDigits(selectedMutation.deed_id)}` : `Deed #${selectedMutation.deed_id}`)} • {lang === "bn" ? `প্লট #${toBnDigits(selectedMutation.plot_id)}` : `Plot #${selectedMutation.plot_id}`}
                   </p>
                 </div>
               </div>
@@ -680,22 +763,22 @@ function OfficerPageContent() {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   {t("officer.stepper_title")}
                 </h4>
-                <StatusStepper currentState={selectedMutation.state} />
+                <StatusStepper currentState={selectedMutation.state} lang={lang} />
               </div>
 
               {/* Applicant & Target Info */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                   <span className="text-slate-400 font-bold uppercase text-[10px]">
-                    Applicant
+                    {t("officer.applicant_label")}
                   </span>
                   <p className="mt-1 font-bold text-slate-900 dark:text-white">
-                    {selectedMutation.applicant_name || `ID #${selectedMutation.applicant_id}`}
+                    {selectedMutation.applicant_name || (lang === "bn" ? `আইডি #${toBnDigits(selectedMutation.applicant_id)}` : `ID #${selectedMutation.applicant_id}`)}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                   <span className="text-slate-400 font-bold uppercase text-[10px]">
-                    Target Deed
+                    {t("officer.target_deed")}
                   </span>
                   <p className="mt-1 font-bold">
                     <Link
@@ -703,13 +786,13 @@ function OfficerPageContent() {
                       target="_blank"
                       className="text-teal-600 hover:underline dark:text-teal-400"
                     >
-                      {selectedMutation.deed_no || `Deed #${selectedMutation.deed_id}`} ↗
+                      {selectedMutation.deed_no || (lang === "bn" ? `দলিল #${toBnDigits(selectedMutation.deed_id)}` : `Deed #${selectedMutation.deed_id}`)} ↗
                     </Link>
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                   <span className="text-slate-400 font-bold uppercase text-[10px]">
-                    Target Plot
+                    {t("officer.target_plot")}
                   </span>
                   <p className="mt-1 font-bold">
                     <Link
@@ -717,7 +800,7 @@ function OfficerPageContent() {
                       target="_blank"
                       className="text-emerald-600 hover:underline dark:text-emerald-400"
                     >
-                      Plot #{selectedMutation.plot_id} ↗
+                      {lang === "bn" ? `প্লট #${toBnDigits(selectedMutation.plot_id)}` : `Plot #${selectedMutation.plot_id}`} ↗
                     </Link>
                   </p>
                 </div>
@@ -731,7 +814,7 @@ function OfficerPageContent() {
                   </h4>
                   {selectedMutation.requires_override && (
                     <span className="rounded bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                      ⚠️ OVERRIDE MANDATORY
+                      {lang === "bn" ? "⚠️ কর্মকর্তার বিশেষ আদেশ আবশ্যক" : "⚠️ OVERRIDE MANDATORY"}
                     </span>
                   )}
                 </div>
@@ -753,7 +836,7 @@ function OfficerPageContent() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                [{f.rule_id}] {f.title || "RULE FLAGGED"}
+                                [{f.rule_id}] {f.title || (lang === "bn" ? "সতর্কতা শনাক্ত" : "RULE FLAGGED")}
                               </span>
                               <span
                                 className={`rounded px-1.5 py-0.2 text-[10px] font-bold ${
@@ -762,7 +845,7 @@ function OfficerPageContent() {
                                     : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
                                 }`}
                               >
-                                {f.severity}
+                                {formatAlertSeverity(f.severity, lang)}
                               </span>
                             </div>
                             {f.text && <p className="mt-1 text-slate-600 dark:text-slate-300">{f.text}</p>}
@@ -777,7 +860,7 @@ function OfficerPageContent() {
                   </div>
                 ) : (
                   <p className="text-xs text-slate-500">
-                    Auto-check results pending initial transition.
+                    {t("officer.auto_check_pending")}
                   </p>
                 )}
               </div>
@@ -797,10 +880,10 @@ function OfficerPageContent() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-slate-900 dark:text-white">
-                              {ev.from_state} → {ev.to_state}
+                              {formatMutationState(ev.from_state, lang)} → {formatMutationState(ev.to_state, lang)}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono">
-                              {new Date(ev.at).toLocaleString()}
+                              {formatDateTime(ev.at, lang)}
                             </span>
                           </div>
                           {ev.note && (
@@ -824,7 +907,7 @@ function OfficerPageContent() {
                 </h4>
 
                 {actionError && (
-                  <ErrorBox title="Transition Error" message={actionError} />
+                  <ErrorBox title={lang === "bn" ? "স্থানান্তর ত্রুটি" : "Transition Error"} message={actionError} />
                 )}
                 {actionSuccess && (
                   <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 animate-fade-in-down">
@@ -879,7 +962,7 @@ function OfficerPageContent() {
                             <Spinner size="sm" />
                           ) : (
                             <span>
-                              {isReject ? "Reject Application" : `Move to ${target.replace("_", " ")}`}
+                              {isReject ? t("officer.reject_action") : `${t("officer.move_to")} ${formatMutationState(target, lang)}`}
                             </span>
                           )}
                         </button>
@@ -888,7 +971,7 @@ function OfficerPageContent() {
 
                     {getNextTransitions(selectedMutation.state).length === 0 && (
                       <span className="text-xs text-slate-500 italic">
-                        Workflow reached terminal state ({selectedMutation.state}). No further transitions available.
+                        {t("officer.terminal_state")}
                       </span>
                     )}
                   </div>
