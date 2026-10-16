@@ -45,26 +45,6 @@ function LoginForm() {
     }
   };
 
-  const handleQuickLogin = async (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await login(u, p);
-      const dest = getDestination(res.role);
-      router.push(dest);
-    } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        setError(err.detail || err.message);
-      } else if (err instanceof Error) {
-        setError(err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleQuickFill = (u: string, p: string) => {
     setUsername(u);
     setPassword(p);
