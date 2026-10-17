@@ -394,7 +394,27 @@
     "page": "Page",
     "prev_page": "Previous",
     "next_page": "Next",
-    "no_logs": "No audit log entries recorded."
+    "no_logs": "No audit log entries recorded.",
+    "root_badge": "Root Administrator Security Center",
+    "full_privileges": "Full Administrative Privileges",
+    "trail_badge": "Trail",
+    "demo_disabled_desc": "Tamper Lab endpoints are strictly blocked when DEMO_MODE is false to protect production databases.",
+    "tamper_control_title": "Simulate Database Payload Tampering",
+    "reseed_btn": "Reseed Database (Scenario Reset)",
+    "reseed_confirm": "Are you sure you want to reset the database and reseed all 300 plots and 8 benchmark scenarios?",
+    "reseed_success": "Database reseeded successfully",
+    "op_failed": "Operation Failed",
+    "area_diff_label": "Original Area: {orig} decimals → Tampered Area: {tamp} decimals (+1.0)",
+    "deed_no_label": "Deed No:",
+    "crypto_obs_label": "Cryptographic Observations:",
+    "open_public_verify": "Open in Citizen Public Verify Page ↗",
+    "refresh_logs_btn": "↻ Refresh Logs",
+    "system_actor": "System",
+    "user_actor": "User #{id}",
+    "modal_tamper_title": "Confirm Tamper Simulation",
+    "modal_restore_title": "Confirm Deed Restore",
+    "cancel": "Cancel",
+    "proceed": "Proceed"
   }
 }
 

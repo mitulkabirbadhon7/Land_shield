@@ -141,6 +141,15 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined") {
+      logout();
+      if (!window.location.pathname.startsWith("/login")) {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.href = `/login?next=${next}`;
+      }
+    }
+
     let errBody: { code?: string; detail?: unknown; report?: unknown } = {};
     try {
       errBody = await res.json();
@@ -172,6 +181,15 @@ export async function apiFetch<T>(
 // Typed API Methods
 // -------------------------------------------------------------
 
+const BN_TO_EN_MAP: Record<string, string> = {
+  "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+  "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+};
+
+export function normalizeBnDigits(val: string): string {
+  return val.replace(/[০-৯]/g, (d) => BN_TO_EN_MAP[d] || d);
+}
+
 export async function login(username: string, password: string): Promise<LoginResponse> {
   const data = await apiFetch<LoginResponse>("/auth/login", {
     method: "POST",
@@ -183,7 +201,8 @@ export async function login(username: string, password: string): Promise<LoginRe
 }
 
 export async function verifyDeed(deedNo: string): Promise<VerifyOut> {
-  return apiFetch<VerifyOut>(`/deeds/${encodeURIComponent(deedNo)}/verify`);
+  const cleanDeedNo = deedNo.trim().toUpperCase();
+  return apiFetch<VerifyOut>(`/deeds/${encodeURIComponent(cleanDeedNo)}/verify`);
 }
 
 export async function getPlot(plotId: number): Promise<PlotOut> {
@@ -206,8 +225,8 @@ export async function searchPlots(
   dagNo?: string
 ): Promise<PlotOut[]> {
   const params = new URLSearchParams();
-  if (mouza) params.set("mouza", mouza);
-  if (dagNo) params.set("dag_no", dagNo);
+  if (mouza) params.set("mouza", mouza.trim());
+  if (dagNo) params.set("dag_no", normalizeBnDigits(dagNo.trim()));
   const query = params.toString();
   return apiFetch<PlotOut[]>(`/plots/search${query ? `?${query}` : ""}`);
 }

@@ -28,6 +28,7 @@
 | **S21** | Deed QR upload, area conservation, Bengali UI purity | Done (107 tests, build ok) | Direct QR file upload, partial sale area conservation, Bengali numerals & pure localization |
 | **S22** | Pre-purchase check state isolation & API cache prevention | Done (107 tests, build ok) | Fixed cross-scenario card verdict persistence, no-store fetch cache headers, language toggle ref guard |
 | **S23** | Cloud key drift diagnosis & Admin reseed endpoint | Done (108 tests, build ok) | Diagnosed Render KEY_UNKNOWN key drift, added POST /dev/reseed and Admin portal 1-click reseed |
+| **S24** | Edge case hardening & 100% pure Bengali Admin UI | Done (108 tests, build ok) | Self-dealing deed block, case-insensitive verify, BN numerals in dag queries, 401 redirect, 100% pure Bengali in /admin |
 
 ### Session S03 Log
 - **What was done:**
@@ -891,7 +892,33 @@ The following placeholders have been clearly marked in the documentation pack an
   - Provided exact human action steps for setting `SIGNING_KEY_HEX` in Render's dashboard.
 - **Known gaps:**
   - None. Both local and cloud paths verified.
-- **Next session:** `S24` (Final Presentation Rehearsal and Hackathon Deliverables Packaging)
+- **Next session:** `S24` (Edge Case Hardening, Failure Mode Immunity, and 100% Pure Bengali Admin Localization)
+
+### Session S24 Log (Edge Case Hardening, Failure Mode Immunity & Pure Bengali Admin UI)
+- **What was done:**
+  - **Comprehensive Edge Case Audit & Resolution**:
+    - **Self-Dealing / Sham Sales Prevention**: In `backend/app/schemas/deeds.py` and `backend/app/services/deeds.py`, enforced schema and domain-level validation rejecting deed registrations where `seller_id == buyer_id`.
+    - **Case-Insensitive Deed Lookup**: In `backend/app/services/deeds.py`, `frontend/src/lib/api.ts`, and `frontend/src/app/verify/page.tsx`, normalized deed queries with `.strip().upper()`, preventing 404/INVALID false alarms when lowercase deed identifiers (e.g. `dhaka-2026-000010`) are submitted.
+    - **Bengali Numeral Dag & Mouza Search**: In `backend/app/api/v1/plots.py` and `frontend/src/lib/api.ts`, added `BN_TO_EN_DIGITS` normalization mapping Bengali numerals (e.g. `১০১`, `প্লট ৬`) to ASCII digits (`101`, `6`), resolving empty search results when citizens type Bengali numerals into the search bar.
+    - **Expired Auth Auto-Recovery**: In `frontend/src/lib/api.ts`, intercepted HTTP 401 Unauthorized responses to clear stale localStorage tokens and automatically redirect expired sessions to `/login?next=...` with full return URL preservation.
+    - **Database Reseed Safety**: In `backend/app/api/v1/dev.py`, fixed an `ObjectDeletedError` 500 failure during reseed by preserving the actor's username and re-querying the admin entity after commit before writing the audit log.
+    - **QR Code Content Validation**: In `frontend/src/app/verify/page.tsx`, enhanced QR code parser to validate URL scheme and deed parameter presence, cleanly alerting users if a non-deed QR code image is uploaded.
+  - **100% Pure Bengali Admin Portal Localization (`/admin`)**:
+    - Audited every user-facing string, modal, button, table header, timestamp, and audit trail pill in `frontend/src/app/admin/page.tsx`.
+    - Updated `frontend/src/locales/bn.json` and `frontend/src/locales/en.json` with all dictionary keys under the `"admin"` namespace.
+    - Localized all administrative elements when Bengali is selected: Root badge, tab headers, Tamper Lab controls, deed input, inline live verification cards, audit trail table headers (`আইডি`, `সময়`, `কার্যক্রম`, `নথি`, `ব্যবহারকারী`, `বিস্তারিত বিবরণ`), pagination controls (`পৃষ্ঠা ১`, `পূর্ববর্তী`, `পরবর্তী`), and confirmation dialog modals.
+    - Converted all numbers, IDs, and timestamps to Bengali script using `toBnDigits` and `toLocaleString("bn-BD")`.
+  - **Quality Assurance & Verification**:
+    - **Backend Pytest Suite**: 108/108 passed in 152s (100% green).
+    - **Frontend ESLint**: 0 errors, 0 warnings.
+    - **Frontend Next.js Production Build**: 10/10 routes compiled and prerendered cleanly in 9.5s with Turbopack.
+- **Decisions:**
+    - `seller_id == buyer_id` rejection is handled at both Pydantic schema validation and domain logic layers to guarantee self-dealing can never penetrate the database or ledger.
+    - Bengali numeral mapping is implemented symmetrically on both frontend search inputs and backend API query parameters.
+- **Known gaps:**
+    - None. All identified edge cases and localization requirements are resolved and verified.
+- **Next session:** `S25` (Final Presentation Rehearsal, Live Demo Script Validation & Submission Packaging)
+
 
 
 

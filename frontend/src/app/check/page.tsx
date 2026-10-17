@@ -9,7 +9,7 @@ import { ErrorBox } from "@/components/ErrorBox";
 import { RiskCard } from "@/components/RiskCard";
 import { ChainTimeline } from "@/components/ChainTimeline";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getChain, getPlot, getRisk, searchPlots, verifyDeed } from "@/lib/api";
+import { getChain, getPlot, getRisk, searchPlots, verifyDeed, normalizeBnDigits } from "@/lib/api";
 import { ChainItem, PlotOut, RiskReportOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -192,6 +192,7 @@ function CitizenCheckContent() {
     if (e) e.preventDefault();
     const cleanQuery = (customQuery !== undefined ? customQuery : query).trim();
     if (!cleanQuery) return;
+    const normalizedQuery = normalizeBnDigits(cleanQuery);
 
     setLoading(true);
     setError(null);
@@ -204,7 +205,7 @@ function CitizenCheckContent() {
     try {
       // 1. Explicit plot ID? (e.g. 'Plot 6', 'প্লট ৬', '#6')
       const explicitPlotMatch =
-        cleanQuery.match(/^(?:plot|প্লট)\s*#?\s*(\d+)$/i) || cleanQuery.match(/^#(\d+)$/);
+        normalizedQuery.match(/^(?:plot|প্লট)\s*#?\s*(\d+)$/i) || normalizedQuery.match(/^#(\d+)$/);
       if (explicitPlotMatch) {
         const numericId = parseInt(explicitPlotMatch[1], 10);
         if (!isNaN(numericId)) {
@@ -218,10 +219,24 @@ function CitizenCheckContent() {
         }
       }
 
+      // Explicit Dag ID? (e.g. 'Dag 101', 'দাগ ১০১')
+      const explicitDagMatch = normalizedQuery.match(/^(?:dag|দাগ)\s*#?\s*(\d+)$/i);
+      if (explicitDagMatch) {
+        const dagStr = explicitDagMatch[1];
+        const dagResults = await searchPlots(undefined, dagStr);
+        if (dagResults.length === 1) {
+          await loadPlotDetails(dagResults[0].id);
+          return;
+        } else if (dagResults.length > 1) {
+          setSearchResults(dagResults);
+          return;
+        }
+      }
+
       // 2. Deed number? (e.g. MIR-2026-... or DHAKA-2026-...)
-      if (/^[A-Z]+-\d{4}-\d+$/i.test(cleanQuery)) {
+      if (/^[A-Z]+-\d{4}-\d+$/i.test(normalizedQuery)) {
         try {
-          const verifyData = await verifyDeed(cleanQuery);
+          const verifyData = await verifyDeed(normalizedQuery.toUpperCase());
           if (verifyData.plot_id) {
             await loadPlotDetails(verifyData.plot_id);
             return;
@@ -232,13 +247,13 @@ function CitizenCheckContent() {
       }
 
       // 3. Search by Dag number or Mouza name
-      const isDigits = /^\d+$/.test(cleanQuery);
+      const isDigits = /^\d+$/.test(normalizedQuery);
       let results: PlotOut[] = [];
       if (isDigits) {
-        results = await searchPlots(undefined, cleanQuery);
+        results = await searchPlots(undefined, normalizedQuery);
         if (results.length === 0) {
           try {
-            const plotData = await getPlot(parseInt(cleanQuery, 10));
+            const plotData = await getPlot(parseInt(normalizedQuery, 10));
             await loadPlotDetails(plotData.id);
             return;
           } catch {
@@ -468,7 +483,13 @@ function CitizenCheckContent() {
         <ErrorBox
           title={t("common.error")}
           message={error}
-          onRetry={() => handleSearch()}
+          onRetry={() => {
+            if (lastLoadedPlotId.current) {
+              loadPlotDetails(lastLoadedPlotId.current);
+            } else {
+              handleSearch();
+            }
+          }}
         />
       )}
 

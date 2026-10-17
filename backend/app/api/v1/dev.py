@@ -158,6 +158,8 @@ def reseed_database(
     from app.models.user import User
     from scripts.seed import seed_data
 
+    actor_username = getattr(current_user, "username", "admin1")
+
     # Clear in reverse foreign key order
     db.execute(delete(AuditLog))
     db.execute(delete(Alert))
@@ -174,9 +176,10 @@ def reseed_database(
     res = seed_data(db, reset=True)
     db.commit()
 
+    new_admin = db.scalars(select(User).where(User.username == actor_username)).first()
     log(
         db,
-        actor=current_user,
+        actor=new_admin,
         action="DEMO_RESEED",
         entity="database",
         entity_id=None,

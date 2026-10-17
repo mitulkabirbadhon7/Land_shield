@@ -40,7 +40,7 @@ function VerifyContent() {
 
   const handleVerify = useCallback(
     async (deedNoToVerify: string) => {
-      const cleanDeedNo = deedNoToVerify.trim();
+      const cleanDeedNo = deedNoToVerify.trim().toUpperCase();
       if (!cleanDeedNo) return;
 
       lastVerifiedDeed.current = cleanDeedNo;
@@ -121,6 +121,10 @@ function VerifyContent() {
         fileScanner.clear();
       } catch {
         // ignore cleanup error
+      }
+      if (parsedDeed.startsWith("http") && !parsedDeed.includes("deed=")) {
+        setError(lang === "bn" ? "কিউআর কোডে কোনো দলিলের তথ্য পাওয়া যায়নি" : "The scanned QR code does not contain a deed reference");
+        return;
       }
       setInputDeedNo(parsedDeed);
       handleVerify(parsedDeed);

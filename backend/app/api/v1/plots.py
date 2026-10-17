@@ -61,6 +61,13 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
     )
 
 
+BN_TO_EN_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+
+
+def _normalize_digits(s: str) -> str:
+    return s.translate(BN_TO_EN_DIGITS)
+
+
 @router.get("/search", response_model=list[PlotOut])
 def search_plots(
     mouza: str | None = Query(None, description="Mouza name filter"),
@@ -68,11 +75,15 @@ def search_plots(
     db: Session = Depends(get_db),
 ):
     """Search land plots by mouza and/or dag number with public name masking."""
+    from sqlalchemy import or_
+
     stmt = select(Plot)
     if mouza and mouza.strip():
         stmt = stmt.where(Plot.mouza.ilike(f"%{mouza.strip()}%"))
     if dag_no and dag_no.strip():
-        stmt = stmt.where(Plot.dag_no == dag_no.strip())
+        raw_dag = dag_no.strip()
+        norm_dag = _normalize_digits(raw_dag)
+        stmt = stmt.where(or_(Plot.dag_no == raw_dag, Plot.dag_no == norm_dag))
 
     plots = db.scalars(stmt).all()
     return [_to_plot_out(plot, db) for plot in plots]
