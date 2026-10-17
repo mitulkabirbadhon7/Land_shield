@@ -252,65 +252,147 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
         </div>
       </Card>
 
-      {/* 3. Findings Detailed List */}
+      {/* 3. Layered Findings Detailed List */}
       <Card
-        title={t("check.risk_analysis")}
+        title={t("layers.title")}
+        subtitle={t("layers.subtitle")}
         headerAction={
           findings.length > 0 ? (
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
               {findings.length} {t("check.findings_count")}
             </span>
-          ) : null
+          ) : (
+            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              {t("check.no_findings")}
+            </span>
+          )
         }
       >
-        {findings.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs font-semibold text-emerald-800 animate-fade-in dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-            <svg className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-            <span>{t("check.no_findings")}</span>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {findings.map((finding, idx) => (
-              <div
-                key={idx}
-                className={`rounded-xl border border-slate-200 bg-slate-50/60 p-4 transition-all duration-200 dark:border-slate-800 dark:bg-slate-900/60 space-y-2 hover:-translate-y-0.5 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-700 animate-fade-in-up stagger-${Math.min(5, (idx % 5) + 1)}`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-slate-900 px-2 py-0.5 font-mono text-[11px] font-bold text-white dark:bg-slate-700">
-                      {finding.rule_id}
-                    </span>
-                    <span
-                      className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase transition-transform duration-200 hover:scale-105 cursor-default ${severityPill(
-                        finding.severity
-                      )}`}
-                    >
-                      {finding.severity}
-                    </span>
-                    {typeof finding.weight === "number" && finding.weight > 0 && (
-                      <span className="text-[11px] font-semibold text-slate-500 font-mono">
-                        +{finding.weight} pts
-                      </span>
-                    )}
+        <div className="space-y-6">
+          {(() => {
+            const LAYER_ORDER = ["integrity", "rules", "reconcile", "lineage", "ml"] as const;
+            const normalizedLayersRun = report.layers_run && report.layers_run.length > 0
+              ? report.layers_run.map((k) => (k === "rule" ? "rules" : k.toLowerCase()))
+              : null;
+
+            // Only display layers that are in layers_run (if provided)
+            // If layers_run is not provided (Round 1 backend), show layers that have findings, or the core integrity/rules
+            const visibleLayers = LAYER_ORDER.filter((layerKey) => {
+              if (normalizedLayersRun) {
+                return normalizedLayersRun.includes(layerKey);
+              }
+              const layerFindings = findings.filter((f) => {
+                const fl = (f.layer || "").toLowerCase();
+                if (layerKey === "rules") return fl === "rules" || fl === "rule";
+                return fl === layerKey;
+              });
+              // Always show integrity and rules; show others if they have findings or if lineage_available is explicitly stated
+              if (layerKey === "integrity" || layerKey === "rules") return true;
+              if (layerKey === "lineage" && report.lineage_available !== undefined && report.lineage_available !== null) return true;
+              return layerFindings.length > 0;
+            });
+
+            return visibleLayers.map((layerKey) => {
+              const layerFindings = findings.filter((f) => {
+                const fl = (f.layer || "").toLowerCase();
+                if (layerKey === "rules") return fl === "rules" || fl === "rule";
+                return fl === layerKey;
+              });
+
+              const isLineageLayer = layerKey === "lineage";
+              const showLineageUnavailable = isLineageLayer && report.lineage_available === false;
+
+              return (
+                <div
+                  key={layerKey}
+                  className="rounded-xl border border-slate-200/90 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/50 space-y-3 shadow-2xs"
+                >
+                  {/* Layer Heading */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{t(`layers.${layerKey}`)}</span>
+                        {layerFindings.length > 0 ? (
+                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                            {layerFindings.length}
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            ✓ OK
+                          </span>
+                        )}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {t(`layers.${layerKey}_desc`)}
+                      </p>
+                    </div>
                   </div>
 
-                  {finding.deed_no && (
-                    <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-500">
-                      {finding.deed_no}
-                    </span>
+                  {/* Findings under this layer */}
+                  {layerFindings.length > 0 ? (
+                    <div className="space-y-2.5 pt-1">
+                      {layerFindings.map((finding, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5 transition-all dark:border-slate-800 dark:bg-slate-900/70 space-y-2"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-md bg-slate-900 px-2 py-0.5 font-mono text-[11px] font-bold text-white dark:bg-slate-700">
+                                {finding.rule_id}
+                              </span>
+                              {finding.sub_code && (
+                                <span className="rounded-md bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                  {finding.sub_code}
+                                </span>
+                              )}
+                              <span
+                                className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase ${severityPill(
+                                  finding.severity
+                                )}`}
+                              >
+                                {finding.severity}
+                              </span>
+                              {typeof finding.weight === "number" && finding.weight > 0 && (
+                                <span className="text-[11px] font-semibold text-slate-500 font-mono">
+                                  +{finding.weight} pts
+                                </span>
+                              )}
+                            </div>
+
+                            {finding.deed_no && (
+                              <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                                {finding.deed_no}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
+                            {finding.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : showLineageUnavailable ? (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400">
+                      <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{t("layers.lineage_not_available")}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5 text-xs font-medium text-emerald-800 dark:border-emerald-950 dark:bg-emerald-950/20 dark:text-emerald-300">
+                      <svg className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{t("layers.no_layer_findings")}</span>
+                    </div>
                   )}
                 </div>
-
-                {/* Natural Bilingual Explanatory Text */}
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
-                  {finding.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+              );
+            });
+          })()}
+        </div>
       </Card>
 
       {/* 4. Mutation Status Summary */}

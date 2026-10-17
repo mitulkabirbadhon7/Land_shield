@@ -15,6 +15,7 @@ import {
 import { AlertOut, MutationOut } from "@/lib/types";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
+import { useFeatures } from "@/lib/features";
 
 const WORKFLOW_STEPS = [
   "SUBMITTED",
@@ -95,6 +96,7 @@ function StatusStepper({ currentState }: { currentState: string }) {
 function OfficerPageContent() {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
+  const features = useFeatures();
 
   // Active Tab: "mutations" | "alerts"
   const [activeTab, setActiveTab] = useState<"mutations" | "alerts">("mutations");
@@ -335,6 +337,21 @@ function OfficerPageContent() {
             {alerts.filter((a) => a.status === "OPEN").length} open
           </span>
         </button>
+
+        {features.FEATURE_RECONCILE && (
+          <Link
+            href="/officer/reconcile"
+            className="flex items-center gap-2 border-b-2 border-transparent px-6 py-3 text-sm font-bold text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition-all duration-200"
+          >
+            <svg className="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            <span>{t("reconcile.title")}</span>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold">
+              R8
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* TAB 1: MUTATIONS (NAMJARI) */}

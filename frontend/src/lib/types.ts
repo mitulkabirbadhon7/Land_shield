@@ -94,9 +94,63 @@ export interface RiskReportOut {
     is_acquisition: boolean;
     is_disputed: boolean;
     active_cases_count: number;
-  };
+  } | string[];
   mutation_summary: MutationSummary;
+  layers?: Record<string, RiskFinding[]>;
+  layers_run?: string[];
+  lineage_available?: boolean | null;
 }
+
+export interface KhatianNode {
+  id: number;
+  plot_id: number;
+  survey_type: "CS" | "SA" | "RS" | "BS" | string;
+  khatian_no: string;
+  dag_no: string;
+  area_decimal: number;
+  owners?: string[] | { name?: string; share?: number }[] | string;
+  parent_id?: number | null;
+}
+
+export interface LineageIssue {
+  code: "MISSING_GENERATION" | "ORPHAN" | "BAD_PARENT" | "AREA_GROWTH" | string;
+  message: string;
+  survey_type?: string;
+  khatian_no?: string;
+}
+
+export interface LineageOut {
+  plot_id: number;
+  nodes: KhatianNode[];
+  edges?: { from: number; to: number }[];
+  issues: LineageIssue[] | string[];
+  lineage_available: boolean;
+}
+
+export interface ReconcileIssue {
+  code: "OWNER_MISMATCH" | "MUTATION_STALLED" | "AREA_NOT_CONSERVED" | string;
+  message: string;
+  detail?: string;
+  sub_code?: string;
+  plot_id?: number;
+}
+
+export interface ReconcilePlotItem {
+  plot_id: number;
+  dag_no: string;
+  mouza: string;
+  upazila: string;
+  district: string;
+  issues: ReconcileIssue[];
+}
+
+export interface ReconcileListOut {
+  items: ReconcilePlotItem[];
+  total: number;
+  page: number;
+  size: number;
+}
+
 
 export interface LoginResponse {
   access_token: string;

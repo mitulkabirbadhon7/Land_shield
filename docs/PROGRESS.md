@@ -36,7 +36,7 @@
 | **P2-01** | Phase 2 DB tables + seed_phase2 | — | Khatian, SigningKey, MerkleRoot, IngestDraft; price_bdt; seed scenarios L1-C1 |
 | **P2-02** | Reconciliation layer R8 + API | — | OWNER_MISMATCH, MUTATION_STALLED, AREA_NOT_CONSERVED; /reconcile endpoints |
 | **P2-03** | Lineage layer R7 + API | — | CS→SA→RS→BS graph; MISSING_GENERATION, ORPHAN, BAD_PARENT, AREA_GROWTH |
-| **P2-04** | UI: layered risk card, lineage timeline, reconcile page | — | /check uses /analysis/plot; LineageTimeline; /officer/reconcile; tag v1.1-recon-lineage |
+| **P2-04** | UI: layered risk card, lineage timeline, reconcile page | Done (build ok) | /check uses /analysis/plot; LineageTimeline; /officer/reconcile; tag v1.1-recon-lineage |
 | **P2-05** | Offline QR backend + keys API | — | build_offline_payload, /deeds/{no}/qr-offline, /keys public endpoint |
 | **P2-06** | Offline verify UI (browser crypto) | — | tweetnacl; /verify/offline; KEY cache; unit tests with backend vector |
 | **P2-07** | LLM client + due-diligence report backend | — | provider-agnostic client; gather_facts; schema-validated output; template fallback |
@@ -67,6 +67,24 @@
 - **Known gaps:**
   - Backend `GET /api/v1/features` endpoint will be provided by teammate. Frontend gracefully falls back until deployed.
 - **Next session:** `P2-04` (UI for layers — lineage timeline, layered risk card, reconcile page).
+
+### Session P2-04 Log (UI for Layers)
+- **What was done:**
+  - Switched `/check` page (`frontend/src/app/check/page.tsx`) to query `/analysis/plot/{id}` via `getAnalysis(plotId, lang)` with graceful fallback to `/risk/plot/{id}`.
+  - Upgraded `RiskCard.tsx` (`frontend/src/components/RiskCard.tsx`): groups findings by security layer with distinct headings (Integrity, Rules R1-R6, Reconciliation R8, Lineage R7, ML Advisory). Hides layers not in `layers_run` when provided. Displays a calm neutral note when `lineage_available=false` without triggering a false alarm.
+  - Implemented `LineageTimeline.tsx` (`frontend/src/components/LineageTimeline.tsx`): horizontal chronological survey flow (CS -> SA -> RS -> BS) displaying khatian numbers, dag numbers, area in decimals, synthetic owners, and red alert indicators with tooltips for lineage issues (`AREA_GROWTH`, `MISSING_GENERATION`, `ORPHAN`, `BAD_PARENT`). Mobile-friendly with horizontal scroll. Gated by `features.FEATURE_LINEAGE`.
+  - Implemented `/officer/reconcile` page (`frontend/src/app/officer/reconcile/page.tsx`): role-protected (`officer`, `admin`) interface with district and discrepancy type filters (`OWNER_MISMATCH`, `MUTATION_STALLED`, `AREA_NOT_CONSERVED`), bilingual explanations, and one-click "Inspect Plot" link. Gated by `features.FEATURE_RECONCILE`.
+  - Added direct navigation tab to `/officer/reconcile` in `frontend/src/app/officer/page.tsx` when `FEATURE_RECONCILE` is enabled.
+  - Extended typed schemas in `frontend/src/lib/types.ts` (`KhatianNode`, `LineageIssue`, `LineageOut`, `ReconcileIssue`, `ReconcilePlotItem`, `ReconcileListOut`, and extended `RiskReportOut`).
+  - Added API client methods in `frontend/src/lib/api.ts` (`getAnalysis`, `getLineage`, `listReconcile`, `getReconcilePlot`).
+  - Added comprehensive bilingual dictionary entries in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`.
+  - Verification: `npm run lint` passed with 0 errors and 0 warnings; `npm run build` compiled 11/11 static routes successfully; pytest backend test suite passed 107/107 tests (0 regressions).
+- **Decisions:**
+  - Layered grouping gives citizens and judges immediate visibility into exactly which institutional defense caught a violation (cryptographic hash/signature vs statutory rule vs inter-office discrepancy).
+  - Graceful fallback for lineage and reconcile ensures that frontend components work smoothly and demonstrably before and after teammate's backend endpoints are deployed.
+- **Known gaps:**
+  - Teammate is implementing backend endpoints for P2-01, P2-02, P2-03.
+- **Next session:** `P2-06` (Offline verify UI — browser crypto with tweetnacl) or teammate's backend integration.
 
 ---
 

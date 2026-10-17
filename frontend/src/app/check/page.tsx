@@ -7,9 +7,11 @@ import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
 import { RiskCard } from "@/components/RiskCard";
 import { ChainTimeline } from "@/components/ChainTimeline";
-import { getChain, getPlot, getRisk, searchPlots, verifyDeed } from "@/lib/api";
-import { ChainItem, PlotOut, RiskReportOut } from "@/lib/types";
+import { LineageTimeline } from "@/components/LineageTimeline";
+import { getChain, getPlot, getAnalysis, getLineage, searchPlots, verifyDeed } from "@/lib/api";
+import { ChainItem, LineageOut, PlotOut, RiskReportOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
+import { useFeatures } from "@/lib/features";
 
 interface BenchmarkScenario {
   id: string;
@@ -22,6 +24,7 @@ interface BenchmarkScenario {
 
 function CitizenCheckContent() {
   const { lang, t } = useLanguage();
+  const features = useFeatures();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -33,6 +36,8 @@ function CitizenCheckContent() {
   const [selectedPlot, setSelectedPlot] = useState<PlotOut | null>(null);
   const [riskReport, setRiskReport] = useState<RiskReportOut | null>(null);
   const [chain, setChain] = useState<ChainItem[]>([]);
+  const [lineage, setLineage] = useState<LineageOut | null>(null);
+  const [lineageLoading, setLineageLoading] = useState(false);
 
   // Search results list (if query matches multiple plots)
   const [searchResults, setSearchResults] = useState<PlotOut[]>([]);
@@ -97,13 +102,24 @@ function CitizenCheckContent() {
       try {
         const [plotData, riskData, chainData] = await Promise.all([
           getPlot(plotId),
-          getRisk(plotId, lang),
+          getAnalysis(plotId, lang),
           getChain(plotId),
         ]);
 
         setSelectedPlot(plotData);
         setRiskReport(riskData);
         setChain(chainData);
+
+        // Fetch lineage if feature flag is active
+        if (features.FEATURE_LINEAGE) {
+          setLineageLoading(true);
+          getLineage(plotId)
+            .then((lin) => setLineage(lin))
+            .catch(() => setLineage(null))
+            .finally(() => setLineageLoading(false));
+        } else {
+          setLineage(null);
+        }
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message);
@@ -114,7 +130,7 @@ function CitizenCheckContent() {
         setLoading(false);
       }
     },
-    [lang, router, searchParams, t]
+    [features.FEATURE_LINEAGE, lang, router, searchParams, t]
   );
 
   // Handle URL query ?plot=... on mount or change
@@ -132,7 +148,7 @@ function CitizenCheckContent() {
   // Re-fetch risk report when user toggles language so text matches
   useEffect(() => {
     if (selectedPlot) {
-      getRisk(selectedPlot.id, lang)
+      getAnalysis(selectedPlot.id, lang)
         .then((data) => setRiskReport(data))
         .catch(() => {});
     }
@@ -489,6 +505,11 @@ function CitizenCheckContent() {
 
           {/* 2. Risk Card (Circular Ring Gauge, Level, Flags, Findings) */}
           <RiskCard report={riskReport} />
+
+          {/* 2.1 Survey Lineage Timeline (CS -> SA -> RS -> BS) when enabled */}
+          {features.FEATURE_LINEAGE && (
+            <LineageTimeline lineage={lineage} loading={lineageLoading} />
+          )}
 
           {/* 3. Ownership Ledger Chain Timeline */}
           <ChainTimeline chain={chain} />

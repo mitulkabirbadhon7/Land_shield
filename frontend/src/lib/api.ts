@@ -7,12 +7,15 @@ import {
   DeedRegistrationResponse,
   DevStatusOut,
   LoginResponse,
+  LineageOut,
   MetaOut,
   MutationCreate,
   MutationOut,
   MutationTransition,
   PersonOut,
   PlotOut,
+  ReconcileIssue,
+  ReconcileListOut,
   RiskReportOut,
   TamperResult,
   UserRole,
@@ -199,6 +202,57 @@ export async function getRisk(
 ): Promise<RiskReportOut> {
   return apiFetch<RiskReportOut>(`/risk/plot/${plotId}?lang=${lang}`);
 }
+
+export async function getAnalysis(
+  plotId: number,
+  lang: "bn" | "en" = "bn"
+): Promise<RiskReportOut> {
+  try {
+    return await apiFetch<RiskReportOut>(`/analysis/plot/${plotId}?lang=${lang}`);
+  } catch {
+    // Graceful fallback to /risk/plot
+    return await apiFetch<RiskReportOut>(`/risk/plot/${plotId}?lang=${lang}`);
+  }
+}
+
+export async function getLineage(plotId: number): Promise<LineageOut | null> {
+  try {
+    return await apiFetch<LineageOut>(`/lineage/${plotId}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function listReconcile(params?: {
+  district?: string;
+  type?: string;
+  page?: number;
+  size?: number;
+}): Promise<ReconcileListOut> {
+  const q = new URLSearchParams();
+  if (params?.district) q.set("district", params.district);
+  if (params?.type && params.type !== "ALL") q.set("type", params.type);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.size) q.set("size", String(params.size));
+  const qs = q.toString();
+  return apiFetch<ReconcileListOut>(`/reconcile${qs ? `?${qs}` : ""}`, {
+    requiresAuth: true,
+  });
+}
+
+export async function getReconcilePlot(
+  plotId: number
+): Promise<{ plot_id: number; issues: ReconcileIssue[] } | null> {
+  try {
+    return await apiFetch<{ plot_id: number; issues: ReconcileIssue[] }>(
+      `/reconcile/${plotId}`,
+      { requiresAuth: true }
+    );
+  } catch {
+    return null;
+  }
+}
+
 
 export async function searchPlots(
   mouza?: string,

@@ -44,11 +44,18 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **PROGRESS.md:** Added Phase 2 session table (P2-00 to P2-19).
 - **CHANGELOG.md / README.md:** Started Phase 2 section; added "Changes since Round 1" in README.
 
+### P2-04 — UI for Layers (Layered Risk Card, Lineage Timeline, Reconcile Portal)
+- **Layered Risk Card (`RiskCard.tsx`):** Groups findings by institutional security layer (Integrity, Rules, Reconciliation, Lineage, ML Advisory); respects `layers_run`; shows neutral information note when `lineage_available` is false without false-positive alarms.
+- **Lineage Timeline Component (`LineageTimeline.tsx`):** Horizontal chronological survey flow (CS -> SA -> RS -> BS) displaying khatian number, dag number, area in decimals, owners, connecting directional vectors, and red alert tags with interactive tooltips for survey violations (`AREA_GROWTH`, `MISSING_GENERATION`, `ORPHAN`, `BAD_PARENT`). Mobile friendly with horizontal scroll.
+- **Citizen Pre-Purchase Check Update (`/check`):** Connected to `/analysis/plot/{id}` endpoint via `getAnalysis` with graceful fallback; conditionally renders `LineageTimeline` when `FEATURE_LINEAGE` is active.
+- **Officer Reconcile Portal (`/officer/reconcile`):** Role-protected portal (`officer`, `admin`) with district and discrepancy type filters (`OWNER_MISMATCH`, `MUTATION_STALLED`, `AREA_NOT_CONSERVED`), bilingual explanations, and one-click "Inspect Plot" button. Added tab link from `/officer`.
+- **API & Schemas:** Added `getAnalysis`, `getLineage`, `listReconcile`, `getReconcilePlot` and TypeScript types in `types.ts`.
+- **Bilingual i18n:** Added full Bangla and English translation keys in `bn.json` and `en.json`.
+
 ### Planned (upcoming sessions)
 - **P2-01:** Phase 2 DB tables (Khatian, SigningKey, MerkleRoot, IngestDraft) + `seed_phase2.py`.
 - **P2-02:** Reconciliation layer R8 + `/reconcile` API.
 - **P2-03:** Survey lineage layer R7 + `/lineage` API.
-- **P2-04:** UI — layered risk card, lineage timeline, officer reconcile page.
 - **P2-05/06:** Offline QR backend + browser crypto verify UI.
 - **P2-07/08:** LLM due-diligence report backend + print-to-PDF UI.
 - **P2-09:** Role-based privacy views.
