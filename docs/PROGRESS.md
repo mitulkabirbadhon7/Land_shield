@@ -26,6 +26,50 @@
 | **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
 | **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
 
+---
+
+## Phase 2 Progress (Final Round)
+
+| Session | Feature | Status | Notes |
+|---|---|---|---|
+| **P2-00** | Foundation: feature flags, layered report shape | Done (frontend) | `features.ts` useFeatures() hook; PROGRESS, CHANGELOG, README updated |
+| **P2-01** | Phase 2 DB tables + seed_phase2 | — | Khatian, SigningKey, MerkleRoot, IngestDraft; price_bdt; seed scenarios L1-C1 |
+| **P2-02** | Reconciliation layer R8 + API | — | OWNER_MISMATCH, MUTATION_STALLED, AREA_NOT_CONSERVED; /reconcile endpoints |
+| **P2-03** | Lineage layer R7 + API | — | CS→SA→RS→BS graph; MISSING_GENERATION, ORPHAN, BAD_PARENT, AREA_GROWTH |
+| **P2-04** | UI: layered risk card, lineage timeline, reconcile page | — | /check uses /analysis/plot; LineageTimeline; /officer/reconcile; tag v1.1-recon-lineage |
+| **P2-05** | Offline QR backend + keys API | — | build_offline_payload, /deeds/{no}/qr-offline, /keys public endpoint |
+| **P2-06** | Offline verify UI (browser crypto) | — | tweetnacl; /verify/offline; KEY cache; unit tests with backend vector |
+| **P2-07** | LLM client + due-diligence report backend | — | provider-agnostic client; gather_facts; schema-validated output; template fallback |
+| **P2-08** | Report UI + print to PDF | — | "Get report" button on /check; window.print(); tag v1.2-offline-agent |
+| **P2-09** | Role-based privacy views | — | person_view(); DATA_POLICY.md |
+| **P2-10** | Merkle transparency log | — | merkle_root(); /transparency page |
+| **P2-11** | Attack suite + metrics + metrics page | — | A1-A9 attacks; /metrics page; EVALUATION.md |
+| **P2-12** | ML dataset generator | — | (cut-able) |
+| **P2-13** | ML training + evaluation + model card | — | (cut-able) |
+| **P2-14** | ML layer integration + UI | — | (cut-able) |
+| **P2-15** | OCR/vision ingest | — | (bonus, cut-able) |
+| **P2-16** | Rollout and cost page | — | /rollout page; cost model |
+| **P2-17** | Pitch deck content, demo script, Q&A | — | 10-slide deck; updated DEMO_SCRIPT |
+| **P2-18** | Docker + staging deploy updates | — | staging service; compose updates |
+| **P2-19** | Final QA, security sweep, release candidate | — | tag v1.3-final-rc |
+
+### Session P2-00 Log (Frontend only — backend handled by teammate)
+- **What was done:**
+  - Created `frontend/src/lib/features.ts`: `loadFeatures()` fetches `GET /api/v1/features` once and caches result in-process; `useFeatures()` React hook returns the cached `Features` object and re-renders once flags load.
+  - Feature flags covered: `FEATURE_RECONCILE`, `FEATURE_LINEAGE`, `FEATURE_OFFLINE_QR`, `FEATURE_AGENT`, `FEATURE_TRANSPARENCY`, `FEATURE_ML`, `FEATURE_OCR` (all default `false` until backend confirms).
+  - Graceful fallback to `DEFAULT_FEATURES` when backend endpoint unavailable.
+  - Updated `docs/CHANGELOG.md`: replaced placeholder Phase 2 roadmap with real `[Phase 2 — Final Round]` section.
+  - Updated `docs/PROGRESS.md`: added Phase 2 session table P2-00 to P2-19.
+  - Updated `README.md`: added "Changes since Round 1" section.
+- **Decisions:**
+  - Single in-flight fetch deduplication prevents multiple concurrent network requests on first render.
+  - Defaults all flags to `false` so no Phase 2 UI leaks if backend is still Round 1.
+- **Known gaps:**
+  - Backend `GET /api/v1/features` endpoint will be provided by teammate. Frontend gracefully falls back until deployed.
+- **Next session:** `P2-04` (UI for layers — lineage timeline, layered risk card, reconcile page).
+
+---
+
 ### Session S03 Log
 - **What was done:**
   - Implemented `backend/app/services/ledger.py`: `GENESIS`, `entry_ts`, `entry_hash`, `latest_entry`, `append_entry`, `verify_chain`, and `is_superseded`.

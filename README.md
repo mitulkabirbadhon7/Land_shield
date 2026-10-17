@@ -50,12 +50,22 @@ In Bangladesh, land disputes account for an estimated 75% of civil court cases [
 
 ### Phase 2 Roadmap Additions (Feature-Flagged)
 * Cross-office reconciliation layer (Rule R8: `OWNER_MISMATCH`, `MUTATION_STALLED`, `AREA_NOT_CONSERVED`).
-* Survey lineage directed acyclic graph (Rule R7: CS -> SA -> RS -> BS continuity).
+* Survey lineage directed acyclic graph (Rule R7: CS → SA → RS → BS continuity).
 * Offline browser QR verification using Web Crypto API.
 * Merkle tree daily transparency logs with published cryptographic roots.
 * Advisory ML risk scoring (LightGBM + SHAP) and dummy document OCR ingest.
 
 ---
+
+## Changes since Round 1
+
+> This section is updated after each merged Phase 2 session. See [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for the full log.
+
+| Session | Change |
+|---|---|
+| **P2-00** | Frontend feature-flag hook (`useFeatures()`); Phase 2 tracking tables in PROGRESS/CHANGELOG/README |
+
+
 
 ## 4. System Architecture
 

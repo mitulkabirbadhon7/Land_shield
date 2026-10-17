@@ -37,11 +37,23 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
-## [Phase 2 - Planned Roadmap (Final Round)]
-- **Feature Flags:** Runtime toggleable features via `GET /api/v1/features` (`FEATURE_RECONCILE`, `FEATURE_LINEAGE`, `FEATURE_OFFLINE_QR`, `FEATURE_AGENT`, `FEATURE_TRANSPARENCY`, `FEATURE_ML`, `FEATURE_OCR`).
-- **Reconciliation Layer (R8):** Cross-office discrepancy detection (`OWNER_MISMATCH`, `MUTATION_STALLED`, `AREA_NOT_CONSERVED`).
-- **Survey Lineage Graph (R7):** Directed acyclic graph across survey generations (CS -> SA -> RS -> BS).
-- **Offline Browser QR Verification:** Client-side Web Crypto API Ed25519 verification without server connectivity.
-- **AI Due-Diligence Agent:** Deterministic fact extraction with schema-validated Bangla summary generation.
-- **Merkle Transparency Log:** Daily cryptographic root of all ledger transactions published publicly.
-- **Advisory Machine Learning:** LightGBM + SHAP anomaly detection model trained on synthetic records.
+## [Phase 2 — Final Round] (In Progress)
+
+### P2-00 — Foundation (Feature Flags, Layered Report)
+- **Frontend `features.ts`:** `loadFeatures()` fetches `GET /api/v1/features` once and caches the result in-process; `useFeatures()` React hook exposes flags to any component without prop-drilling.
+- **PROGRESS.md:** Added Phase 2 session table (P2-00 to P2-19).
+- **CHANGELOG.md / README.md:** Started Phase 2 section; added "Changes since Round 1" in README.
+
+### Planned (upcoming sessions)
+- **P2-01:** Phase 2 DB tables (Khatian, SigningKey, MerkleRoot, IngestDraft) + `seed_phase2.py`.
+- **P2-02:** Reconciliation layer R8 + `/reconcile` API.
+- **P2-03:** Survey lineage layer R7 + `/lineage` API.
+- **P2-04:** UI — layered risk card, lineage timeline, officer reconcile page.
+- **P2-05/06:** Offline QR backend + browser crypto verify UI.
+- **P2-07/08:** LLM due-diligence report backend + print-to-PDF UI.
+- **P2-09:** Role-based privacy views.
+- **P2-10:** Merkle transparency log + `/transparency` page.
+- **P2-11:** Attack suite + metrics + `/metrics` page.
+- **P2-12–14:** ML advisory layer (cut-able).
+- **P2-15:** OCR/vision ingest (bonus, cut-able).
+- **P2-16–19:** Rollout/cost page, pitch deck, staging, final QA.
