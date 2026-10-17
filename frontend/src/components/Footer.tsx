@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   return (
     <footer className="w-full border-t border-slate-200/80 bg-slate-50/80 dark:border-slate-800/80 dark:bg-slate-950/80 mt-auto">
@@ -44,12 +44,21 @@ export function Footer() {
           </div>
 
           {/* Quick links */}
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
             <Link href="/check" className="hover:text-emerald-600 transition">
               {t("nav.check")}
             </Link>
             <Link href="/verify" className="hover:text-emerald-600 transition">
               {t("nav.verify")}
+            </Link>
+            <Link href="/transparency" className="hover:text-emerald-600 transition">
+              {lang === "bn" ? "স্বচ্ছতা লগ" : "Transparency"}
+            </Link>
+            <Link href="/metrics" className="hover:text-emerald-600 transition">
+              {lang === "bn" ? "মেট্রিক্স" : "Metrics"}
+            </Link>
+            <Link href="/rollout" className="hover:text-emerald-600 transition">
+              {lang === "bn" ? "রোলআউট ও বাজেট" : "Rollout Plan"}
             </Link>
             <Link href="/login" className="hover:text-emerald-600 transition">
               {t("nav.login")}
