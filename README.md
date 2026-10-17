@@ -65,6 +65,7 @@ In Bangladesh, land disputes account for an estimated 75% of civil court cases [
 |---|---|
 | **P2-00** | Frontend feature-flag hook (`useFeatures()`); Phase 2 tracking tables in PROGRESS/CHANGELOG/README |
 | **P2-04** | Layered risk card breakdown, CS→SA→RS→BS survey lineage timeline, AC Land officer cross-office reconciliation portal (`/officer/reconcile`) |
+| **P2-06** | Browser-side offline QR deed verification (`/verify/offline`) using tweetnacl Ed25519 signatures, Web Crypto SHA-256 payload integrity, public key caching, and 1-click test vectors |
 
 
 

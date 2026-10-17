@@ -368,6 +368,33 @@
     "OWNER_MISMATCH_desc": "Record owner differs from the mutation-derived legitimate owner.",
     "MUTATION_STALLED_desc": "Mutation application has been stalled in review beyond the allowed 90-day window.",
     "AREA_NOT_CONSERVED_desc": "Sum of registered holdings does not conserve the cadastral parcel area."
+  },
+  "verify_offline": {
+    "title": "Offline Deed Verification (Client-Side Crypto)",
+    "subtitle": "Direct Ed25519 signature and SHA-256 integrity verification inside browser without network access",
+    "badge": "Offline Standalone Mode",
+    "tab_scan": "Scan Camera QR",
+    "tab_paste": "Paste Payload Token",
+    "input_placeholder": "Paste Base64URL offline deed token or raw JSON payload here...",
+    "verify_btn": "Verify Offline",
+    "quick_samples": "Quick Test Vectors:",
+    "sample_valid": "Authentic Deed (Valid)",
+    "sample_tampered": "Tampered Deed (Forged)",
+    "sample_unknown": "Unknown Key ID",
+    "AUTHENTIC": "Deed is Digitally Authentic & Intact (AUTHENTIC)",
+    "AUTHENTIC_desc": "All deed payload attributes, SHA-256 hash, and Sub-Registrar's Ed25519 digital signature verified mathematically.",
+    "NOT_AUTHENTIC": "Deed is Altered or Forged (NOT AUTHENTIC)",
+    "NOT_AUTHENTIC_desc": "Payload contents have been tampered with or do not match the digital signature. Possible forged document.",
+    "KEY_UNKNOWN": "Public Key Not Found in Cache (KEY UNKNOWN)",
+    "KEY_UNKNOWN_desc": "The verification key for this deed is not present in local browser cache. Please load the verify page once while online to cache public keys.",
+    "permanent_notice": "Permanent Notice: Offline check proves authenticity, not whether a newer sale exists. Check online for that.",
+    "switch_online": "Switch to Full Online Check →",
+    "switch_offline": "Verify Offline Without Network",
+    "keys_cached": "Cached Public Keys on Device:",
+    "deed_details": "Deed Attributes & Record",
+    "crypto_details": "Cryptographic Proof Details",
+    "key_id": "Key ID",
+    "hash": "Payload Hash (SHA-256)"
   }
 }
 

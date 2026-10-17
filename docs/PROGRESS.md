@@ -38,7 +38,7 @@
 | **P2-03** | Lineage layer R7 + API | — | CS→SA→RS→BS graph; MISSING_GENERATION, ORPHAN, BAD_PARENT, AREA_GROWTH |
 | **P2-04** | UI: layered risk card, lineage timeline, reconcile page | Done (build ok) | /check uses /analysis/plot; LineageTimeline; /officer/reconcile; tag v1.1-recon-lineage |
 | **P2-05** | Offline QR backend + keys API | — | build_offline_payload, /deeds/{no}/qr-offline, /keys public endpoint |
-| **P2-06** | Offline verify UI (browser crypto) | — | tweetnacl; /verify/offline; KEY cache; unit tests with backend vector |
+| **P2-06** | Offline verify UI (browser crypto) | Done (4 unit tests, build ok) | tweetnacl Ed25519; /verify/offline; public key cache; SHA-256 payload integrity |
 | **P2-07** | LLM client + due-diligence report backend | — | provider-agnostic client; gather_facts; schema-validated output; template fallback |
 | **P2-08** | Report UI + print to PDF | — | "Get report" button on /check; window.print(); tag v1.2-offline-agent |
 | **P2-09** | Role-based privacy views | — | person_view(); DATA_POLICY.md |
@@ -85,6 +85,34 @@
 - **Known gaps:**
   - Teammate is implementing backend endpoints for P2-01, P2-02, P2-03.
 - **Next session:** `P2-06` (Offline verify UI — browser crypto with tweetnacl) or teammate's backend integration.
+
+### Session P2-06 Log (Offline Verify UI)
+- **What was done:**
+  - Installed `tweetnacl` (pure JS Ed25519) and types in `frontend/`.
+  - Authored test vector generator `scripts/make_offline_vector.py` and generated fixture `frontend/tests/fixtures/offline_vector.json` with valid, tampered (modified area), and unknown key test vectors.
+  - Built offline verification module `frontend/src/lib/offlineVerify.ts`:
+    - `decodeBase64Url` handling URL-safe and standard base64 decoding with padding.
+    - Web Crypto API SHA-256 deed hashing directly over received raw `payload_json` UTF-8 bytes (conforming to TRD 6C: avoids Python vs JS float string formatting discrepancies).
+    - `tweetnacl.sign.detached.verify` Ed25519 signature verification against public key matching `key_id`.
+    - Local storage public key cache with fallback to embedded `DEFAULT_OFFLINE_KEYS` and automatic online background sync (`syncPublicKeysOnline`).
+    - Returns structured `OfflineVerifyResult` (`AUTHENTIC`, `NOT_AUTHENTIC`, `KEY_UNKNOWN`).
+  - Added standalone Node unit test suite `frontend/tests/test_offline.mjs` verifying all 4 cryptographic scenarios (valid deed -> AUTHENTIC, tampered area -> NOT_AUTHENTIC, unknown key -> KEY_UNKNOWN, raw JSON string -> AUTHENTIC).
+  - Wired `npm test` script in `frontend/package.json` (`node tests/test_offline.mjs`).
+  - Implemented offline deed verification page `frontend/src/app/verify/offline/page.tsx`:
+    - Seamless tab interface for camera QR scanning (`html5-qrcode` dynamic client import) and pasting base64/JSON QR payloads.
+    - 1-click test vector buttons (Valid, Tampered, Unknown Key) for instant demonstration and grading evaluation.
+    - Interactive status badge (`AUTHENTIC` emerald, `NOT_AUTHENTIC` red, `KEY_UNKNOWN` amber), extracted deed metadata table (Deed No, Plot, Area, Date, Registry, Parties), cryptographic proof details (Hash, Signature snippet, Key ID), and cached public keys count.
+    - Mandatory, permanent notice explaining offline limitations: proves payload integrity and authentic signing at time of registration, but cannot verify subsequent resales or mutations without online ledger check.
+    - Gated by `features.FEATURE_OFFLINE_QR` with fallback notice.
+  - Linked `/verify` page header to `/verify/offline` when `FEATURE_OFFLINE_QR` is active.
+  - Added complete bilingual translations in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json` under `"verify_offline"`.
+  - Verification: `npm test` passed (4/4 test cases), `npm run lint` passed (0 errors, 0 warnings), `npm run build` generated 12/12 static routes, backend pytest passed 107/107 tests (0 regressions).
+- **Decisions:**
+  - Hashing UTF-8 bytes of `payload_json` as received adheres to TRD 6C and guarantees exact cryptographic bit-parity with the backend.
+  - Permanent offline disclaimer ensures citizens understand offline verification does not replace live mutation checking.
+- **Known gaps:**
+  - Backend teammate is implementing P2-05 `/deeds/{no}/qr-offline` and `/keys` endpoint. UI works immediately with embedded keys and background sync.
+- **Next session:** `P2-08` (Report UI + print to PDF on branch `p2-08-report-ui`), skipping P2-07 (teammate's backend session).
 
 ---
 

@@ -52,11 +52,18 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **API & Schemas:** Added `getAnalysis`, `getLineage`, `listReconcile`, `getReconcilePlot` and TypeScript types in `types.ts`.
 - **Bilingual i18n:** Added full Bangla and English translation keys in `bn.json` and `en.json`.
 
+### P2-06 — Offline Verify UI (Browser Cryptography & Offline Deed Proof)
+- **Browser-Side Cryptographic Engine (`offlineVerify.ts`):** Implemented client-side verification using pure JS `tweetnacl` for Ed25519 digital signatures and Web Crypto API for SHA-256 deed hashing directly over UTF-8 payload bytes (avoiding float formatting divergences).
+- **Public Key Caching & Sync:** Local storage cache with embedded baseline `DEFAULT_OFFLINE_KEYS` and automatic background synchronization (`syncPublicKeysOnline`) whenever internet connectivity is available.
+- **Offline Verify Route (`/verify/offline`):** Public offline verification portal with QR camera scanning (`html5-qrcode`), paste payload, 1-click test vector demonstration buttons (Valid, Tampered, Unknown Key), interactive status badges (`AUTHENTIC`, `NOT_AUTHENTIC`, `KEY_UNKNOWN`), metadata breakdown, and mandatory permanent notice explaining offline boundaries.
+- **Header Link:** Integrated offline verification shortcut from `/verify` when `FEATURE_OFFLINE_QR` is active.
+- **Automated Verification:** Added `test_offline.mjs` unit test suite wired to `npm test` verifying 4 distinct cryptographic integrity scenarios.
+
 ### Planned (upcoming sessions)
 - **P2-01:** Phase 2 DB tables (Khatian, SigningKey, MerkleRoot, IngestDraft) + `seed_phase2.py`.
 - **P2-02:** Reconciliation layer R8 + `/reconcile` API.
 - **P2-03:** Survey lineage layer R7 + `/lineage` API.
-- **P2-05/06:** Offline QR backend + browser crypto verify UI.
+- **P2-05:** Offline QR backend (/deeds/{no}/qr-offline + /keys).
 - **P2-07/08:** LLM due-diligence report backend + print-to-PDF UI.
 - **P2-09:** Role-based privacy views.
 - **P2-10:** Merkle transparency log + `/transparency` page.
