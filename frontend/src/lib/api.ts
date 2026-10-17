@@ -113,13 +113,14 @@ export function logout(): void {
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
+  retries?: number;
 }
 
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { requiresAuth = false, headers = {}, ...rest } = options;
+  const { requiresAuth = false, retries = 1, headers = {}, ...rest } = options;
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
 
   const reqHeaders = new Headers(headers);
@@ -134,47 +135,74 @@ export async function apiFetch<T>(
     throw new ApiError(401, "UNAUTHORIZED", "Authentication required");
   }
 
-  const res = await fetch(url, {
-    cache: "no-store",
-    ...rest,
-    headers: reqHeaders,
-  });
+  let attempt = 0;
+  const maxRetries = Math.max(0, retries);
 
-  if (!res.ok) {
-    if (res.status === 401 && typeof window !== "undefined") {
-      logout();
-      if (!window.location.pathname.startsWith("/login")) {
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.href = `/login?next=${next}`;
-      }
-    }
-
-    let errBody: { code?: string; detail?: unknown; report?: unknown } = {};
+  while (true) {
     try {
-      errBody = await res.json();
-    } catch {
-      // Body was not JSON
+      const res = await fetch(url, {
+        cache: "no-store",
+        ...rest,
+        headers: reqHeaders,
+      });
+
+      // Transient gateway / server errors during Render cold starts
+      if (
+        (res.status === 502 || res.status === 503 || res.status === 504) &&
+        attempt < maxRetries
+      ) {
+        attempt++;
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+
+      if (!res.ok) {
+        if (res.status === 401 && typeof window !== "undefined") {
+          logout();
+          if (!window.location.pathname.startsWith("/login")) {
+            const next = encodeURIComponent(window.location.pathname + window.location.search);
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = `/login?next=${next}`;
+          }
+        }
+
+        let errBody: { code?: string; detail?: unknown; report?: unknown } = {};
+        try {
+          errBody = await res.json();
+        } catch {
+          // Body was not JSON
+        }
+
+        const code = errBody.code || `HTTP_${res.status}`;
+        let detail: string | undefined;
+        if (typeof errBody.detail === "string") {
+          detail = errBody.detail;
+        } else if (Array.isArray(errBody.detail) && errBody.detail.length > 0) {
+          const first = errBody.detail[0] as { msg?: string } | undefined;
+          detail = first?.msg || "Validation error";
+        }
+
+        throw new ApiError(res.status, code, detail, errBody.report);
+      }
+
+      // Handle empty or 204 responses
+      if (res.status === 204) {
+        return {} as T;
+      }
+
+      return (await res.json()) as T;
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      if (attempt < maxRetries) {
+        attempt++;
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+      throw err;
     }
-
-    const code = errBody.code || `HTTP_${res.status}`;
-    let detail: string | undefined;
-    if (typeof errBody.detail === "string") {
-      detail = errBody.detail;
-    } else if (Array.isArray(errBody.detail) && errBody.detail.length > 0) {
-      const first = errBody.detail[0] as { msg?: string } | undefined;
-      detail = first?.msg || "Validation error";
-    }
-
-    throw new ApiError(res.status, code, detail, errBody.report);
   }
-
-  // Handle empty or 204 responses
-  if (res.status === 204) {
-    return {} as T;
-  }
-
-  return (await res.json()) as T;
 }
 
 // -------------------------------------------------------------

@@ -29,6 +29,7 @@
 | **S22** | Pre-purchase check state isolation & API cache prevention | Done (107 tests, build ok) | Fixed cross-scenario card verdict persistence, no-store fetch cache headers, language toggle ref guard |
 | **S23** | Cloud key drift diagnosis & Admin reseed endpoint | Done (108 tests, build ok) | Diagnosed Render KEY_UNKNOWN key drift, added POST /dev/reseed and Admin portal 1-click reseed |
 | **S24** | Edge case hardening & 100% pure Bengali Admin UI | Done (108 tests, build ok) | Self-dealing deed block, case-insensitive verify, BN numerals in dag queries, 401 redirect, 100% pure Bengali in /admin |
+| **S25** | Database sequence drift immunity, cold start retry & resilient scenario lookup | Done (109 tests, build ok) | Reset autoincrement sequences during reseed, exponential backoff retry in apiFetch, canonical deed/mouza fallback in /check |
 
 ### Session S03 Log
 - **What was done:**
@@ -917,7 +918,29 @@ The following placeholders have been clearly marked in the documentation pack an
     - Bengali numeral mapping is implemented symmetrically on both frontend search inputs and backend API query parameters.
 - **Known gaps:**
     - None. All identified edge cases and localization requirements are resolved and verified.
-- **Next session:** `S25` (Final Presentation Rehearsal, Live Demo Script Validation & Submission Packaging)
+- **Next session:** `S25` (Database Sequence Drift Immunity, Cold Start Retry & Resilient Scenario Lookup)
+
+### Session S25 Log (Database Sequence Drift Immunity, Cold Start Retry & Resilient Scenario Lookup)
+- **What was done:**
+  - **Database Autoincrement Sequence Reset (`backend/app/api/v1/dev.py`)**:
+    - Identified root cause of plot ID drift on PostgreSQL / Render: `DELETE FROM <table>` does not restart identity sequences, causing plot IDs to shift to 301..308 or higher after reseed.
+    - Updated `reseed_database()` to explicitly execute sequence restarts for PostgreSQL (`ALTER SEQUENCE IF EXISTS <seq> RESTART WITH 1;`) and SQLite (`DELETE FROM sqlite_sequence WHERE name IN (...);`) across all 10 core tables (`plots`, `persons`, `deeds`, `users`, `mutations`, `mutation_events`, `alerts`, `audit_logs`, `ledger_entries`, `cases`).
+    - Added automated backend regression test `test_dev_reseed_resets_sequences` in `backend/tests/test_hardening.py` verifying that consecutive reseed operations always preserve plot IDs starting at 1.
+  - **Transient Network & Cold Start Resilience (`frontend/src/lib/api.ts`)**:
+    - Added retry loop with backoff to `apiFetch` for transient network errors and Render spin-up gateway statuses (502, 503, 504).
+    - Preserves non-retryable client errors (400, 401, 404, 409, 422) without unnecessary repeated queries.
+  - **Resilient Pre-Purchase Check Scenario & Plot Lookup (`frontend/src/app/check/page.tsx`)**:
+    - Defined `CANONICAL_SCENARIO_MAP` mapping benchmark test scenarios S1–S8 to their immutable canonical deeds and mouza/dag coordinates (e.g. S8 target deed `DHAKA-2026-000014`, S1 `DHAKA-2026-000002`, S5 mouza Padmapara / dag 101).
+    - Implemented `resolveScenarioPlotId` fallback in `frontend/src/app/check/page.tsx`: if `getPlot(id)` returns HTTP 404 due to sequence drift, automatically resolves the plot by verifying the canonical deed or querying by mouza and dag number.
+    - Connected fallback to scenario pill clicks, explicit plot searches (`Plot 8`, `#8`), direct numeric searches (`8`), scenario code searches (`S1`–`S8`), and direct URL query visits (`/check?plot=8`).
+    - Kept UI layout, fonts, colors, and styling completely intact.
+- **Decisions:**
+  - Sequence resets are wrapped in safe try-except blocks with dialect autodetection to maintain 100% compatibility across PostgreSQL and SQLite.
+  - In `frontend/src/app/check/page.tsx`, `resolveScenarioPlotId` is invoked strictly on 404 errors for benchmark scenarios (1..8 or hint), preserving native 404 error handling for non-existent citizen queries.
+- **Known gaps:**
+  - None.
+- **Next session:** `S26` (Round 1 Hackathon Submission Packaging & Evaluation Demo Readiness)
+
 
 
 

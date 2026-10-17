@@ -21,7 +21,23 @@ interface BenchmarkScenario {
   expected_rule?: string;
   expected_status?: string;
   description?: string;
+  target_deed_no?: string | null;
+  deed_numbers?: string[];
 }
+
+const CANONICAL_SCENARIO_MAP: Record<
+  number,
+  { id: string; target_deed_no: string | null; deed_numbers: string[]; mouza: string; dag_no: string }
+> = {
+  1: { id: "S1", target_deed_no: "DHAKA-2026-000002", deed_numbers: ["DHAKA-2026-000001", "DHAKA-2026-000002"], mouza: "রূপনগর", dag_no: "101" },
+  2: { id: "S2", target_deed_no: "DHAKA-2026-000003", deed_numbers: ["DHAKA-2026-000003"], mouza: "শান্তিনগর", dag_no: "101" },
+  3: { id: "S3", target_deed_no: "DHAKA-2026-000004", deed_numbers: ["DHAKA-2026-000004"], mouza: "আনন্দপুর", dag_no: "101" },
+  4: { id: "S4", target_deed_no: "DHAKA-2026-000008", deed_numbers: ["DHAKA-2026-000005", "DHAKA-2026-000006", "DHAKA-2026-000007", "DHAKA-2026-000008"], mouza: "সবুজবাগ", dag_no: "101" },
+  5: { id: "S5", target_deed_no: null, deed_numbers: [], mouza: "পদ্মাপাড়া", dag_no: "101" },
+  6: { id: "S6", target_deed_no: "DHAKA-2026-000010", deed_numbers: ["DHAKA-2026-000009", "DHAKA-2026-000010"], mouza: "নদীয়া", dag_no: "101" },
+  7: { id: "S7", target_deed_no: "DHAKA-2026-000012", deed_numbers: ["DHAKA-2026-000011", "DHAKA-2026-000012"], mouza: "ধানমন্ডিপুর", dag_no: "101" },
+  8: { id: "S8", target_deed_no: "DHAKA-2026-000014", deed_numbers: ["DHAKA-2026-000013", "DHAKA-2026-000014"], mouza: "সোনারগাঁওপুর", dag_no: "101" },
+};
 
 function CitizenCheckContent() {
   const { lang, t } = useLanguage();
@@ -54,14 +70,14 @@ function CitizenCheckContent() {
 
   // Benchmark scenarios loaded from /scenarios.json
   const [scenarios, setScenarios] = useState<BenchmarkScenario[]>([
-    { id: "S1", name: "দ্বৈত বিক্রয় (Double Sale)", plot_id: 1, expected_status: "CRITICAL" },
-    { id: "S2", name: "স্বত্বহীন বিক্রি (Not Owner)", plot_id: 2, expected_status: "CRITICAL" },
-    { id: "S3", name: "নামজারি বাকি (৯০ দিনের অধিক)", plot_id: 3, expected_status: "MEDIUM" },
-    { id: "S4", name: "দ্রুত হস্তান্তর (Rapid)", plot_id: 4, expected_status: "HIGH" },
-    { id: "S5", name: "খাস / মামলা বিচারাধীন", plot_id: 5, expected_status: "HIGH" },
-    { id: "S6", name: "নিরাপদ জমি (Clean Deal)", plot_id: 6, expected_status: "LOW" },
-    { id: "S7", name: "বৈধ পেন্ডিং পুনঃবিক্রয়", plot_id: 7, expected_status: "LOW" },
-    { id: "S8", name: "অংশবিশেষ বিক্রি (Partial)", plot_id: 8, expected_status: "LOW" },
+    { id: "S1", name: "দ্বৈত বিক্রয় (Double Sale)", plot_id: 1, expected_status: "CRITICAL", target_deed_no: "DHAKA-2026-000002", deed_numbers: ["DHAKA-2026-000001", "DHAKA-2026-000002"] },
+    { id: "S2", name: "স্বত্বহীন বিক্রি (Not Owner)", plot_id: 2, expected_status: "CRITICAL", target_deed_no: "DHAKA-2026-000003", deed_numbers: ["DHAKA-2026-000003"] },
+    { id: "S3", name: "নামজারি বাকি (৯০ দিনের অধিক)", plot_id: 3, expected_status: "MEDIUM", target_deed_no: "DHAKA-2026-000004", deed_numbers: ["DHAKA-2026-000004"] },
+    { id: "S4", name: "দ্রুত হস্তান্তর (Rapid)", plot_id: 4, expected_status: "HIGH", target_deed_no: "DHAKA-2026-000008", deed_numbers: ["DHAKA-2026-000005", "DHAKA-2026-000006", "DHAKA-2026-000007", "DHAKA-2026-000008"] },
+    { id: "S5", name: "খাস / মামলা বিচারাধীন", plot_id: 5, expected_status: "HIGH", target_deed_no: null, deed_numbers: [] },
+    { id: "S6", name: "নিরাপদ জমি (Clean Deal)", plot_id: 6, expected_status: "LOW", target_deed_no: "DHAKA-2026-000010", deed_numbers: ["DHAKA-2026-000009", "DHAKA-2026-000010"] },
+    { id: "S7", name: "বৈধ পেন্ডিং পুনঃবিক্রয়", plot_id: 7, expected_status: "LOW", target_deed_no: "DHAKA-2026-000012", deed_numbers: ["DHAKA-2026-000011", "DHAKA-2026-000012"] },
+    { id: "S8", name: "অংশবিশেষ বিক্রি (Partial)", plot_id: 8, expected_status: "LOW", target_deed_no: "DHAKA-2026-000014", deed_numbers: ["DHAKA-2026-000013", "DHAKA-2026-000014"] },
   ]);
 
   const scenarioNames: Record<string, { bn: string; en: string }> = {
@@ -125,9 +141,70 @@ function CitizenCheckContent() {
 
   const lastLoadedPlotId = useRef<number | null>(null);
 
+  // Resilient fallback to resolve canonical benchmark scenario plot when sequence drift occurs
+  const resolveScenarioPlotId = useCallback(
+    async (
+      scenarioNumOrId: number | string,
+      scenarioHint?: BenchmarkScenario
+    ): Promise<number | null> => {
+      let num = typeof scenarioNumOrId === "number" ? scenarioNumOrId : NaN;
+      if (isNaN(num) && typeof scenarioNumOrId === "string") {
+        const match = scenarioNumOrId.match(/^S?(\d+)$/i);
+        if (match) num = parseInt(match[1], 10);
+      }
+
+      const canonical =
+        !isNaN(num) && CANONICAL_SCENARIO_MAP[num]
+          ? CANONICAL_SCENARIO_MAP[num]
+          : scenarioHint
+          ? Object.values(CANONICAL_SCENARIO_MAP).find((c) => c.id === scenarioHint.id)
+          : null;
+
+      const targetDeed =
+        scenarioHint?.target_deed_no !== undefined
+          ? scenarioHint.target_deed_no
+          : canonical?.target_deed_no;
+
+      // 1. Try resolving via target deed
+      if (targetDeed) {
+        try {
+          const verifyData = await verifyDeed(targetDeed);
+          if (verifyData && verifyData.plot_id) return verifyData.plot_id;
+        } catch {
+          // continue
+        }
+      }
+
+      // 2. Try any other deed numbers for this scenario
+      const deeds = scenarioHint?.deed_numbers || canonical?.deed_numbers || [];
+      for (const d of deeds) {
+        if (d && d !== targetDeed) {
+          try {
+            const verifyData = await verifyDeed(d);
+            if (verifyData && verifyData.plot_id) return verifyData.plot_id;
+          } catch {
+            // continue
+          }
+        }
+      }
+
+      // 3. Try lookup by canonical mouza and dag number
+      if (canonical?.mouza && canonical?.dag_no) {
+        try {
+          const plots = await searchPlots(canonical.mouza, canonical.dag_no);
+          if (plots.length > 0) return plots[0].id;
+        } catch {
+          // ignore
+        }
+      }
+
+      return null;
+    },
+    []
+  );
+
   const loadPlotDetails = useCallback(
-    async (plotId: number) => {
-      lastLoadedPlotId.current = plotId;
+    async (plotId: number, scenarioHint?: BenchmarkScenario): Promise<boolean> => {
       setLoading(true);
       setError(null);
       setSelectedPlot(null);
@@ -136,33 +213,72 @@ function CitizenCheckContent() {
       setSearchResults([]);
       setSearched(true);
 
-      // Only update URL if plot query is not already present to avoid loop
-      const currentPlot = searchParams.get("plot");
-      if (currentPlot !== String(plotId)) {
-        router.replace(`/check?plot=${plotId}`);
-      }
+      let targetId = plotId;
 
       try {
-        const [plotData, riskData, chainData] = await Promise.all([
-          getPlot(plotId),
-          getRisk(plotId, lang),
-          getChain(plotId),
+        let plotData: PlotOut;
+        try {
+          plotData = await getPlot(targetId);
+        } catch (plotErr: unknown) {
+          const is404 =
+            (plotErr instanceof Error &&
+              (plotErr.message.includes("404") ||
+                plotErr.message.toLowerCase().includes("not found"))) ||
+            (typeof plotErr === "object" &&
+              plotErr !== null &&
+              "status" in plotErr &&
+              (plotErr as { status: number }).status === 404);
+
+          if (is404 && ((targetId >= 1 && targetId <= 8) || scenarioHint)) {
+            const resolvedId = await resolveScenarioPlotId(targetId, scenarioHint);
+            if (resolvedId && resolvedId !== targetId) {
+              targetId = resolvedId;
+              plotData = await getPlot(targetId);
+              // Update scenario state to reflect resolved plot ID to avoid future 404 roundtrips
+              setScenarios((prev) =>
+                prev.map((s) =>
+                  s.plot_id === plotId || (scenarioHint && s.id === scenarioHint.id)
+                    ? { ...s, plot_id: resolvedId }
+                    : s
+                )
+              );
+            } else {
+              throw plotErr;
+            }
+          } else {
+            throw plotErr;
+          }
+        }
+
+        lastLoadedPlotId.current = targetId;
+
+        // Only update URL if plot query is not already present to avoid loop
+        const currentPlot = searchParams.get("plot");
+        if (currentPlot !== String(targetId)) {
+          router.replace(`/check?plot=${targetId}`);
+        }
+
+        const [riskData, chainData] = await Promise.all([
+          getRisk(targetId, lang),
+          getChain(targetId),
         ]);
 
         setSelectedPlot(plotData);
         setRiskReport(riskData);
         setChain(chainData);
+        return true;
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message);
         } else {
           setError(t("common.error"));
         }
+        return false;
       } finally {
         setLoading(false);
       }
     },
-    [lang, router, searchParams, t]
+    [lang, resolveScenarioPlotId, router, searchParams, t]
   );
 
   // Handle URL query ?plot=... on mount or change
@@ -203,19 +319,24 @@ function CitizenCheckContent() {
     setSearched(true);
 
     try {
+      // 0. Scenario code match? (e.g. 'S1', 's8', 'scenario 8', 'দৃশ্যকল্প ৮')
+      const scenarioCodeMatch = normalizedQuery.match(/^(?:s|scenario|দৃশ্যকল্প)\s*([1-8])$/i);
+      if (scenarioCodeMatch) {
+        const scNum = parseInt(scenarioCodeMatch[1], 10);
+        const scHint = scenarios.find((s) => s.id.toUpperCase() === `S${scNum}`);
+        await loadPlotDetails(scHint?.plot_id ?? scNum, scHint);
+        return;
+      }
+
       // 1. Explicit plot ID? (e.g. 'Plot 6', 'প্লট ৬', '#6')
       const explicitPlotMatch =
         normalizedQuery.match(/^(?:plot|প্লট)\s*#?\s*(\d+)$/i) || normalizedQuery.match(/^#(\d+)$/);
       if (explicitPlotMatch) {
         const numericId = parseInt(explicitPlotMatch[1], 10);
         if (!isNaN(numericId)) {
-          try {
-            const plotData = await getPlot(numericId);
-            await loadPlotDetails(plotData.id);
-            return;
-          } catch {
-            // fall through
-          }
+          const scHint = scenarios.find((s) => s.plot_id === numericId || s.id === `S${numericId}`);
+          await loadPlotDetails(scHint?.plot_id ?? numericId, scHint);
+          return;
         }
       }
 
@@ -234,9 +355,10 @@ function CitizenCheckContent() {
       }
 
       // 2. Deed number? (e.g. MIR-2026-... or DHAKA-2026-...)
-      if (/^[A-Z]+-\d{4}-\d+$/i.test(normalizedQuery)) {
+      const cleanDeedQuery = normalizedQuery.replace(/\s+/g, "").toUpperCase();
+      if (/^[A-Z]+-\d{4}-\d+$/i.test(cleanDeedQuery)) {
         try {
-          const verifyData = await verifyDeed(normalizedQuery.toUpperCase());
+          const verifyData = await verifyDeed(cleanDeedQuery);
           if (verifyData.plot_id) {
             await loadPlotDetails(verifyData.plot_id);
             return;
@@ -252,12 +374,19 @@ function CitizenCheckContent() {
       if (isDigits) {
         results = await searchPlots(undefined, normalizedQuery);
         if (results.length === 0) {
-          try {
-            const plotData = await getPlot(parseInt(normalizedQuery, 10));
-            await loadPlotDetails(plotData.id);
-            return;
-          } catch {
-            // none
+          const numId = parseInt(normalizedQuery, 10);
+          const scHint = scenarios.find((s) => s.plot_id === numId || s.id === `S${numId}`);
+          if ((numId >= 1 && numId <= 8) || scHint) {
+            const ok = await loadPlotDetails(scHint?.plot_id ?? numId, scHint);
+            if (ok) return;
+          } else {
+            try {
+              const plotData = await getPlot(numId);
+              await loadPlotDetails(plotData.id);
+              return;
+            } catch {
+              // Not a direct plot either, fall through to setSearchResults([]) showing "No results found"
+            }
           }
         }
       } else {
@@ -453,7 +582,7 @@ function CitizenCheckContent() {
                     type="button"
                     onClick={() => {
                       setQuery(`Plot ${sc.plot_id}`);
-                      loadPlotDetails(sc.plot_id);
+                      loadPlotDetails(sc.plot_id, sc);
                     }}
                     className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs ${getScenarioPillStyle(
                       sc.expected_status
