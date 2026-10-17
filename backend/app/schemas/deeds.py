@@ -18,6 +18,12 @@ class DeedCreate(BaseModel):
                 data["area_sold"] = data["area_decimal"]
         return data
 
+    @model_validator(mode="after")
+    def check_seller_not_buyer(self) -> "DeedCreate":
+        if self.seller_id == self.buyer_id:
+            raise ValueError("Seller and buyer cannot be the same person")
+        return self
+
 
 class VerifyOut(BaseModel):
     status: str

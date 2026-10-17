@@ -12,6 +12,8 @@ class PlotOut(BaseModel):
     flags: list[str] = Field(default_factory=list)
     initial_owner_id: int | None = None
     current_owner_id: int | None = None
+    remaining_decimal: float | None = None
+    sold_decimal: float | None = None
     initial_owner_name: str | None = None
     current_owner_name: str | None = None
     initial_owner_masked: str | None = None

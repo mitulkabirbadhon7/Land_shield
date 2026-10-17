@@ -126,3 +126,112 @@ def restore_deed(
         "deed_no": deed.deed_no,
         "area_sold": deed.area_sold,
     }
+
+
+@router.post("/reseed")
+def reseed_database(
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """Tamper Lab: reseed database with canonical synthetic scenarios (Admin + Demo Mode only)."""
+    if not settings.demo_mode:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dev endpoints disabled when DEMO_MODE is false",
+        )
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+
+    from sqlalchemy import delete, text
+    from app.models.audit import AuditLog
+    from app.models.alert import Alert
+    from app.models.mutation_event import MutationEvent
+    from app.models.mutation import Mutation
+    from app.models.ledger import LedgerEntry
+    from app.models.deed import Deed
+    from app.models.case import Case
+    from app.models.plot import Plot
+    from app.models.person import Person
+    from app.models.user import User
+    from scripts.seed import seed_data
+
+    actor_username = getattr(current_user, "username", "admin1")
+
+    # Clear in reverse foreign key order
+    db.execute(delete(AuditLog))
+    db.execute(delete(Alert))
+    db.execute(delete(MutationEvent))
+    db.execute(delete(Mutation))
+    db.execute(delete(LedgerEntry))
+    db.execute(delete(Deed))
+    db.execute(delete(Case))
+    db.execute(delete(Plot))
+    db.execute(delete(Person))
+    db.execute(delete(User))
+    db.flush()
+
+    # Explicitly reset autoincrement sequences to prevent sequence drift
+    try:
+        bind = db.get_bind()
+        dialect_name = getattr(bind.dialect, "name", "")
+    except Exception:
+        dialect_name = ""
+
+    if dialect_name == "postgresql":
+        try:
+            db.execute(
+                text(
+                    "TRUNCATE TABLE audit_log, alerts, mutation_events, mutations, "
+                    "ledger_entries, deeds, cases, plots, persons, users RESTART IDENTITY CASCADE;"
+                )
+            )
+            db.flush()
+        except Exception:
+            pass
+    elif dialect_name == "sqlite":
+        try:
+            db.execute(
+                text(
+                    "DELETE FROM sqlite_sequence WHERE name IN "
+                    "('plots', 'persons', 'deeds', 'users', 'mutations', "
+                    "'mutation_events', 'alerts', 'audit_log', 'ledger_entries', 'cases');"
+                )
+            )
+        except Exception:
+            pass
+    else:
+        try:
+            db.execute(
+                text(
+                    "DELETE FROM sqlite_sequence WHERE name IN "
+                    "('plots', 'persons', 'deeds', 'users', 'mutations', "
+                    "'mutation_events', 'alerts', 'audit_log', 'ledger_entries', 'cases');"
+                )
+            )
+        except Exception:
+            pass
+
+    db.flush()
+
+    res = seed_data(db, reset=True)
+    db.commit()
+
+    new_admin = db.scalars(select(User).where(User.username == actor_username)).first()
+    log(
+        db,
+        actor=new_admin,
+        action="DEMO_RESEED",
+        entity="database",
+        entity_id=None,
+        detail="reseeded canonical scenarios S1-S8",
+    )
+    db.commit()
+
+    return {
+        "status": "reseeded",
+        "detail": f"Database reseeded successfully with {len(res['plots'])} plots and {len(res['scenarios'])} scenarios",
+    }
+

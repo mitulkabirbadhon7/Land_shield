@@ -34,23 +34,33 @@ export interface PlotOut {
   upazila: string;
   district: string;
   area_decimal: number;
+  remaining_decimal?: number;
+  sold_decimal?: number;
   land_type: string;
-  is_khas: boolean;
-  is_acquisition: boolean;
-  is_disputed: boolean;
-  initial_owner_masked: string;
-  current_owner_masked: string;
+  is_khas?: boolean;
+  is_acquisition?: boolean;
+  is_disputed?: boolean;
+  initial_owner_masked?: string;
+  current_owner_masked?: string;
+  initial_owner_id?: number | null;
+  current_owner_id?: number | null;
+  initial_owner_name?: string | null;
+  current_owner_name?: string | null;
+  flags?: string[];
 }
 
 export interface ChainItem {
-  seq: number;
+  seq?: number;
   deed_no: string;
-  deed_hash: string;
-  entry_hash: string;
-  timestamp: string;
-  buyer_masked: string;
-  deed_status: string;
-  verify_status: DeedStatus;
+  deed_hash?: string;
+  entry_hash?: string;
+  timestamp?: string;
+  date?: string;
+  buyer_masked?: string;
+  buyer?: string;
+  deed_status?: string;
+  verify_status?: DeedStatus | string;
+  area_sold?: number;
 }
 
 export interface RiskFinding {
@@ -65,10 +75,14 @@ export interface RiskFinding {
 }
 
 export interface MutationSummary {
-  total: number;
-  completed: number;
-  pending: number;
-  rejected: number;
+  total?: number;
+  completed?: number;
+  pending?: number;
+  rejected?: number;
+  total_deeds?: number;
+  mutated_deeds?: number;
+  pending_mutations?: number;
+  missing_mutations?: number;
 }
 
 export interface RiskReportOut {
@@ -173,6 +187,7 @@ export interface MutationTransition {
 export interface MutationOut {
   id: number;
   deed_id: number;
+  deed_no?: string | null;
   plot_id: number;
   state: string;
   applicant_id: number;

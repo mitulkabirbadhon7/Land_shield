@@ -137,6 +137,7 @@ allowed_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.s
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -181,8 +182,62 @@ app.include_router(ingest.router)
 
 
 
+@app.get("/")
+@app.head("/")
+def root_index():
+    return {
+        "name": "LandShield API",
+        "status": "online",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/v1/health",
+        "deep_health": "/api/v1/health/deep",
+    }
+
+
 @app.get("/api/v1/health")
+@app.head("/api/v1/health")
+@app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/api/v1/health/deep")
+@app.head("/api/v1/health/deep")
+@app.get("/health/deep")
+@app.head("/health/deep")
+def deep_health_check():
+    """Deep healthcheck verifying database connectivity and seed presence without exposing secrets."""
+    from sqlalchemy import select, func, text
+    from sqlalchemy.orm import Session
+    from app.models.plot import Plot
+    from app.models.deed import Deed
+
+    try:
+        with Session(engine) as db:
+            db.execute(text("SELECT 1"))
+            plots_count = db.scalar(select(func.count(Plot.id))) or 0
+            deeds_count = db.scalar(select(func.count(Deed.id))) or 0
+
+        is_seeded = plots_count > 0
+        return {
+            "status": "ok",
+            "database": "connected",
+            "seeded": is_seeded,
+            "plots_count": plots_count,
+            "deeds_count": deeds_count,
+        }
+    except Exception:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "status": "unhealthy",
+                "database": "disconnected",
+                "seeded": False,
+                "error": "Database connectivity check failed",
+            },
+        )
+
 
 

@@ -1,38 +1,36 @@
-from __future__ import annotations
+import re
 from typing import Any
 
 STAFF_ROLES: set[str] = {"registrar", "officer", "admin"}
+
+# Comprehensive regex matching complete Bangla orthographic syllables (Akshors)
+# including base consonants, nuktas, conjuncts (virama), vowel matras, and modifiers (chandrabindu, etc.)
+AKSHOR = re.compile(
+    r"(?:[\u0985-\u0994]|(?:[\u0995-\u09B9\u09CE\u09DC-\u09DF]\u09BC?(?:\u09CD[\u0995-\u09B9\u09DC-\u09DF]\u09BC?)*))[\u09BE-\u09CC\u09D7]?[\u0981-\u0983]?|."
+)
 
 
 def mask_name(name: str | None) -> str:
     """Mask a person's display name to protect privacy in public outputs.
 
-    Keeps the first and last character of each word with '***' in between.
-    Supports both Bangla and Latin scripts, handling short words gracefully.
-
-    Examples:
-        "রহিম উদ্দিন" -> "র***ম উ***ন"
-        "John Doe"    -> "J***n D***e"
-        "Md Ali"      -> "M***d A***i"
-        "A"           -> "A***"
+    Keeps the first and last grapheme/syllable of each word with '***' in between.
+    Supports complete Bangla orthographic syllables (akshors) and Latin scripts.
     """
     if not name:
         return ""
-
     words = name.strip().split()
     if not words:
         return ""
-
-    masked_words: list[str] = []
+    masked: list[str] = []
     for word in words:
-        if len(word) <= 1:
-            masked_words.append(f"{word}***")
-        elif len(word) == 2:
-            masked_words.append(f"{word[0]}***{word[1]}")
+        graphemes = [g for g in AKSHOR.findall(word) if g]
+        if len(graphemes) <= 1:
+            masked.append(word)
+        elif len(graphemes) == 2:
+            masked.append(graphemes[0] + "***" + graphemes[1])
         else:
-            masked_words.append(f"{word[0]}***{word[-1]}")
-
-    return " ".join(masked_words)
+            masked.append(graphemes[0] + "***" + graphemes[-1])
+    return " ".join(masked)
 
 
 def is_staff_viewer(viewer: Any) -> bool:

@@ -69,6 +69,9 @@ def register_deed(
     if buyer is None:
         raise DomainError(f"Buyer with id {buyer_id} does not exist")
 
+    if seller_id == buyer_id:
+        raise DomainError("Seller and buyer cannot be the same person")
+
     if area_sold <= 0:
         raise DomainError(f"area_sold must be greater than 0, got {area_sold}")
 
@@ -166,13 +169,19 @@ def verify_deed(
       7. SUPERSEDED (newer ledger entry exists on plot)
       8. VALID
     """
-    stmt = select(Deed).where(Deed.deed_no == deed_no)
+    clean_deed_no = deed_no.strip() if isinstance(deed_no, str) else str(deed_no)
+    stmt = select(Deed).where(Deed.deed_no == clean_deed_no)
     deed = db.scalars(stmt).first()
+    if deed is None:
+        stmt_upper = select(Deed).where(Deed.deed_no == clean_deed_no.upper())
+        deed = db.scalars(stmt_upper).first()
+    if deed is None and clean_deed_no.isdigit():
+        deed = db.get(Deed, int(clean_deed_no))
     if deed is None:
         return {
             "status": "UNKNOWN",
             "reasons": ["UNKNOWN: Deed not found"],
-            "deed_no": deed_no,
+            "deed_no": clean_deed_no,
             "plot_id": None,
             "chain_position": None,
             "registered_at": None,

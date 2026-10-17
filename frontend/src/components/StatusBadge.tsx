@@ -42,12 +42,12 @@ export function StatusBadge({
     case "VALID":
       return (
         <span
-          className={`inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 shadow-sm ${sizeClasses} ${className}`}
+          className={`group/badge inline-flex items-center rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 shadow-sm animate-pulse-glow transition-transform duration-200 hover:scale-105 cursor-default ${sizeClasses} ${className}`}
           data-testid="status-badge-valid"
         >
           {showIcon && (
             <svg
-              className={`${iconSizes} text-emerald-600 dark:text-emerald-400 shrink-0`}
+              className={`${iconSizes} text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover/badge:scale-110`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -67,12 +67,12 @@ export function StatusBadge({
     case "TAMPERED":
       return (
         <span
-          className={`inline-flex items-center rounded-full bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800 shadow-sm animate-pulse ${sizeClasses} ${className}`}
+          className={`group/badge inline-flex items-center rounded-full bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-100 dark:border-rose-700 shadow-sm animate-pulse-alert transition-transform duration-200 hover:scale-105 cursor-default ${sizeClasses} ${className}`}
           data-testid="status-badge-tampered"
         >
           {showIcon && (
             <svg
-              className={`${iconSizes} text-rose-600 dark:text-rose-400 shrink-0`}
+              className={`${iconSizes} text-rose-600 dark:text-rose-400 shrink-0 transition-transform duration-200 group-hover/badge:scale-110`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -92,12 +92,12 @@ export function StatusBadge({
     case "SUPERSEDED":
       return (
         <span
-          className={`inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 shadow-sm ${sizeClasses} ${className}`}
+          className={`group/badge inline-flex items-center rounded-full bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 shadow-sm transition-transform duration-200 hover:scale-105 cursor-default ${sizeClasses} ${className}`}
           data-testid="status-badge-superseded"
         >
           {showIcon && (
             <svg
-              className={`${iconSizes} text-amber-600 dark:text-amber-400 shrink-0`}
+              className={`${iconSizes} text-amber-600 dark:text-amber-400 shrink-0 transition-transform duration-300 group-hover/badge:rotate-45`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -117,12 +117,12 @@ export function StatusBadge({
     case "CANCELLED":
       return (
         <span
-          className={`inline-flex items-center rounded-full bg-slate-100 text-slate-500 border border-slate-300 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700 shadow-sm line-through ${sizeClasses} ${className}`}
+          className={`group/badge inline-flex items-center rounded-full bg-slate-100 text-slate-500 border border-slate-300 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700 shadow-sm line-through transition-transform duration-200 hover:scale-105 cursor-default ${sizeClasses} ${className}`}
           data-testid="status-badge-cancelled"
         >
           {showIcon && (
             <svg
-              className={`${iconSizes} text-slate-400 dark:text-slate-500 shrink-0 no-underline`}
+              className={`${iconSizes} text-slate-400 dark:text-slate-500 shrink-0 no-underline transition-transform duration-200 group-hover/badge:scale-110`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -143,12 +143,12 @@ export function StatusBadge({
     default:
       return (
         <span
-          className={`inline-flex items-center rounded-full bg-gray-100 text-gray-600 border border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 shadow-sm ${sizeClasses} ${className}`}
+          className={`group/badge inline-flex items-center rounded-full bg-gray-100 text-gray-700 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 shadow-sm transition-transform duration-200 hover:scale-105 cursor-default ${sizeClasses} ${className}`}
           data-testid="status-badge-unknown"
         >
           {showIcon && (
             <svg
-              className={`${iconSizes} text-gray-500 dark:text-gray-400 shrink-0`}
+              className={`${iconSizes} text-gray-500 dark:text-gray-400 shrink-0 transition-transform duration-200 group-hover/badge:scale-110`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

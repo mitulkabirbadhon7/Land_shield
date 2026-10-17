@@ -1,6 +1,6 @@
 # LandShield Empirical Evaluation Report
 
-Generated: 2026-10-17T20:20:55.492986+00:00 | Benchmark: 300 Synthetic Plots (210 Clean, 90 Anomalous)
+Generated: 2026-10-17T20:39:49.540946+00:00 | Benchmark: 300 Synthetic Plots (210 Clean, 90 Anomalous)
 
 ## 1. Executive Summary
 

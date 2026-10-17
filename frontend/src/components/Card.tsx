@@ -10,6 +10,7 @@ interface CardProps {
   footer?: React.ReactNode;
   className?: string;
   interactive?: boolean;
+  animate?: boolean;
   onClick?: () => void;
 }
 
@@ -21,15 +22,18 @@ export function Card({
   footer,
   className = "",
   interactive = false,
+  animate = false,
   onClick,
 }: CardProps) {
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl border border-slate-200/80 bg-white/90 p-5 shadow-xs transition-all duration-200 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none ${
+      className={`rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-xs transition-all duration-300 ease-out backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none ${
+        animate ? "animate-fade-in-up" : ""
+      } ${
         interactive
-          ? "cursor-pointer hover:-translate-y-0.5 hover:border-emerald-500/50 hover:shadow-md dark:hover:border-emerald-500/40"
-          : ""
+          ? "cursor-pointer hover:-translate-y-1 hover:border-emerald-500/50 hover:shadow-lg active:scale-[0.99] dark:hover:border-emerald-500/40"
+          : "hover:border-slate-300/90 dark:hover:border-slate-700/80"
       } ${className}`}
     >
       {(title || subtitle || headerAction) && (

@@ -7,13 +7,13 @@ import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
-import { QRScanner } from "@/components/QRScanner";
+import { QRScanner, parseDeedFromQR } from "@/components/QRScanner";
 import { getChain, getPlot, verifyDeed } from "@/lib/api";
 import { ChainItem, DeedStatus, PlotOut, VerifyOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 
 function VerifyContent() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -25,27 +25,35 @@ function VerifyContent() {
   const [chainItem, setChainItem] = useState<ChainItem | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDirectUploading, setIsDirectUploading] = useState(false);
+  const fileInputDirectRef = React.useRef<HTMLInputElement>(null);
 
-  // Sample deeds for testing and demo evaluation
+  // Sample deeds for testing and demo evaluation (from deterministic seed benchmarks)
   const sampleDeeds = [
-    { label: "বৈধ দলিল (Valid)", deedNo: "MIR-2026-000001" },
-    { label: "নমুনা ২ (Plot 2)", deedNo: "MIR-2026-000002" },
-    { label: "নমুনা ৩ (Plot 3)", deedNo: "MIR-2026-000003" },
+    { label: lang === "bn" ? "বৈধ দলিল (Plot 6)" : "Valid Deed (Plot 6)", deedNo: "DHAKA-2026-000010" },
+    { label: lang === "bn" ? "বৈধ দলিল (Plot 2)" : "Valid Deed (Plot 2)", deedNo: "DHAKA-2026-000003" },
+    { label: lang === "bn" ? "প্রতিস্থাপিত (Plot 1)" : "Superseded (Plot 1)", deedNo: "DHAKA-2026-000001" },
+    { label: lang === "bn" ? "অংশবিশেষ (Plot 8)" : "Partial Sale (Plot 8)", deedNo: "DHAKA-2026-000014" },
   ];
+
+  const lastVerifiedDeed = React.useRef<string | null>(null);
 
   const handleVerify = useCallback(
     async (deedNoToVerify: string) => {
-      const cleanDeedNo = deedNoToVerify.trim();
+      const cleanDeedNo = deedNoToVerify.trim().toUpperCase();
       if (!cleanDeedNo) return;
 
+      lastVerifiedDeed.current = cleanDeedNo;
       setLoading(true);
       setError(null);
       setResult(null);
       setPlot(null);
       setChainItem(null);
 
-      // Update URL search param
-      router.replace(`/verify?deed=${encodeURIComponent(cleanDeedNo)}`);
+      // Only update URL search param if not already set to avoid navigation loops
+      if (searchParams.get("deed") !== cleanDeedNo) {
+        router.replace(`/verify?deed=${encodeURIComponent(cleanDeedNo)}`);
+      }
 
       try {
         const verifyRes = await verifyDeed(cleanDeedNo);
@@ -78,13 +86,14 @@ function VerifyContent() {
         setLoading(false);
       }
     },
-    [router, t]
+    [router, searchParams, t]
   );
 
   // Trigger verify automatically if ?deed= is present in URL
   useEffect(() => {
     const deedParam = searchParams.get("deed");
-    if (deedParam) {
+    if (deedParam && lastVerifiedDeed.current !== deedParam) {
+      lastVerifiedDeed.current = deedParam;
       setInputDeedNo(deedParam);
       handleVerify(deedParam);
     }
@@ -94,6 +103,39 @@ function VerifyContent() {
     setShowScanner(false);
     setInputDeedNo(scannedDeed);
     handleVerify(scannedDeed);
+  };
+
+  const handleDirectFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsDirectUploading(true);
+    setError(null);
+
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const fileScanner = new Html5Qrcode("verify-direct-qr-engine");
+      const decodedText = await fileScanner.scanFile(file, false);
+      const parsedDeed = parseDeedFromQR(decodedText);
+      try {
+        fileScanner.clear();
+      } catch {
+        // ignore cleanup error
+      }
+      if (parsedDeed.startsWith("http") && !parsedDeed.includes("deed=")) {
+        setError(lang === "bn" ? "কিউআর কোডে কোনো দলিলের তথ্য পাওয়া যায়নি" : "The scanned QR code does not contain a deed reference");
+        return;
+      }
+      setInputDeedNo(parsedDeed);
+      handleVerify(parsedDeed);
+    } catch {
+      setError(t("verify.upload_qr_error"));
+    } finally {
+      setIsDirectUploading(false);
+      if (fileInputDirectRef.current) {
+        fileInputDirectRef.current.value = "";
+      }
+    }
   };
 
   const handleCopyLink = () => {
@@ -144,12 +186,12 @@ function VerifyContent() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Page Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-2">
+      <div className="text-center max-w-2xl mx-auto space-y-2 animate-fade-in-down">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:bg-teal-950/60 dark:text-teal-300">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>পাবলিক ভেরিফিকেশন সার্ভিস</span>
+          <span>{t("verify.public_badge")}</span>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -161,7 +203,7 @@ function VerifyContent() {
       </div>
 
       {/* Verification Input & Scanner Bar */}
-      <Card className="p-6">
+      <Card className="p-6 animate-fade-in-up stagger-1">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -181,13 +223,13 @@ function VerifyContent() {
                 value={inputDeedNo}
                 onChange={(e) => setInputDeedNo(e.target.value)}
                 placeholder={t("verify.input_placeholder")}
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-2xs focus:border-teal-500 focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-2xs transition-all focus:border-teal-500 focus:shadow-sm focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
               {inputDeedNo && (
                 <button
                   type="button"
                   onClick={() => setInputDeedNo("")}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -197,11 +239,11 @@ function VerifyContent() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="submit"
                 disabled={loading || !inputDeedNo.trim()}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-teal-500/20 transition hover:bg-teal-700 active:scale-95 disabled:opacity-50 dark:bg-teal-600 dark:hover:bg-teal-500"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-teal-500/20 transition-all hover:bg-teal-700 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 dark:bg-teal-600 dark:hover:bg-teal-500"
               >
                 {loading ? <Spinner size="sm" /> : (
                   <>
@@ -216,14 +258,40 @@ function VerifyContent() {
               <button
                 type="button"
                 onClick={() => setShowScanner(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:border-slate-400 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-400 hover:-translate-y-0.5 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
               >
                 <svg className="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
                 <span className="hidden sm:inline">{t("verify.btn_scan_qr")}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputDirectRef.current?.click()}
+                disabled={isDirectUploading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-400 hover:-translate-y-0.5 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
+              >
+                {isDirectUploading ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <svg className="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                )}
+                <span>{t("verify.btn_upload_qr")}</span>
+              </button>
             </div>
+
+            {/* Hidden File Engine & File Input for Direct Upload */}
+            <div id="verify-direct-qr-engine" className="hidden" />
+            <input
+              ref={fileInputDirectRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleDirectFileUpload}
+            />
           </div>
 
           {/* Quick Demo Sample Deed Pills */}
@@ -237,7 +305,7 @@ function VerifyContent() {
                   setInputDeedNo(sample.deedNo);
                   handleVerify(sample.deedNo);
                 }}
-                className="rounded-full border border-slate-200 bg-slate-100/80 px-2.5 py-1 font-mono text-[11px] font-medium text-slate-700 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300 transition"
+                className="rounded-full border border-slate-200 bg-slate-100/80 px-2.5 py-1 font-mono text-[11px] font-medium text-slate-700 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 hover:scale-105 active:scale-95 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
               >
                 {sample.deedNo}
               </button>
@@ -255,22 +323,28 @@ function VerifyContent() {
         />
       )}
 
-      {/* Loading State */}
+      {/* Loading State with Shimmer Skeleton */}
       {loading && (
-        <div className="py-12 text-center space-y-3">
-          <Spinner size="lg" />
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            {t("common.loading")}
-          </p>
+        <div className="space-y-4 py-4 animate-fade-in">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="pointer-events-none absolute inset-0 animate-shimmer" />
+            <div className="flex items-center gap-4">
+              <Spinner size="md" />
+              <div className="space-y-2 flex-1">
+                <div className="h-4 w-48 rounded-md bg-slate-200 dark:bg-slate-800" />
+                <div className="h-3 w-72 rounded-md bg-slate-100 dark:bg-slate-850" />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Verification Result View */}
       {result && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
           {/* 1. Large Status Banner */}
           <div
-            className={`rounded-2xl border p-6 sm:p-8 shadow-sm transition-all backdrop-blur-xs ${currentStyle.border} ${currentStyle.bg}`}
+            className={`rounded-2xl border p-6 sm:p-8 shadow-sm transition-all duration-300 backdrop-blur-md ${currentStyle.border} ${currentStyle.bg}`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-6">
               <div className="space-y-1">
@@ -289,13 +363,13 @@ function VerifyContent() {
             {/* Plain-Language Explanation Line */}
             <div className="pt-4">
               <p className={`text-base font-semibold leading-relaxed ${currentStyle.titleColor}`}>
-                {t(`status_desc.${status}`, "স্ট্যাটাস বিবরণ পাওয়া যায়নি")}
+                {t(`status_desc.${status}`, lang === "bn" ? "স্ট্যাটাস বিবরণ পাওয়া যায়নি" : "Status description unavailable")}
               </p>
             </div>
           </div>
 
           {/* 2. Deed Summary & Plot Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in-up stagger-2">
             {/* Deed Metadata Card */}
             <Card
               title={t("verify.deed_summary")}
@@ -330,13 +404,13 @@ function VerifyContent() {
                   </div>
                 )}
 
-                {chainItem?.buyer_masked && (
+                {(chainItem?.buyer_masked || chainItem?.buyer) && (
                   <div className="py-2.5 flex justify-between">
                     <dt className="text-slate-500 dark:text-slate-400">
                       {t("verify.buyer")}:
                     </dt>
                     <dd className="font-semibold text-slate-900 dark:text-slate-100">
-                      {chainItem.buyer_masked}
+                      {chainItem?.buyer_masked || chainItem?.buyer}
                     </dd>
                   </div>
                 )}
@@ -363,7 +437,7 @@ function VerifyContent() {
                     href={`/check?plot=${plot.id}`}
                     className="text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 transition"
                   >
-                    ঝুঁকি দেখুন →
+                    {t("verify.see_risk")}
                   </Link>
                 ) : null
               }
@@ -399,7 +473,7 @@ function VerifyContent() {
 
                   <div className="py-2.5 flex justify-between">
                     <dt className="text-slate-500 dark:text-slate-400">
-                      জমির পরিমাণ (Area):
+                      {t("verify.plot_area_label")}
                     </dt>
                     <dd className="font-semibold text-slate-900 dark:text-slate-100">
                       {plot.area_decimal} {t("verify.decimals")} ({plot.land_type})
@@ -409,21 +483,21 @@ function VerifyContent() {
               ) : (
                 <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400">
                   {result.plot_id
-                    ? `প্লট #${result.plot_id} এর বিস্তারিত লোড হচ্ছে...`
-                    : "এই দলিলের জন্য কোনো সক্রিয় প্লট যুক্ত নেই।"}
+                    ? t("verify.plot_loading", "Loading...").replace("{plot_id}", String(result.plot_id))
+                    : t("verify.no_plot_attached")}
                 </div>
               )}
             </Card>
           </div>
 
           {/* 3. Technical Audit & Reasons List */}
-          <Card title={t("verify.technical_reasons")}>
+          <Card title={t("verify.technical_reasons")} className="animate-fade-in-up stagger-3">
             {result.reasons && result.reasons.length > 0 ? (
               <ul className="space-y-2">
                 {result.reasons.map((reason, idx) => (
                   <li
                     key={idx}
-                    className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50/70 p-3 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                    className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50/70 p-3 text-xs text-rose-800 transition-all hover:scale-[1.01] dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
                   >
                     <svg className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -443,24 +517,38 @@ function VerifyContent() {
           </Card>
 
           {/* 4. Action Bar (Share / Plot Check) */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 animate-fade-in-up stagger-4">
             <button
               type="button"
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-400 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-              <span>{copied ? "লিঙ্ক কপি হয়েছে! ✓" : "যাচাই লিঙ্ক কপি করুন"}</span>
+              {copied ? (
+                <>
+                  <svg className="w-4 h-4 text-emerald-600 animate-scale-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-emerald-600 font-bold">{t("verify.copied")}</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                  <span>{t("verify.copy_link")}</span>
+                </>
+              )}
             </button>
 
             {result.plot_id && (
               <Link
                 href={`/check?plot=${result.plot_id}`}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-600/20 transition-all hover:bg-teal-700 hover:-translate-y-0.5 active:scale-95"
               >
                 <span>{t("verify.check_plot_link")}</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </Link>
             )}
           </div>
@@ -483,7 +571,7 @@ export default function VerifyPage() {
     <Suspense
       fallback={
         <div className="py-20 text-center">
-          <Spinner size="lg" label="লোড হচ্ছে..." />
+          <Spinner size="lg" />
         </div>
       }
     >

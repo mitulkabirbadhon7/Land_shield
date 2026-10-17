@@ -78,13 +78,6 @@ def create_eval_dataset(db: Session) -> list[dict[str, Any]]:
             db.add(k3)
             db.commit()
 
-        # Add legitimate single active deed
-        deed = register_deed(
-            db, _SK, plot_id=p.id, seller_id=owner.id, buyer_id=owner.id,
-            area_sold=p.area_decimal, deed_type="SALE", sub_registry="MIR", skip_fraud=True,
-        )
-        db.commit()
-
         plots_meta.append({"plot_id": p.id, "is_anomalous": False, "category": "CLEAN"})
 
     # --- 2. Generate 90 Anomalous Plots (Label: 1) ---
@@ -154,9 +147,8 @@ def create_eval_dataset(db: Session) -> list[dict[str, Any]]:
                 db.commit()
 
             elif cat == "RECONCILE_MISMATCH":
-                # Ledger deed held by owner, but AC Land current_owner_id is stranger
-                register_deed(db, _SK, plot_id=p.id, seller_id=owner.id, buyer_id=owner.id, area_sold=20.0, deed_type="SALE", sub_registry="MIR", skip_fraud=True)
-                db.commit()
+                # AC Land current_owner_id was set to stranger while initial owner was owner -> OWNER_MISMATCH
+                pass
 
             plots_meta.append({"plot_id": p.id, "is_anomalous": True, "category": cat})
             curr_idx += 1

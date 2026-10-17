@@ -251,17 +251,18 @@ def run_attack_a6(db: Session, i: int) -> bool:
 
 def run_attack_a7(db: Session, i: int) -> bool:
     """A7: Direct tampering with plot ownership records -> Detected by Rule R8 OWNER_MISMATCH."""
+    p_seller = Person(display_name=f"Seller A7_{i}", is_synthetic=True)
     p_legit = Person(display_name=f"Legit Owner A7_{i}", is_synthetic=True)
     p_spoofed = Person(display_name=f"Spoofed Owner A7_{i}", is_synthetic=True)
     plot = Plot(dag_no=f"A7_{i}", mouza="Mirpur", upazila="Mirpur", district="Dhaka", area_decimal=10.0, land_type="Nal", initial_owner_id=1)
-    db.add_all([p_legit, p_spoofed, plot])
+    db.add_all([p_seller, p_legit, p_spoofed, plot])
     db.commit()
-    plot.initial_owner_id = p_legit.id
+    plot.initial_owner_id = p_seller.id
     plot.current_owner_id = p_legit.id
     db.commit()
 
-    # Valid deed to p_legit
-    _reg(db, plot_id=plot.id, seller_id=p_legit.id, buyer_id=p_legit.id, area_sold=10.0, skip_fraud=True)
+    # Valid deed from p_seller to p_legit
+    _reg(db, plot_id=plot.id, seller_id=p_seller.id, buyer_id=p_legit.id, area_sold=10.0, skip_fraud=True)
 
     # Tamper with AC Land recorded owner directly
     plot.current_owner_id = p_spoofed.id

@@ -29,7 +29,13 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import random
+import sys
 from typing import Any
+
+# Ensure backend root is on sys.path when executed directly
+_backend_root = Path(__file__).resolve().parent.parent
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
 
 from argon2 import PasswordHasher
 from faker import Faker
@@ -525,27 +531,30 @@ def seed_data(
         recompute_current_owner(db, plot)
     db.flush()
 
-    # 7. Write scenarios.json & DEMO_ACCOUNTS.md
-    repo_root = get_repo_root()
-    scenarios_file = repo_root / "data" / "scenarios" / "scenarios.json"
-    scenarios_file.parent.mkdir(parents=True, exist_ok=True)
-    scenarios_content = {
-        "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
-        "reference_date": SEED_REFERENCE_DATE.isoformat(),
-        "scenarios": scenarios_metadata,
-    }
-    scenarios_file.write_text(json.dumps(scenarios_content, indent=2, ensure_ascii=False), encoding="utf-8")
+    # 7. Write scenarios.json & DEMO_ACCOUNTS.md (non-fatal in cloud/read-only environments)
+    try:
+        repo_root = get_repo_root()
+        scenarios_file = repo_root / "data" / "scenarios" / "scenarios.json"
+        scenarios_file.parent.mkdir(parents=True, exist_ok=True)
+        scenarios_content = {
+            "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
+            "reference_date": SEED_REFERENCE_DATE.isoformat(),
+            "scenarios": scenarios_metadata,
+        }
+        scenarios_file.write_text(json.dumps(scenarios_content, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    demo_acc_content = "# LandShield - Synthetic Demo Accounts\n\n"
-    demo_acc_content += "> **IMPORTANT:** All credentials listed below are purely synthetic for hackathon evaluation and demonstration.\n\n"
-    demo_acc_content += "| Role | Username | Password | Purpose |\n"
-    demo_acc_content += "|---|---|---|---|\n"
-    for spec in DEMO_USERS_SPEC:
-        demo_acc_content += f"| {spec['role'].capitalize()} | `{spec['username']}` | `{spec['password']}` | {spec['name']} |\n"
+        demo_acc_content = "# LandShield - Synthetic Demo Accounts\n\n"
+        demo_acc_content += "> **IMPORTANT:** All credentials listed below are purely synthetic for hackathon evaluation and demonstration.\n\n"
+        demo_acc_content += "| Role | Username | Password | Purpose |\n"
+        demo_acc_content += "|---|---|---|---|\n"
+        for spec in DEMO_USERS_SPEC:
+            demo_acc_content += f"| {spec['role'].capitalize()} | `{spec['username']}` | `{spec['password']}` | {spec['name']} |\n"
 
-    for doc_dir in [repo_root / "docs", repo_root / "Docs"]:
-        if doc_dir.exists():
-            (doc_dir / "DEMO_ACCOUNTS.md").write_text(demo_acc_content, encoding="utf-8")
+        for doc_dir in [repo_root / "docs", repo_root / "Docs"]:
+            if doc_dir.exists():
+                (doc_dir / "DEMO_ACCOUNTS.md").write_text(demo_acc_content, encoding="utf-8")
+    except Exception:
+        pass
 
     return {
         "users": created_users,
@@ -558,6 +567,7 @@ def seed_data(
 def main():
     parser = argparse.ArgumentParser(description="Seed synthetic data for LandShield")
     parser.add_argument("--reset", action="store_true", help="Wipe and recreate database tables")
+    parser.add_argument("--with-applications", action="store_true", help="Seed with sample applications")
     args = parser.parse_args()
 
     if args.reset:

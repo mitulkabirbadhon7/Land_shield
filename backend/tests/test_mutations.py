@@ -368,3 +368,68 @@ def test_mutation_api_rbac_and_public_view(client: TestClient, seeded_db: Sessio
     assert res_officer_view.status_code == 200
     off_data = res_officer_view.json()
     assert off_data["auto_check_json"] is not None
+
+
+def test_scenario_s6_clean_sale_mutation_application_recommendation_approves(
+    client: TestClient,
+    seeded_db: Session,
+    test_users: dict,
+):
+    """Submitting an application for S6 clean deal returns clean auto-check recommendation (APPROVE/not blocked)."""
+    p6 = seeded_db.get(Plot, 6)
+    assert p6 is not None
+    assert p6.current_owner_id is not None
+
+    buyer = seeded_db.scalars(
+        select(Person).where(Person.id != p6.current_owner_id)
+    ).first()
+    assert buyer is not None
+
+    # 1. Registrar registers new clean transfer on S6
+    res_deed = client.post(
+        "/api/v1/deeds",
+        json={
+            "plot_id": p6.id,
+            "seller_id": p6.current_owner_id,
+            "buyer_id": buyer.id,
+            "area_sold": 10.0,
+            "deed_type": "SALE",
+            "sub_registry": "DHAKA",
+        },
+        headers={"Authorization": f"Bearer {test_users['registrar_token']}"},
+    )
+    assert res_deed.status_code == 201
+    deed_data = res_deed.json()
+    assert deed_data["verify"]["status"] == "VALID"
+    new_deed_id = deed_data["deed"]["id"]
+
+    # 2. Registrar submits mutation application with auto_check
+    res_mut = client.post(
+        "/api/v1/mutations",
+        json={"deed_id": new_deed_id, "auto_check": True},
+        headers={"Authorization": f"Bearer {test_users['registrar_token']}"},
+    )
+    assert res_mut.status_code == 201
+    mut_data = res_mut.json()
+    assert mut_data["state"] == "AUTO_CHECKED"
+    assert mut_data["requires_override"] is False
+    assert mut_data["auto_check_json"]["has_critical"] is False
+    assert mut_data["auto_check_json"]["score"] == 0
+
+    # 3. Officer can transition directly to UNDER_REVIEW and APPROVED without override note
+    mut_id = mut_data["id"]
+    res_review = client.post(
+        f"/api/v1/mutations/{mut_id}/transition",
+        json={"to_state": "UNDER_REVIEW", "note": "Clean deal verified"},
+        headers={"Authorization": f"Bearer {test_users['officer_token']}"},
+    )
+    assert res_review.status_code == 200
+
+    res_approve = client.post(
+        f"/api/v1/mutations/{mut_id}/transition",
+        json={"to_state": "APPROVED", "note": "Recommended and approved"},
+        headers={"Authorization": f"Bearer {test_users['officer_token']}"},
+    )
+    assert res_approve.status_code == 200
+    assert res_approve.json()["state"] == "APPROVED"
+
