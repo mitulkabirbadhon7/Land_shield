@@ -494,47 +494,86 @@ function RegistrarPageContent() {
       const p = await resolveRegistrarPlot(cfg);
       handleSelectPlot(p);
 
-      // Determine seller
+      // Fetch live directory persons to guarantee matching live DB entities across cloud & local
+      let livePersons: PersonOut[] = [];
+      try {
+        livePersons = await searchPersons("", 20);
+      } catch {
+        // non-fatal
+      }
+
       let sellerPerson: PersonOut | null = null;
-      const actualSellerId =
-        scenarioType === "clean" ? p.current_owner_id ?? cfg.sellerId : cfg.sellerId;
-      const sellerDisplayName =
-        scenarioType === "clean" && (p.current_owner_name || p.current_owner_masked)
-          ? p.current_owner_name || p.current_owner_masked || cfg.sellerName
-          : cfg.sellerName;
-
-      try {
-        const persons = await searchPersons(String(actualSellerId), 5);
-        sellerPerson = persons.find((x) => x.id === actualSellerId) || null;
-      } catch {
-        // fallback
-      }
-
-      if (!sellerPerson) {
-        sellerPerson = {
-          id: actualSellerId,
-          display_name: sellerDisplayName,
-          is_synthetic: true,
-        };
-      }
-      handleSelectSeller(sellerPerson);
-
-      // Determine buyer
       let buyerPerson: PersonOut | null = null;
-      try {
-        const buyers = await searchPersons(String(cfg.buyerId), 5);
-        buyerPerson = buyers.find((x) => x.id === cfg.buyerId) || null;
-      } catch {
-        // fallback
+
+      if (scenarioType === "clean") {
+        // S6 Clean: genuine current owner selling to an existing live buyer
+        const sId = p.current_owner_id ?? p.initial_owner_id ?? cfg.sellerId;
+        sellerPerson = livePersons.find((x) => x.id === sId) || null;
+        if (!sellerPerson) {
+          sellerPerson = {
+            id: sId,
+            display_name: p.current_owner_name || p.current_owner_masked || cfg.sellerName,
+            is_synthetic: true,
+          };
+        }
+
+        // Live buyer distinct from seller
+        buyerPerson = livePersons.find((x) => x.id !== sId) || null;
+        if (!buyerPerson) {
+          buyerPerson = {
+            id: cfg.buyerId,
+            display_name: cfg.buyerName,
+            is_synthetic: true,
+          };
+        }
+      } else if (scenarioType === "double") {
+        // S1 Double Sale: the seller is the original owner who already sold the plot (no remaining title)
+        const sId = p.initial_owner_id ?? p.current_owner_id ?? cfg.sellerId;
+        sellerPerson = livePersons.find((x) => x.id === sId) || null;
+        if (!sellerPerson) {
+          sellerPerson = {
+            id: sId,
+            display_name: p.initial_owner_name || p.current_owner_name || cfg.sellerName,
+            is_synthetic: true,
+          };
+        }
+
+        // Live buyer distinct from seller
+        buyerPerson = livePersons.find((x) => x.id !== sId) || null;
+        if (!buyerPerson) {
+          buyerPerson = {
+            id: cfg.buyerId,
+            display_name: cfg.buyerName,
+            is_synthetic: true,
+          };
+        }
+      } else {
+        // S2 Stranger: seller is a live person who has NO title to this plot
+        const ownerId = p.current_owner_id ?? p.initial_owner_id;
+        sellerPerson = livePersons.find((x) => x.id !== ownerId) || null;
+        if (!sellerPerson) {
+          sellerPerson = {
+            id: cfg.sellerId,
+            display_name: cfg.sellerName,
+            is_synthetic: true,
+          };
+        }
+
+        // Live buyer distinct from both owner and stranger seller
+        buyerPerson =
+          livePersons.find(
+            (x) => x.id !== ownerId && (!sellerPerson || x.id !== sellerPerson.id)
+          ) || null;
+        if (!buyerPerson) {
+          buyerPerson = {
+            id: cfg.buyerId,
+            display_name: cfg.buyerName,
+            is_synthetic: true,
+          };
+        }
       }
 
-      if (!buyerPerson) {
-        buyerPerson = {
-          id: cfg.buyerId,
-          display_name: cfg.buyerName,
-          is_synthetic: true,
-        };
-      }
+      handleSelectSeller(sellerPerson);
       handleSelectBuyer(buyerPerson);
 
       setAreaSold(cfg.area);

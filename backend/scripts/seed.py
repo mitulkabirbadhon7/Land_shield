@@ -531,27 +531,30 @@ def seed_data(
         recompute_current_owner(db, plot)
     db.flush()
 
-    # 7. Write scenarios.json & DEMO_ACCOUNTS.md
-    repo_root = get_repo_root()
-    scenarios_file = repo_root / "data" / "scenarios" / "scenarios.json"
-    scenarios_file.parent.mkdir(parents=True, exist_ok=True)
-    scenarios_content = {
-        "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
-        "reference_date": SEED_REFERENCE_DATE.isoformat(),
-        "scenarios": scenarios_metadata,
-    }
-    scenarios_file.write_text(json.dumps(scenarios_content, indent=2, ensure_ascii=False), encoding="utf-8")
+    # 7. Write scenarios.json & DEMO_ACCOUNTS.md (non-fatal in cloud/read-only environments)
+    try:
+        repo_root = get_repo_root()
+        scenarios_file = repo_root / "data" / "scenarios" / "scenarios.json"
+        scenarios_file.parent.mkdir(parents=True, exist_ok=True)
+        scenarios_content = {
+            "description": "Pre-configured synthetic test scenarios for LandShield evaluation",
+            "reference_date": SEED_REFERENCE_DATE.isoformat(),
+            "scenarios": scenarios_metadata,
+        }
+        scenarios_file.write_text(json.dumps(scenarios_content, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    demo_acc_content = "# LandShield - Synthetic Demo Accounts\n\n"
-    demo_acc_content += "> **IMPORTANT:** All credentials listed below are purely synthetic for hackathon evaluation and demonstration.\n\n"
-    demo_acc_content += "| Role | Username | Password | Purpose |\n"
-    demo_acc_content += "|---|---|---|---|\n"
-    for spec in DEMO_USERS_SPEC:
-        demo_acc_content += f"| {spec['role'].capitalize()} | `{spec['username']}` | `{spec['password']}` | {spec['name']} |\n"
+        demo_acc_content = "# LandShield - Synthetic Demo Accounts\n\n"
+        demo_acc_content += "> **IMPORTANT:** All credentials listed below are purely synthetic for hackathon evaluation and demonstration.\n\n"
+        demo_acc_content += "| Role | Username | Password | Purpose |\n"
+        demo_acc_content += "|---|---|---|---|\n"
+        for spec in DEMO_USERS_SPEC:
+            demo_acc_content += f"| {spec['role'].capitalize()} | `{spec['username']}` | `{spec['password']}` | {spec['name']} |\n"
 
-    for doc_dir in [repo_root / "docs", repo_root / "Docs"]:
-        if doc_dir.exists():
-            (doc_dir / "DEMO_ACCOUNTS.md").write_text(demo_acc_content, encoding="utf-8")
+        for doc_dir in [repo_root / "docs", repo_root / "Docs"]:
+            if doc_dir.exists():
+                (doc_dir / "DEMO_ACCOUNTS.md").write_text(demo_acc_content, encoding="utf-8")
+    except Exception:
+        pass
 
     return {
         "users": created_users,

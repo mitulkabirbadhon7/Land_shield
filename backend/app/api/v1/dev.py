@@ -180,78 +180,39 @@ def reseed_database(
     except Exception:
         dialect_name = ""
 
-    all_table_names = [
-        "plots",
-        "persons",
-        "deeds",
-        "users",
-        "mutations",
-        "mutation_events",
-        "alerts",
-        "audit_log",
-        "audit_logs",
-        "ledger_entries",
-        "cases",
-    ]
-
-    pg_sequences = [
-        "plots_id_seq",
-        "persons_id_seq",
-        "deeds_id_seq",
-        "users_id_seq",
-        "mutations_id_seq",
-        "mutation_events_id_seq",
-        "alerts_id_seq",
-        "audit_log_id_seq",
-        "audit_logs_id_seq",
-        "ledger_entries_id_seq",
-        "cases_id_seq",
-    ]
-
     if dialect_name == "postgresql":
-        for seq in pg_sequences:
-            try:
-                db.execute(text(f"ALTER SEQUENCE IF EXISTS {seq} RESTART WITH 1;"))
-            except Exception:
-                pass
-        for tbl in all_table_names:
-            try:
-                db.execute(text(f"SELECT setval(pg_get_serial_sequence('{tbl}', 'id'), 1, false);"))
-            except Exception:
-                pass
+        try:
+            db.execute(
+                text(
+                    "TRUNCATE TABLE audit_log, alerts, mutation_events, mutations, "
+                    "ledger_entries, deeds, cases, plots, persons, users RESTART IDENTITY CASCADE;"
+                )
+            )
+            db.flush()
+        except Exception:
+            pass
     elif dialect_name == "sqlite":
         try:
             db.execute(
                 text(
                     "DELETE FROM sqlite_sequence WHERE name IN "
                     "('plots', 'persons', 'deeds', 'users', 'mutations', "
-                    "'mutation_events', 'alerts', 'audit_log', 'audit_logs', 'ledger_entries', 'cases');"
+                    "'mutation_events', 'alerts', 'audit_log', 'ledger_entries', 'cases');"
                 )
             )
         except Exception:
             pass
     else:
-        # Fallback: attempt both safe resets
         try:
             db.execute(
                 text(
                     "DELETE FROM sqlite_sequence WHERE name IN "
                     "('plots', 'persons', 'deeds', 'users', 'mutations', "
-                    "'mutation_events', 'alerts', 'audit_log', 'audit_logs', 'ledger_entries', 'cases');"
+                    "'mutation_events', 'alerts', 'audit_log', 'ledger_entries', 'cases');"
                 )
             )
         except Exception:
             pass
-        for seq in pg_sequences:
-            try:
-                db.execute(text(f"ALTER SEQUENCE IF EXISTS {seq} RESTART WITH 1;"))
-            except Exception:
-                pass
-        for tbl in all_table_names:
-            try:
-                db.execute(text(f"SELECT setval(pg_get_serial_sequence('{tbl}', 'id'), 1, false);"))
-            except Exception:
-                pass
 
     db.flush()
 

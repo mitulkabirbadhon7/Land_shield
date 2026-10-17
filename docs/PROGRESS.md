@@ -960,6 +960,14 @@ The following placeholders have been clearly marked in the documentation pack an
     - Localized benchmark scenario chips to `দৃশ্যকল্প ১`, `দৃশ্যকল্প ২`, `দৃশ্যকল্প ৬`.
     - Localized deed types (`বিক্রয় (কাবলা)`, `হেবা / দানপত্র`, `ওয়ারিশান / বণ্টননামা`, `বন্ধক`) and sub-registry offices (`মিরপুর সাব-রেজিস্ট্রি অফিস`, `ঢাকা সদর সাব-রেজিস্ট্রি অফিস`, `সাভার সাব-রেজিস্ট্রি অফিস`).
     - Localized plot and person suggestion dropdown items (`দাগ #${toBnDigits(p.dag_no)}`, `প্লট #${toBnDigits(p.id)}`, `আইডি #${toBnDigits(person.id)}`).
+  - **Live Dynamic Actor Resolution (`frontend/src/app/registrar/page.tsx`)**:
+    - Replaced hardcoded actor IDs (`sellerId: 1`, `buyerId: 99`) in `handleLoadScenario` with dynamic directory lookup (`searchPersons("", 20)`).
+    - For S1 (Double Sale): dynamically assigns `p.initial_owner_id` (the person who already sold this plot) and a distinct live buyer, preventing `Seller with id 1 does not exist` 422 errors when running on cloud databases with sequence drift.
+    - For S2 (Stranger): dynamically picks an existing live person who has no title to `p`, guaranteeing the fraud check hook evaluates Rule R2.
+    - For S6 (Clean): dynamically uses `p.current_owner_id` and a distinct live buyer.
+  - **Atomic PostgreSQL Sequence Reset (`backend/app/api/v1/dev.py`, `backend/scripts/seed.py`)**:
+    - Used native `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` for PostgreSQL in `/dev/reseed`, eliminating transaction aborted errors and safely resetting sequence counters to 1.
+    - Made filesystem metadata generation non-fatal in cloud environments.
 - **Decisions:**
   - Preserved standard styling and theme classes (`bg-slate-900/80`, `border-rose-500`, `text-rose-900`) while giving the registrar immediate viewport-level visibility without disruption.
   - Retained both modal pop-up and inline backup state so registrars can dismiss the modal to cross-examine their input values while still having the alert card accessible.
