@@ -22,6 +22,8 @@ export function Header() {
     { href: "/", label: t("nav.home") },
     { href: "/check", label: t("nav.check") },
     { href: "/verify", label: t("nav.verify") },
+    { href: "/transparency", label: lang === "bn" ? "স্বচ্ছতা লগ" : "Transparency" },
+    { href: "/metrics", label: lang === "bn" ? "মেট্রিক্স" : "Metrics" },
     ...(user && (role === "registrar" || role === "admin")
       ? [{ href: "/registrar", label: t("nav.registrar") }]
       : []),

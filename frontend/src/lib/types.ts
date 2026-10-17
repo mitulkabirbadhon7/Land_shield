@@ -310,4 +310,33 @@ export interface FraudReport {
   findings: FraudFinding[];
 }
 
+export interface ReportLayerBreakdown {
+  layer: string;
+  title: string;
+  status: "PASS" | "WARN" | "FAIL";
+  findings: string[];
+}
+
+export interface DueDiligenceReportOut {
+  plot_id: number;
+  report_id: string;
+  generated_at: string;
+  lang: "bn" | "en";
+  plot_summary: {
+    dag_no: string;
+    mouza: string;
+    upazila: string;
+    district: string;
+    area_decimal: number;
+    current_owner?: string;
+  };
+  risk_level: "LOW" | "MEDIUM" | "HIGH";
+  risk_score: number;
+  executive_summary: string;
+  layer_breakdown: ReportLayerBreakdown[];
+  actionable_checklist: string[];
+  legal_disclaimer: string;
+}
+
+
 

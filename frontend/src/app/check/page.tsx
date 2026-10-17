@@ -8,8 +8,23 @@ import { ErrorBox } from "@/components/ErrorBox";
 import { RiskCard } from "@/components/RiskCard";
 import { ChainTimeline } from "@/components/ChainTimeline";
 import { LineageTimeline } from "@/components/LineageTimeline";
-import { getChain, getPlot, getAnalysis, getLineage, searchPlots, verifyDeed } from "@/lib/api";
-import { ChainItem, LineageOut, PlotOut, RiskReportOut } from "@/lib/types";
+import { ReportModal } from "@/components/ReportModal";
+import {
+  getChain,
+  getPlot,
+  getAnalysis,
+  getLineage,
+  getDueDiligenceReport,
+  searchPlots,
+  verifyDeed,
+} from "@/lib/api";
+import {
+  ChainItem,
+  DueDiligenceReportOut,
+  LineageOut,
+  PlotOut,
+  RiskReportOut,
+} from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 import { useFeatures } from "@/lib/features";
 
@@ -38,6 +53,28 @@ function CitizenCheckContent() {
   const [chain, setChain] = useState<ChainItem[]>([]);
   const [lineage, setLineage] = useState<LineageOut | null>(null);
   const [lineageLoading, setLineageLoading] = useState(false);
+
+  // AI Due-Diligence Report Modal state
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [dueDiligenceReport, setDueDiligenceReport] = useState<DueDiligenceReportOut | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const handleOpenReport = async () => {
+    if (!selectedPlot) return;
+    setReportModalOpen(true);
+    setReportLoading(true);
+    try {
+      const rep = await getDueDiligenceReport(
+        selectedPlot.id,
+        (lang as "bn" | "en") || "bn"
+      );
+      setDueDiligenceReport(rep);
+    } catch {
+      // Graceful error handling
+    } finally {
+      setReportLoading(false);
+    }
+  };
 
   // Search results list (if query matches multiple plots)
   const [searchResults, setSearchResults] = useState<PlotOut[]>([]);
@@ -503,6 +540,38 @@ function CitizenCheckContent() {
             </div>
           </Card>
 
+          {/* 1.5 AI Due-Diligence Report Trigger Banner */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-teal-900/40 dark:bg-slate-850">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-white font-extrabold text-sm shadow-md shadow-teal-600/30">
+                AI
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {lang === "bn"
+                    ? "এআই ডিউ-ডিলিজেন্স রিপোর্ট ও আইনি পরামর্শ"
+                    : "AI Due-Diligence & Legal Advisory Report"}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {lang === "bn"
+                    ? "জমির স্বত্ব, খতিয়ান, ডিজিটাল স্বাক্ষর ও জালিয়াতি ঝুঁকির পূর্ণাঙ্গ প্রিন্ট-রেডি প্রতিবেদন।"
+                    : "Print-ready institutional report covering ownership, signatures, and fraud checklist."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleOpenReport}
+              className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-600/25 hover:bg-teal-700 active:scale-95 transition-all"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>{lang === "bn" ? "রিপোর্ট তৈরি ও প্রিন্ট করুন" : "Generate & Print Report"}</span>
+            </button>
+          </div>
+
           {/* 2. Risk Card (Circular Ring Gauge, Level, Flags, Findings) */}
           <RiskCard report={riskReport} />
 
@@ -520,6 +589,14 @@ function CitizenCheckContent() {
           </div>
         </div>
       )}
+
+      {/* AI Due-Diligence Printable Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        loading={reportLoading}
+        report={dueDiligenceReport}
+      />
     </div>
   );
 }

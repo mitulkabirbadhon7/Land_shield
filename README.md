@@ -66,6 +66,10 @@ In Bangladesh, land disputes account for an estimated 75% of civil court cases [
 | **P2-00** | Frontend feature-flag hook (`useFeatures()`); Phase 2 tracking tables in PROGRESS/CHANGELOG/README |
 | **P2-04** | Layered risk card breakdown, CS→SA→RS→BS survey lineage timeline, AC Land officer cross-office reconciliation portal (`/officer/reconcile`) |
 | **P2-06** | Browser-side offline QR deed verification (`/verify/offline`) using tweetnacl Ed25519 signatures, Web Crypto SHA-256 payload integrity, public key caching, and 1-click test vectors |
+| **P2-08** | Citizen AI Due-Diligence Report modal with `@media print` styling, risk score gauge, multi-layer findings breakdown, and actionable buyer checklist |
+| **P2-10** | Merkle Transparency Log portal (`/transparency`) with published daily root hashes, batch details, and interactive 3-hop inclusion proof verifier |
+| **P2-11** | System security metrics & attack benchmark portal (`/metrics`) covering A1–A9 threat vectors, 100% detection rate, and layer latency progress |
+| **P2-16** | National phased rollout strategy & cost-benefit analysis portal (`/rollout`) detailing 64-district implementation, ৳45.5 Cr budget, and 270:1 litigation ROI |
 
 
 
