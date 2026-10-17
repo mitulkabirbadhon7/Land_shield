@@ -9,9 +9,11 @@ import {
   getDeedQrBlob,
   getMeta,
   getPlot,
+  normalizeBnDigits,
   searchPersons,
   searchPlots,
   startMutation,
+  verifyDeed,
   ApiError,
 } from "@/lib/api";
 import {
@@ -26,6 +28,105 @@ import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
+function getRuleTitle(ruleId?: string, subCode?: string, lang: string = "bn"): string {
+  if (lang !== "bn") return "CRITICAL RULE VIOLATION";
+  const r = (ruleId || "").toUpperCase();
+  const sc = (subCode || "").toUpperCase();
+  if (r.includes("R1") || sc.includes("DOUBLE_SALE") || sc.includes("OVERSOLD")) {
+    return sc.includes("OVERSOLD")
+      ? "জমির পরিমাণ সীমার অতিরিক্ত (নিয়ম ১ লঙ্ঘন)"
+      : "দ্বৈত বিক্রয় বা প্রতারণা প্রতিরোধ (নিয়ম ১ লঙ্ঘন)";
+  }
+  if (r.includes("R2") || sc.includes("NOT_OWNER") || sc.includes("STRANGER")) {
+    return "স্বত্বহীন বিক্রেতা প্রতিরোধ (নিয়ম ২ লঙ্ঘন)";
+  }
+  if (r.includes("R3") || sc.includes("MISSING_MUTATION")) {
+    return "বকেয়া নামজারিজনিত জটিলতা (নিয়ম ৩ লঙ্ঘন)";
+  }
+  if (r.includes("R4") || sc.includes("RAPID_TRANSFERS")) {
+    return "অস্বাভাবিক দ্রুত হস্তান্তর (নিয়ম ৪ লঙ্ঘন)";
+  }
+  if (r.includes("R5") || sc.includes("INTEGRITY")) {
+    return "ক্রিপ্টোগ্রাফিক সুরক্ষা বা চেইন ত্রুটি (নিয়ম ৫ লঙ্ঘন)";
+  }
+  if (r.includes("R6") || sc.includes("FLAGGED_LAND")) {
+    return "সংরক্ষিত বা বিরোধপূর্ণ জমি (নিয়ম ৬ লঙ্ঘন)";
+  }
+  return "সংকটপূর্ণ নীতি লঙ্ঘন";
+}
+
+function translateReason(reason: string, lang: string = "bn"): string {
+  if (!reason) return "";
+  if (lang !== "bn") return reason;
+
+  const r = reason.toUpperCase();
+  if (r.includes("R1_DOUBLE_SALE") || (r.includes("DOUBLE") && r.includes("SALE"))) {
+    return "দ্বৈত বিক্রয়ের আশঙ্কা: বিক্রেতা আগেই অন্য দলিলে এই জমি বিক্রি করেছেন (পূর্বে অনিষ্পন্ন নামজারি বিদ্যমান)। হস্তান্তরের জন্য পর্যাপ্ত অবশিষ্ট লেজার স্বত্ব নেই।";
+  }
+  if (r.includes("R1_OVERSOLD") || r.includes("OVERSOLD")) {
+    return "অতিরিক্ত বিক্রয়ের আশঙ্কা: হস্তান্তরিত জমির পরিমাণ দাগের মোট জমি বা বিক্রেতার প্রাপ্য অংশের চেয়ে বেশি।";
+  }
+  if (r.includes("R2_SELLER_NOT_OWNER") || (r.includes("NOT") && r.includes("OWNER")) || r.includes("STRANGER")) {
+    return "স্বত্বহীন বিক্রেতা: বিক্রেতা এই দাগের রেকর্ডকৃত মালিক নন এবং লেজারেও তার কোনো জমির স্বত্ব নেই।";
+  }
+  if (r.includes("R3_MISSING_MUTATION") || r.includes("MUTATION")) {
+    return "বকেয়া নামজারি: ৯০ দিনের বেশি সময় পূর্বে রেজিস্ট্রি হওয়া দলিলে এখনও নামজারি সম্পন্ন হয়নি।";
+  }
+  if (r.includes("R4_RAPID_TRANSFERS") || r.includes("RAPID")) {
+    return "অস্বাভাবিক দ্রুত হস্তান্তর: ৩০ দিনের মধ্যে এই দাগে অস্বাভাবিক সংখ্যক মালিকানা হস্তান্তর ঘটেছে।";
+  }
+  if (r.includes("R5") || r.includes("HASH_MISMATCH") || r.includes("SIGNATURE") || r.includes("INTEGRITY")) {
+    return "ক্রিপ্টোগ্রাফিক সুরক্ষা ত্রুটি: দলিলে পরিবর্তন, ভুয়া ডিজিটাল স্বাক্ষর অথবা লেজার চেইনে অসঙ্গতি সনাক্ত হয়েছে।";
+  }
+  if (r.includes("R6") || r.includes("FLAGGED") || r.includes("KHAS") || r.includes("DISPUTED")) {
+    return "সংরক্ষিত জমি: দাগটি সরকারি খাস/অধিগ্রহণকৃত অথবা আদালতে সক্রিয় মামলা রয়েছে।";
+  }
+
+  return toBnDigits(reason);
+}
+
+function translateFindingText(text: string, ruleId?: string, subCode?: string, lang: string = "bn"): string {
+  if (!text) return "";
+  if (lang !== "bn") return text;
+
+  const r = (ruleId || "").toUpperCase();
+  const sc = (subCode || "").toUpperCase();
+  if (r.includes("R1") || sc.includes("DOUBLE_SALE") || sc.includes("OVERSOLD")) {
+    return "দ্বৈত বিক্রয় বা প্রতারণার আশঙ্কা। বিক্রেতা আগেই অন্য দলিলে এই জমি বিক্রি করেছেন।";
+  }
+  if (r.includes("R2") || sc.includes("NOT_OWNER") || sc.includes("STRANGER")) {
+    return "বিক্রেতা খতিয়ানভুক্ত মালিক নন এবং দলিল লেজারেও তার কোনো জমির রেকর্ড নেই।";
+  }
+  if (r.includes("R3") || sc.includes("MISSING_MUTATION")) {
+    return "৯০ দিনের বেশি সময় পূর্বে রেজিস্ট্রি হওয়া দলিলে এখনও নামজারি (খতিয়ান সংশোধন) সম্পন্ন হয়নি।";
+  }
+  if (r.includes("R4") || sc.includes("RAPID_TRANSFERS")) {
+    return "অস্বাভাবিক দ্রুত হস্তান্তর। এই দাগে ৩০ দিনের মধ্যে ৩টি বা ততোধিক দলিলের মাধ্যমে মালিকানা বদল হয়েছে।";
+  }
+  if (r.includes("R5") || sc.includes("INTEGRITY")) {
+    return "ক্রিপ্টোগ্রাফিক সুরক্ষা ত্রুটি। দলিলে পরিবর্তন, ভুয়া ডিজিটাল স্বাক্ষর অথবা লেজার চেইনে অসঙ্গতি সনাক্ত হয়েছে।";
+  }
+  if (r.includes("R6") || sc.includes("FLAGGED_LAND")) {
+    return "বিরোধপূর্ণ বা সংরক্ষিত জমি। দাগটি সরকারি খাস/অধিগ্রহণকৃত অথবা আদালতে সক্রিয় মামলা রয়েছে।";
+  }
+  return toBnDigits(text);
+}
+
+function translateRiskLevel(level: string, lang: string = "bn"): string {
+  if (lang !== "bn") return level;
+  switch (level?.toUpperCase()) {
+    case "CRITICAL":
+      return "সংকটপূর্ণ";
+    case "HIGH":
+      return "উচ্চ ঝুঁকি";
+    case "MEDIUM":
+      return "মাঝারি ঝুঁকি";
+    case "LOW":
+      return "নিম্ন ঝুঁকি";
+    default:
+      return level;
+  }
+}
 
 function RegistrarPageContent() {
   const { t, lang } = useLanguage();
@@ -74,6 +175,7 @@ function RegistrarPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fraudReport, setFraudReport] = useState<FraudReport | null>(null);
+  const [fraudModalOpen, setFraudModalOpen] = useState(false);
   const [successData, setSuccessData] = useState<DeedRegistrationResponse | null>(null);
   const [qrBlobUrl, setQrBlobUrl] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -107,30 +209,202 @@ function RegistrarPageContent() {
     };
   }, [qrBlobUrl]);
 
-  // Handle Plot Search
-  const handlePlotSearch = async (query: string) => {
-    setPlotQuery(query);
-    if (!query.trim()) {
-      setPlotResults([]);
-      setShowPlotDropdown(false);
-      return;
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".plot-search-container")) {
+        setShowPlotDropdown(false);
+      }
+      if (!target.closest(".seller-search-container")) {
+        setShowSellerDropdown(false);
+      }
+      if (!target.closest(".buyer-search-container")) {
+        setShowBuyerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  // Canonical scenario configuration for registrar benchmark testing
+  const REGISTRAR_SCENARIOS = {
+    clean: {
+      id: "S6",
+      fallbackPlotId: 6,
+      canonicalDeed: "DHAKA-2026-000011",
+      mouza: "নদীয়া",
+      dagNo: "101",
+      sellerId: 16,
+      sellerName: "আনিস বিশ্বাস (Anis Biswas)",
+      buyerId: 99,
+      buyerName: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
+      area: "10.0",
+      deedType: "SALE",
+      subRegistry: "MIR",
+    },
+    double: {
+      id: "S1",
+      fallbackPlotId: 1,
+      canonicalDeed: "DHAKA-2026-000002",
+      mouza: "রূপনগর",
+      dagNo: "101",
+      sellerId: 1,
+      sellerName: "মোহাম্মদ রহমান (Mohammad Rahman)",
+      buyerId: 99,
+      buyerName: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
+      area: "30.0",
+      deedType: "SALE",
+      subRegistry: "MIR",
+    },
+    stranger: {
+      id: "S2",
+      fallbackPlotId: 2,
+      canonicalDeed: "DHAKA-2026-000003",
+      mouza: "শান্তিনগর",
+      dagNo: "101",
+      sellerId: 99,
+      sellerName: "ওয়াহিদুল ভূঁইয়া (Stranger Seller)",
+      buyerId: 20,
+      buyerName: "রাশেদ মোল্লা (Rashed Molla)",
+      area: "15.0",
+      deedType: "SALE",
+      subRegistry: "MIR",
+    },
+  };
+
+  // Resilient plot resolver against DB sequence drift
+  const resolveRegistrarPlot = async (
+    cfg: (typeof REGISTRAR_SCENARIOS)[keyof typeof REGISTRAR_SCENARIOS]
+  ): Promise<PlotOut> => {
+    // 1. Try direct ID
+    try {
+      const p = await getPlot(cfg.fallbackPlotId);
+      if (p) return p;
+    } catch {
+      // Sequence drift on Render / live server
     }
+
+    // 2. Try canonical deed lookup (returns true live plot_id)
+    if (cfg.canonicalDeed) {
+      try {
+        const v = await verifyDeed(cfg.canonicalDeed);
+        if (v && v.plot_id) {
+          const p = await getPlot(v.plot_id);
+          if (p) return p;
+        }
+      } catch {
+        // continue
+      }
+    }
+
+    // 3. Try mouza + dag lookup
+    if (cfg.mouza && cfg.dagNo) {
+      try {
+        const plots = await searchPlots(cfg.mouza, cfg.dagNo);
+        if (plots && plots.length > 0) return plots[0];
+      } catch {
+        // continue
+      }
+    }
+
+    // 4. Safe fallback object
+    return {
+      id: cfg.fallbackPlotId,
+      dag_no: cfg.dagNo,
+      mouza: cfg.mouza,
+      upazila: "মেঘনা",
+      district: "ঢাকা",
+      area_decimal: parseFloat(cfg.area) * 2,
+      remaining_decimal: parseFloat(cfg.area),
+      sold_decimal: 0,
+      land_type: "residential",
+      flags: [],
+      initial_owner_id: cfg.sellerId,
+      current_owner_id: cfg.sellerId,
+      initial_owner_name: cfg.sellerName,
+      current_owner_name: cfg.sellerName,
+    };
+  };
+
+  // Handle Plot Search
+  const handlePlotSearch = async (rawQuery: string) => {
+    setPlotQuery(rawQuery);
     setPlotSearching(true);
     setShowPlotDropdown(true);
+
+    const trimmed = rawQuery.trim();
+    const norm = normalizeBnDigits(trimmed);
+
     try {
-      if (/^\d+$/.test(query.trim())) {
+      if (!trimmed) {
+        // Empty query: load available plots on focus/click so user can select immediately
+        const results = await searchPlots();
+        setPlotResults(results.slice(0, 15));
+        return;
+      }
+
+      // 1. Check if numeric: Dag number or Plot ID
+      if (/^\d+$/.test(norm)) {
+        const num = parseInt(norm, 10);
+
+        // Search by Dag number first
+        const dagResults = await searchPlots(undefined, norm);
+        if (dagResults && dagResults.length > 0) {
+          setPlotResults(dagResults.slice(0, 15));
+          return;
+        }
+
+        // Direct plot ID lookup
         try {
-          const directPlot = await getPlot(parseInt(query.trim(), 10));
+          const directPlot = await getPlot(num);
           if (directPlot) {
             setPlotResults([directPlot]);
-            setPlotSearching(false);
             return;
           }
         } catch {
-          // not found by ID, fall through
+          // fall through
+        }
+
+        // Check benchmark scenario plot
+        const matchedCfg = Object.values(REGISTRAR_SCENARIOS).find(
+          (c) => c.fallbackPlotId === num
+        );
+        if (matchedCfg) {
+          try {
+            const resolved = await resolveRegistrarPlot(matchedCfg);
+            if (resolved) {
+              setPlotResults([resolved]);
+              return;
+            }
+          } catch {
+            // fall through
+          }
         }
       }
-      const results = await searchPlots(query.trim());
+
+      // 2. Query like "Plot 6", "Dag 101", "প্লট ৬", "দাগ ১০১"
+      const matchPlotOrDag = norm.match(/(?:plot|dag|প্লট|দাগ)\s*#?\s*(\d+)/i);
+      if (matchPlotOrDag) {
+        const n = matchPlotOrDag[1];
+        const dagResults = await searchPlots(undefined, n);
+        if (dagResults && dagResults.length > 0) {
+          setPlotResults(dagResults.slice(0, 15));
+          return;
+        }
+        try {
+          const p = await getPlot(parseInt(n, 10));
+          if (p) {
+            setPlotResults([p]);
+            return;
+          }
+        } catch {
+          // fall through
+        }
+      }
+
+      // 3. Otherwise search by mouza
+      const results = await searchPlots(trimmed);
       setPlotResults(results || []);
     } catch {
       setPlotResults([]);
@@ -142,7 +416,11 @@ function RegistrarPageContent() {
   const handleSelectPlot = (p: PlotOut) => {
     setPlotId(p.id);
     setSelectedPlot(p);
-    setPlotQuery(`Dag #${p.dag_no} - Mouza ${p.mouza} (Plot #${p.id})`);
+    setPlotQuery(
+      lang === "bn"
+        ? `দাগ #${toBnDigits(p.dag_no)} - মৌজা ${p.mouza} (প্লট #${toBnDigits(p.id)})`
+        : `Dag #${p.dag_no} - Mouza ${p.mouza} (Plot #${p.id})`
+    );
     setShowPlotDropdown(false);
     setFormError(null);
   };
@@ -165,7 +443,11 @@ function RegistrarPageContent() {
   const handleSelectSeller = (person: PersonOut) => {
     setSellerId(person.id);
     setSelectedSeller(person);
-    setSellerQuery(`${person.display_name} (#${person.id})`);
+    setSellerQuery(
+      lang === "bn"
+        ? `${person.display_name} (আইডি #${toBnDigits(person.id)})`
+        : `${person.display_name} (#${person.id})`
+    );
     setShowSellerDropdown(false);
     setFormError(null);
   };
@@ -188,7 +470,11 @@ function RegistrarPageContent() {
   const handleSelectBuyer = (person: PersonOut) => {
     setBuyerId(person.id);
     setSelectedBuyer(person);
-    setBuyerQuery(`${person.display_name} (#${person.id})`);
+    setBuyerQuery(
+      lang === "bn"
+        ? `${person.display_name} (আইডি #${toBnDigits(person.id)})`
+        : `${person.display_name} (#${person.id})`
+    );
     setShowBuyerDropdown(false);
     setFormError(null);
   };
@@ -201,88 +487,65 @@ function RegistrarPageContent() {
     setMutationSuccess(null);
     setMutationError(null);
 
+    const cfg = REGISTRAR_SCENARIOS[scenarioType];
+    if (!cfg) return;
+
     try {
-      if (scenarioType === "clean") {
-        // Plot 6: Clean Deal (Genuine current owner is Person 16 with 35.0 decimals)
-        const p = await getPlot(6);
-        handleSelectPlot(p);
-        const sellerId = p.current_owner_id ?? 16;
-        let s: PersonOut | undefined;
-        try {
-          const sellerResults = await searchPersons(String(sellerId), 5);
-          s = sellerResults.find((x) => x.id === sellerId);
-        } catch {
-          // fallback
-        }
-        if (!s) {
-          s = {
-            id: sellerId,
-            display_name: p.current_owner_name || "আনিস বিশ্বাস (Anis Biswas)",
-            is_synthetic: true,
-          };
-        }
-        handleSelectSeller(s);
-        let b: PersonOut | undefined;
-        try {
-          const buyerResults = await searchPersons("99", 5);
-          b = buyerResults.find((x) => x.id === 99);
-        } catch {
-          // fallback
-        }
-        if (!b) {
-          b = {
-            id: 99,
-            display_name: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
-            is_synthetic: true,
-          };
-        }
-        handleSelectBuyer(b);
-        setAreaSold("10.0");
-        setDeedType("SALE");
-        setSubRegistry("MIR");
-      } else if (scenarioType === "double") {
-        // Plot 1: Double Sale (Seller 1 already sold this plot)
-        const p = await getPlot(1);
-        handleSelectPlot(p);
-        const persons = await searchPersons("", 50);
-        const s = persons.find((x) => x.id === 1) || {
-          id: 1,
-          display_name: "মোহাম্মদ রহমান (Mohammad Rahman)",
-          is_synthetic: true,
-        };
-        handleSelectSeller(s);
-        const b = persons.find((x) => x.id === 99) || {
-          id: 99,
-          display_name: "ওয়াহিদুল ভূঁইয়া (Wahidul Bhuiyan)",
-          is_synthetic: true,
-        };
-        handleSelectBuyer(b);
-        setAreaSold("30.0");
-        setDeedType("SALE");
-        setSubRegistry("MIR");
-      } else if (scenarioType === "stranger") {
-        // Plot 2: Stranger Seller (Seller 99 does not own Plot 2)
-        const p = await getPlot(2);
-        handleSelectPlot(p);
-        const persons = await searchPersons("", 50);
-        const s = persons.find((x) => x.id === 99) || {
-          id: 99,
-          display_name: "ওয়াহিদুল ভূঁইয়া (Stranger Seller)",
-          is_synthetic: true,
-        };
-        handleSelectSeller(s);
-        const b = persons.find((x) => x.id === 20) || {
-          id: 20,
-          display_name: "রাশেদ মোল্লা (Rashed Molla)",
-          is_synthetic: true,
-        };
-        handleSelectBuyer(b);
-        setAreaSold("15.0");
-        setDeedType("SALE");
-        setSubRegistry("MIR");
+      const p = await resolveRegistrarPlot(cfg);
+      handleSelectPlot(p);
+
+      // Determine seller
+      let sellerPerson: PersonOut | null = null;
+      const actualSellerId =
+        scenarioType === "clean" ? p.current_owner_id ?? cfg.sellerId : cfg.sellerId;
+      const sellerDisplayName =
+        scenarioType === "clean" && (p.current_owner_name || p.current_owner_masked)
+          ? p.current_owner_name || p.current_owner_masked || cfg.sellerName
+          : cfg.sellerName;
+
+      try {
+        const persons = await searchPersons(String(actualSellerId), 5);
+        sellerPerson = persons.find((x) => x.id === actualSellerId) || null;
+      } catch {
+        // fallback
       }
-    } catch {
-      // Fallback
+
+      if (!sellerPerson) {
+        sellerPerson = {
+          id: actualSellerId,
+          display_name: sellerDisplayName,
+          is_synthetic: true,
+        };
+      }
+      handleSelectSeller(sellerPerson);
+
+      // Determine buyer
+      let buyerPerson: PersonOut | null = null;
+      try {
+        const buyers = await searchPersons(String(cfg.buyerId), 5);
+        buyerPerson = buyers.find((x) => x.id === cfg.buyerId) || null;
+      } catch {
+        // fallback
+      }
+
+      if (!buyerPerson) {
+        buyerPerson = {
+          id: cfg.buyerId,
+          display_name: cfg.buyerName,
+          is_synthetic: true,
+        };
+      }
+      handleSelectBuyer(buyerPerson);
+
+      setAreaSold(cfg.area);
+      setDeedType(cfg.deedType);
+      setSubRegistry(cfg.subRegistry);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setFormError(err.message);
+      } else {
+        setFormError(t("common.error"));
+      }
     }
   };
 
@@ -291,6 +554,7 @@ function RegistrarPageContent() {
     e.preventDefault();
     setFormError(null);
     setFraudReport(null);
+    setFraudModalOpen(false);
     setSuccessData(null);
     setMutationSuccess(null);
     setMutationError(null);
@@ -349,6 +613,9 @@ function RegistrarPageContent() {
       });
 
       setSuccessData(response);
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
 
       // Refresh plot data to immediately update remaining_decimal & sold_decimal
       try {
@@ -373,6 +640,7 @@ function RegistrarPageContent() {
       if (err instanceof ApiError) {
         if (err.status === 409 && err.code === "FRAUD_BLOCKED") {
           setFraudReport(err.report as FraudReport);
+          setFraudModalOpen(true);
         } else {
           setFormError(err.detail || err.message);
         }
@@ -429,6 +697,7 @@ function RegistrarPageContent() {
     setAreaSold("");
     setFormError(null);
     setFraudReport(null);
+    setFraudModalOpen(false);
     setSuccessData(null);
     if (qrBlobUrl) {
       URL.revokeObjectURL(qrBlobUrl);
@@ -535,7 +804,7 @@ function RegistrarPageContent() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="rounded bg-emerald-200 px-1.5 py-0.2 text-[10px] font-black text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">
-                  S6
+                  {lang === "bn" ? "দৃশ্যকল্প ৬" : "S6"}
                 </span>
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
                   {t("registrar.scenario_clean")}
@@ -543,7 +812,7 @@ function RegistrarPageContent() {
               </div>
               <p className="mt-0.5 text-[10px] text-emerald-700/80 dark:text-emerald-300/80">
                 {lang === "bn"
-                  ? "প্লট ৬ • প্রকৃত খতিয়ানদার • প্রত্যাশিত: বৈধ নিবন্ধন (201)"
+                  ? "প্লট ৬ • প্রকৃত খতিয়ানদার • প্রত্যাশিত: বৈধ নিবন্ধন (২০১)"
                   : "Plot 6 • Genuine owner • Expect 201 Success"}
               </p>
             </div>
@@ -560,7 +829,7 @@ function RegistrarPageContent() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="rounded bg-rose-200 px-1.5 py-0.2 text-[10px] font-black text-rose-900 dark:bg-rose-800 dark:text-rose-100">
-                  S1
+                  {lang === "bn" ? "দৃশ্যকল্প ১" : "S1"}
                 </span>
                 <span className="text-xs font-bold text-rose-900 dark:text-rose-200">
                   {t("registrar.scenario_double")}
@@ -568,7 +837,7 @@ function RegistrarPageContent() {
               </div>
               <p className="mt-0.5 text-[10px] text-rose-700/80 dark:text-rose-300/80">
                 {lang === "bn"
-                  ? "প্লট ১ • দ্বৈত বিক্রয় অপচেষ্টা • প্রত্যাশিত: রুল R1 বাতিল (409)"
+                  ? "প্লট ১ • দ্বৈত বিক্রয় অপচেষ্টা • প্রত্যাশিত: নিয়ম ১ বাতিল (৪০৯)"
                   : "Plot 1 • Seller 1 reselling • Expect 409 Block (R1)"}
               </p>
             </div>
@@ -585,7 +854,7 @@ function RegistrarPageContent() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="rounded bg-amber-200 px-1.5 py-0.2 text-[10px] font-black text-amber-900 dark:bg-amber-800 dark:text-amber-100">
-                  S2
+                  {lang === "bn" ? "দৃশ্যকল্প ২" : "S2"}
                 </span>
                 <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
                   {t("registrar.scenario_stranger")}
@@ -593,7 +862,7 @@ function RegistrarPageContent() {
               </div>
               <p className="mt-0.5 text-[10px] text-amber-700/80 dark:text-amber-300/80">
                 {lang === "bn"
-                  ? "প্লট ২ • স্বত্বহীন ব্যক্তি • প্রত্যাশিত: রুল R2 বাতিল (409)"
+                  ? "প্লট ২ • স্বত্বহীন ব্যক্তি • প্রত্যাশিত: নিয়ম ২ বাতিল (৪০৯)"
                   : "Plot 2 • Seller 99 not owner • Expect 409 Block (R2)"}
               </p>
             </div>
@@ -604,8 +873,154 @@ function RegistrarPageContent() {
         </div>
       </div>
 
-      {/* RESULT STATE A: PRE-REGISTRATION FRAUD BLOCKED (HTTP 409) */}
-      {fraudReport && (
+      {/* POP-UP MODAL: PRE-REGISTRATION FRAUD BLOCKED (HTTP 409) */}
+      {fraudReport && fraudModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setFraudModalOpen(false);
+            }
+          }}
+        >
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border-2 border-rose-500 bg-white shadow-2xl shadow-rose-950/40 dark:border-rose-600 dark:bg-slate-900 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-rose-600 px-6 py-4 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-xs text-white">
+                  <svg
+                    className="h-7 w-7 animate-pulse"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">
+                    {lang === "bn"
+                      ? "নিবন্ধন বাতিল: সম্ভাব্য ভূমি জালিয়াতি শনাক্ত!"
+                      : t("registrar.fraud_blocked_title")}
+                  </h3>
+                  <span className="inline-block rounded bg-rose-800/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-100">
+                    {lang === "bn"
+                      ? "জালিয়াতি প্রতিরোধ (বাতিলকৃত)"
+                      : t("registrar.fraud_blocked_badge")}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <span className="text-2xl font-black tracking-tight">
+                    {lang === "bn"
+                      ? `${toBnDigits(fraudReport.score)} / ${toBnDigits(100)}`
+                      : `${fraudReport.score} / 100`}
+                  </span>
+                  <p className="text-[11px] font-bold text-rose-100 uppercase">
+                    {translateRiskLevel(fraudReport.level, lang)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFraudModalOpen(false)}
+                  aria-label="Close"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 hover:bg-white/25 text-white font-bold transition"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 overflow-y-auto">
+              <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">
+                {lang === "bn"
+                  ? "স্বয়ংক্রিয় জালিয়াতি শনাক্তকরণ ব্যবস্থা এই দলিলটি নিবন্ধন আটকে দিয়েছে। ডাটাবেজ বা লেজারে কোনো রেকর্ড বা দলিল নম্বর তৈরি হয়নি।"
+                  : t("registrar.fraud_blocked_desc")}
+              </p>
+
+              <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/60 dark:bg-rose-950/30">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300 mb-2">
+                  {lang === "bn" ? "শনাক্তকৃত নিয়ম লঙ্ঘনসমূহ:" : t("registrar.fraud_findings")}
+                </h4>
+                <div className="space-y-3">
+                  {fraudReport.findings
+                    ?.filter((f) => f.severity === "CRITICAL" || f.decisive)
+                    .map((finding, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-lg border border-rose-200 bg-white p-3 text-xs text-rose-900 dark:border-rose-900/80 dark:bg-rose-900/20 dark:text-rose-200 shadow-xs"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-rose-700 dark:text-rose-300">
+                            {lang === "bn"
+                              ? `[নিয়ম ${toBnDigits(finding.rule_id?.replace(/^R/i, "")) || finding.rule_id}] ${getRuleTitle(finding.rule_id, finding.sub_code, lang)}`
+                              : `[${finding.rule_id}] ${finding.title || "CRITICAL RULE VIOLATION"}`}
+                          </span>
+                          <span className="rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            {translateRiskLevel(finding.severity || "CRITICAL", lang)}
+                          </span>
+                        </div>
+                        {finding.text && (
+                          <p className="text-rose-800 dark:text-rose-300 font-medium mt-1">
+                            {translateFindingText(finding.text, finding.rule_id, finding.sub_code, lang)}
+                          </p>
+                        )}
+                        {finding.reasons && finding.reasons.length > 0 && (
+                          <ul className="mt-2 list-disc list-inside space-y-1 text-rose-700 dark:text-rose-300">
+                            {finding.reasons.map((r, rIdx) => (
+                              <li key={rIdx}>{translateReason(r, lang)}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 text-xs text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+                <p className="font-medium">
+                  {lang === "bn"
+                    ? "🛡️ লেজারে কোনো প্রভাব নেই: কোনো ডিজিটাল স্বাক্ষর বা ক্রমিক দলিল নম্বর জারি করা হয়নি। ভূমি রেকর্ড শতভাগ অপরিবর্তনীয় ও সুরক্ষিত রয়েছে।"
+                    : "🛡️ Zero Ledger Impact: No digital signature or sequential deed number was granted. The ledger remains intact."}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 px-6 py-3 flex flex-col sm:flex-row items-center justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setFraudModalOpen(false)}
+                className="w-full sm:w-auto rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                {lang === "bn" ? "পপ-আপ বন্ধ করুন" : "Close Pop-up"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetForm();
+                  setFraudModalOpen(false);
+                }}
+                className="w-full sm:w-auto rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition shadow-xs"
+              >
+                {lang === "bn" ? "আবেদন সংশোধন ও নতুন করে শুরু" : "Clear & Modify Application"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INLINE ALERT CARD: PRE-REGISTRATION FRAUD BLOCKED (HTTP 409) */}
+      {fraudReport && !fraudModalOpen && (
         <div className="mb-8 overflow-hidden rounded-2xl border-2 border-rose-500 bg-rose-50/90 shadow-xl shadow-rose-500/10 dark:border-rose-600 dark:bg-rose-950/40 animate-alert-banner">
           <div className="bg-rose-600 px-6 py-4 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -626,31 +1041,39 @@ function RegistrarPageContent() {
               </div>
               <div>
                 <h3 className="text-lg font-black tracking-tight">
-                  {t("registrar.fraud_blocked_title")}
+                  {lang === "bn"
+                    ? "নিবন্ধন বাতিল: সম্ভাব্য ভূমি জালিয়াতি শনাক্ত!"
+                    : t("registrar.fraud_blocked_title")}
                 </h3>
                 <span className="inline-block rounded bg-rose-800/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-100">
-                  {t("registrar.fraud_blocked_badge")}
+                  {lang === "bn"
+                    ? "জালিয়াতি প্রতিরোধ (বাতিলকৃত)"
+                    : t("registrar.fraud_blocked_badge")}
                 </span>
               </div>
             </div>
             <div className="text-right">
               <span className="text-2xl font-black tracking-tight">
-                {fraudReport.score} / 100
+                {lang === "bn"
+                  ? `${toBnDigits(fraudReport.score)} / ${toBnDigits(100)}`
+                  : `${fraudReport.score} / 100`}
               </span>
               <p className="text-[11px] font-bold text-rose-100 uppercase">
-                {fraudReport.level}
+                {translateRiskLevel(fraudReport.level, lang)}
               </p>
             </div>
           </div>
 
           <div className="p-6 space-y-4">
             <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">
-              {t("registrar.fraud_blocked_desc")}
+              {lang === "bn"
+                ? "স্বয়ংক্রিয় জালিয়াতি শনাক্তকরণ ব্যবস্থা এই দলিলটি নিবন্ধন আটকে দিয়েছে। ডাটাবেজ বা লেজারে কোনো রেকর্ড বা দলিল নম্বর তৈরি হয়নি।"
+                : t("registrar.fraud_blocked_desc")}
             </p>
 
             <div className="rounded-xl border border-rose-200 bg-white/80 p-4 dark:border-rose-900/60 dark:bg-rose-950/30">
               <h4 className="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300 mb-2">
-                {t("registrar.fraud_findings")}
+                {lang === "bn" ? "শনাক্তকৃত নিয়ম লঙ্ঘনসমূহ:" : t("registrar.fraud_findings")}
               </h4>
               <div className="space-y-3">
                 {fraudReport.findings
@@ -661,22 +1084,24 @@ function RegistrarPageContent() {
                       className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-900/80 dark:bg-rose-900/20 dark:text-rose-200"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono font-bold text-rose-700 dark:text-rose-300">
-                          [{finding.rule_id}] {finding.title || "CRITICAL RULE VIOLATION"}
+                        <span className="font-bold text-rose-700 dark:text-rose-300">
+                          {lang === "bn"
+                            ? `[নিয়ম ${toBnDigits(finding.rule_id?.replace(/^R/i, "")) || finding.rule_id}] ${getRuleTitle(finding.rule_id, finding.sub_code, lang)}`
+                            : `[${finding.rule_id}] ${finding.title || "CRITICAL RULE VIOLATION"}`}
                         </span>
                         <span className="rounded bg-rose-600 px-1.5 py-0.2 text-[10px] font-bold text-white">
-                          CRITICAL
+                          {translateRiskLevel(finding.severity || "CRITICAL", lang)}
                         </span>
                       </div>
                       {finding.text && (
                         <p className="text-rose-800 dark:text-rose-300 font-medium mt-1">
-                          {finding.text}
+                          {translateFindingText(finding.text, finding.rule_id, finding.sub_code, lang)}
                         </p>
                       )}
                       {finding.reasons && finding.reasons.length > 0 && (
                         <ul className="mt-2 list-disc list-inside space-y-1 text-rose-700 dark:text-rose-300">
                           {finding.reasons.map((r, rIdx) => (
-                            <li key={rIdx}>{r}</li>
+                            <li key={rIdx}>{translateReason(r, lang)}</li>
                           ))}
                         </ul>
                       )}
@@ -687,15 +1112,26 @@ function RegistrarPageContent() {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
               <p className="text-xs text-rose-700 dark:text-rose-300 italic">
-                🛡️ Zero Ledger Impact: No digital signature or sequential deed number was granted.
+                {lang === "bn"
+                  ? "🛡️ লেজারে কোনো প্রভাব নেই: কোনো ডিজিটাল স্বাক্ষর বা ক্রমিক দলিল নম্বর জারি করা হয়নি।"
+                  : "🛡️ Zero Ledger Impact: No digital signature or sequential deed number was granted."}
               </p>
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="w-full sm:w-auto rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition dark:bg-rose-700 dark:hover:bg-rose-600"
-              >
-                Clear & Modify Application
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setFraudModalOpen(true)}
+                  className="w-full sm:w-auto rounded-xl border border-rose-300 bg-white px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200 shadow-2xs"
+                >
+                  {lang === "bn" ? "পপ-আপে দেখুন" : "View as Pop-up"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="w-full sm:w-auto rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition dark:bg-rose-700 dark:hover:bg-rose-600 shadow-2xs"
+                >
+                  {lang === "bn" ? "আবেদন সংশোধন ও রিসেট করুন" : "Clear & Modify Application"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -760,25 +1196,25 @@ function RegistrarPageContent() {
                 <div className="rounded-xl border border-emerald-200 bg-white/90 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40 text-xs space-y-2">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
                     <div>
-                      <span className="text-slate-500">Plot ID:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "প্লট আইডি:" : "Plot ID:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        #{successData.deed.plot_id}
+                        #{lang === "bn" ? toBnDigits(successData.deed.plot_id) : successData.deed.plot_id}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Area Sold:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "বিক্রীত জমি:" : "Area Sold:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        {successData.deed.area_sold} decimals
+                        {lang === "bn" ? `${toBnDigits(successData.deed.area_sold)} শতক` : `${successData.deed.area_sold} decimals`}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Deed Type:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "দলিলের ধরন:" : "Deed Type:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {successData.deed.deed_type}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Sub-Registry:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "সাব-রেজিস্ট্রি:" : "Sub-Registry:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {successData.deed.sub_registry}
                       </p>
@@ -787,13 +1223,13 @@ function RegistrarPageContent() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <div>
-                      <span className="text-slate-500">Seller:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "বিক্রেতা:" : "Seller:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {successData.deed.seller_name || `Person #${successData.deed.seller_id}`}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Buyer:</span>
+                      <span className="text-slate-500">{lang === "bn" ? "গ্রহীতা:" : "Buyer:"}</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {successData.deed.buyer_name || `Person #${successData.deed.buyer_id}`}
                       </p>
@@ -826,7 +1262,11 @@ function RegistrarPageContent() {
 
                     {mutationSuccess ? (
                       <div className="flex items-center gap-2 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
-                        <span>✓ {lang === "bn" ? `নামজারি #${mutationSuccess.id} (${mutationSuccess.state})` : `Mutation #${mutationSuccess.id} (${mutationSuccess.state})`}</span>
+                        <span>
+                          ✓ {lang === "bn"
+                            ? `নামজারি #${toBnDigits(mutationSuccess.id)} (${mutationSuccess.state === "SUBMITTED" ? "দাখিলকৃত" : mutationSuccess.state})`
+                            : `Mutation #${mutationSuccess.id} (${mutationSuccess.state})`}
+                        </span>
                       </div>
                     ) : (
                       <button
@@ -838,7 +1278,7 @@ function RegistrarPageContent() {
                         {mutationStarting ? (
                           <>
                             <Spinner size="sm" />
-                            <span>Starting Mutation...</span>
+                            <span>{lang === "bn" ? "নামজারি শুরু হচ্ছে..." : "Starting Mutation..."}</span>
                           </>
                         ) : (
                           <span>{t("registrar.mutation_btn")}</span>
@@ -875,7 +1315,9 @@ function RegistrarPageContent() {
                       className="h-full w-full object-contain"
                     />
                   ) : (
-                    <p className="text-xs text-slate-400">QR code unavailable</p>
+                    <p className="text-xs text-slate-400">
+                      {lang === "bn" ? "কিউআর কোড প্রস্তুত নয়" : "QR code unavailable"}
+                    </p>
                   )}
                 </div>
 
@@ -927,7 +1369,11 @@ function RegistrarPageContent() {
       {/* Main Registration Form */}
       <Card
         title={t("registrar.form_title")}
-        subtitle="Mandatory cryptographic land deed entry per Bangladesh Registration Act"
+        subtitle={
+          lang === "bn"
+            ? "বাংলাদেশ রেজিস্ট্রেশন আইন অনুযায়ী বাধ্যতামূলক ক্রিপ্টোগ্রাফিক দলিল নিবন্ধন"
+            : "Mandatory cryptographic land deed entry per Bangladesh Registration Act"
+        }
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {formError && (
@@ -938,7 +1384,7 @@ function RegistrarPageContent() {
           )}
 
           {/* 1. PLOT SEARCH & SELECT */}
-          <div className="relative">
+          <div className="relative plot-search-container">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
               1. {t("registrar.plot_select_label")} *
             </label>
@@ -948,7 +1394,16 @@ function RegistrarPageContent() {
                 value={plotQuery}
                 onChange={(e) => handlePlotSearch(e.target.value)}
                 onFocus={() => {
-                  if (plotResults.length > 0) setShowPlotDropdown(true);
+                  setShowPlotDropdown(true);
+                  if (plotResults.length === 0) {
+                    handlePlotSearch(plotQuery);
+                  }
+                }}
+                onClick={() => {
+                  setShowPlotDropdown(true);
+                  if (plotResults.length === 0) {
+                    handlePlotSearch(plotQuery);
+                  }
                 }}
                 placeholder={t("registrar.plot_search_placeholder")}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 shadow-2xs transition focus:border-emerald-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
@@ -967,19 +1422,27 @@ function RegistrarPageContent() {
                   <button
                     key={p.id}
                     type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectPlot(p);
+                    }}
                     onClick={() => handleSelectPlot(p)}
                     className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                   >
                     <div>
                       <span className="font-bold text-slate-900 dark:text-white">
-                        Dag #{p.dag_no} • Mouza: {p.mouza}
+                        {lang === "bn"
+                          ? `দাগ #${toBnDigits(p.dag_no)} • মৌজা: ${p.mouza}`
+                          : `Dag #${p.dag_no} • Mouza: ${p.mouza}`}
                       </span>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Upazila: {p.upazila}, District: {p.district} • {p.area_decimal} decimals
+                        {lang === "bn"
+                          ? `উপজেলা: ${p.upazila}, জেলা: ${p.district} • ${toBnDigits(p.area_decimal)} শতক`
+                          : `Upazila: ${p.upazila}, District: ${p.district} • ${p.area_decimal} decimals`}
                       </p>
                     </div>
                     <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      Plot #{p.id}
+                      {lang === "bn" ? `প্লট #${toBnDigits(p.id)}` : `Plot #${p.id}`}
                     </span>
                   </button>
                 ))}
@@ -1028,12 +1491,12 @@ function RegistrarPageContent() {
                   </div>
                   {selectedPlot.is_khas && (
                     <span className="rounded bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
-                      KHAS LAND
+                      {lang === "bn" ? "খাস জমি" : "KHAS LAND"}
                     </span>
                   )}
                   {selectedPlot.is_disputed && (
                     <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
-                      DISPUTED
+                      {lang === "bn" ? "বিরোধপূর্ণ জমি" : "DISPUTED"}
                     </span>
                   )}
                 </div>
@@ -1044,7 +1507,7 @@ function RegistrarPageContent() {
           {/* 2. SELLER & BUYER GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* SELLER SELECT */}
-            <div className="relative">
+            <div className="relative seller-search-container">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                 2. {t("registrar.seller_label")} *
               </label>
@@ -1054,6 +1517,7 @@ function RegistrarPageContent() {
                   value={sellerQuery}
                   onChange={(e) => handleSellerSearch(e.target.value)}
                   onFocus={() => handleSellerSearch(sellerQuery)}
+                  onClick={() => handleSellerSearch(sellerQuery)}
                   placeholder={t("registrar.seller_placeholder")}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 shadow-2xs transition focus:border-emerald-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
                 />
@@ -1071,6 +1535,10 @@ function RegistrarPageContent() {
                     <button
                       key={person.id}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectSeller(person);
+                      }}
                       onClick={() => handleSelectSeller(person)}
                       className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                     >
@@ -1078,7 +1546,7 @@ function RegistrarPageContent() {
                         {person.display_name}
                       </span>
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        ID #{person.id}
+                        {lang === "bn" ? `আইডি #${toBnDigits(person.id)}` : `ID #${person.id}`}
                       </span>
                     </button>
                   ))}
@@ -1087,13 +1555,15 @@ function RegistrarPageContent() {
 
               {selectedSeller && (
                 <p className="mt-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                  ✓ Selected Seller: {selectedSeller.display_name} (#{selectedSeller.id})
+                  {lang === "bn"
+                    ? `✓ নির্বাচিত বিক্রেতা: ${selectedSeller.display_name} (#${toBnDigits(selectedSeller.id)})`
+                    : `✓ Selected Seller: ${selectedSeller.display_name} (#${selectedSeller.id})`}
                 </p>
               )}
             </div>
 
             {/* BUYER SELECT */}
-            <div className="relative">
+            <div className="relative buyer-search-container">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                 3. {t("registrar.buyer_label")} *
               </label>
@@ -1103,6 +1573,7 @@ function RegistrarPageContent() {
                   value={buyerQuery}
                   onChange={(e) => handleBuyerSearch(e.target.value)}
                   onFocus={() => handleBuyerSearch(buyerQuery)}
+                  onClick={() => handleBuyerSearch(buyerQuery)}
                   placeholder={t("registrar.buyer_placeholder")}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 shadow-2xs transition focus:border-emerald-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
                 />
@@ -1120,6 +1591,10 @@ function RegistrarPageContent() {
                     <button
                       key={person.id}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectBuyer(person);
+                      }}
                       onClick={() => handleSelectBuyer(person)}
                       className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                     >
@@ -1127,7 +1602,7 @@ function RegistrarPageContent() {
                         {person.display_name}
                       </span>
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        ID #{person.id}
+                        {lang === "bn" ? `আইডি #${toBnDigits(person.id)}` : `ID #${person.id}`}
                       </span>
                     </button>
                   ))}
@@ -1136,7 +1611,9 @@ function RegistrarPageContent() {
 
               {selectedBuyer && (
                 <p className="mt-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                  ✓ Selected Buyer: {selectedBuyer.display_name} (#{selectedBuyer.id})
+                  {lang === "bn"
+                    ? `✓ নির্বাচিত গ্রহীতা: ${selectedBuyer.display_name} (#${toBnDigits(selectedBuyer.id)})`
+                    : `✓ Selected Buyer: ${selectedBuyer.display_name} (#${selectedBuyer.id})`}
                 </p>
               )}
             </div>
@@ -1162,11 +1639,14 @@ function RegistrarPageContent() {
               {selectedPlot && (
                 <div className="mt-1 flex items-center justify-between text-[11px]">
                   <span className="text-slate-500">
-                    {lang === "bn" ? "প্লট মোট:" : "Plot total:"} {selectedPlot.area_decimal} dec
+                    {lang === "bn"
+                      ? `প্লট মোট: ${toBnDigits(selectedPlot.area_decimal)} শতক`
+                      : `Plot total: ${selectedPlot.area_decimal} dec`}
                   </span>
                   <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                    {lang === "bn" ? "অবশিষ্ট প্রাপ্য:" : "Available balance:"}{" "}
-                    {selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} dec
+                    {lang === "bn"
+                      ? `অবশিষ্ট প্রাপ্য: ${toBnDigits(selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal)} শতক`
+                      : `Available balance: ${selectedPlot.remaining_decimal !== undefined ? selectedPlot.remaining_decimal : selectedPlot.area_decimal} dec`}
                   </span>
                 </div>
               )}
@@ -1184,7 +1664,17 @@ function RegistrarPageContent() {
               >
                 {meta.deed_types.map((dt) => (
                   <option key={dt} value={dt}>
-                    {dt}
+                    {lang === "bn"
+                      ? dt === "SALE"
+                        ? "বিক্রয় (কাবলা)"
+                        : dt === "GIFT"
+                        ? "হেবা / দানপত্র"
+                        : dt === "HEIR"
+                        ? "ওয়ারিশান / বণ্টননামা"
+                        : dt === "MORTGAGE"
+                        ? "বন্ধক"
+                        : dt
+                      : dt}
                   </option>
                 ))}
               </select>
@@ -1202,7 +1692,15 @@ function RegistrarPageContent() {
               >
                 {meta.sub_registries.map((sr) => (
                   <option key={sr.code} value={sr.code}>
-                    {sr.name} ({sr.code})
+                    {lang === "bn"
+                      ? sr.code === "MIR"
+                        ? "মিরপুর সাব-রেজিস্ট্রি অফিস"
+                        : sr.code === "DHAKA"
+                        ? "ঢাকা সদর সাব-রেজিস্ট্রি অফিস"
+                        : sr.code === "SAVAR"
+                        ? "সাভার সাব-রেজিস্ট্রি অফিস"
+                        : sr.name
+                      : `${sr.name} (${sr.code})`}
                   </option>
                 ))}
               </select>

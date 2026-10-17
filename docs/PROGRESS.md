@@ -30,6 +30,7 @@
 | **S23** | Cloud key drift diagnosis & Admin reseed endpoint | Done (108 tests, build ok) | Diagnosed Render KEY_UNKNOWN key drift, added POST /dev/reseed and Admin portal 1-click reseed |
 | **S24** | Edge case hardening & 100% pure Bengali Admin UI | Done (108 tests, build ok) | Self-dealing deed block, case-insensitive verify, BN numerals in dag queries, 401 redirect, 100% pure Bengali in /admin |
 | **S25** | Database sequence drift immunity, cold start retry & resilient scenario lookup | Done (109 tests, build ok) | Reset autoincrement sequences during reseed, exponential backoff retry in apiFetch, canonical deed/mouza fallback in /check |
+| **S26** | Registrar benchmark scenarios & resilient plot dropdown selection | Done (109 tests, build ok) | Resilient scenario resolution for S6/S1/S2 in /registrar, on-focus/click plot fetching, onMouseDown dropdown selection |
 
 ### Session S03 Log
 - **What was done:**
@@ -939,7 +940,33 @@ The following placeholders have been clearly marked in the documentation pack an
   - In `frontend/src/app/check/page.tsx`, `resolveScenarioPlotId` is invoked strictly on 404 errors for benchmark scenarios (1..8 or hint), preserving native 404 error handling for non-existent citizen queries.
 - **Known gaps:**
   - None.
-- **Next session:** `S26` (Round 1 Hackathon Submission Packaging & Evaluation Demo Readiness)
+- **Next session:** `S26` (Registrar Benchmark Scenarios & Resilient Plot Dropdown Selection)
+
+| **S26** | Registrar benchmark scenarios & resilient plot dropdown selection | Done (109 tests, build ok) | Resilient scenario resolution for S6/S1/S2 in /registrar, on-focus/click plot fetching, onMouseDown dropdown selection |
+| **S27** | Viewport pop-up fraud modal & 100% pure Bengali localization | Done (109 tests, build ok) | Fixed-position viewport pop-up modal on 409 fraud block (no scroll needed), 100% pure Bengali localization across fraud findings, rules, badges, and form controls |
+
+### Session S27 Log (Viewport Pop-up Fraud Modal & 100% Pure Bengali Localization)
+- **What was done:**
+  - **Immediate Viewport Pop-up Modal (`frontend/src/app/registrar/page.tsx`)**:
+    - Converted pre-registration fraud rejection into an immediate fixed-position modal overlay (`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-md overflow-y-auto`).
+    - Eliminates the need to scroll: when the registrar clicks "দলিল নিবন্ধন ও ডিজিটাল স্বাক্ষর সম্পাদন করুন" at the bottom of the page, the fraud alert card appears centered directly in the user's active viewport.
+    - Added backdrop-click dismissal and dual action buttons: `পপ-আপ বন্ধ করুন` (Close pop-up to review form inputs) and `আবেদন সংশোধন ও নতুন করে শুরু` (Reset form and dismiss modal).
+    - Added secondary inline alert card with `পপ-আপে দেখুন` button if the user dismisses the pop-up modal to inspect or edit form fields.
+    - Added smooth scroll to top on successful registration (`window.scrollTo({ top: 0, behavior: "smooth" })`) so the issued cryptographic QR code and deed metadata are brought directly into view.
+  - **100% Pure Bengali Localization (`frontend/src/locales/bn.json`, `frontend/src/app/registrar/page.tsx`)**:
+    - Localized all rule titles, rule IDs, and sub-codes to pure Bengali numerals and terminology: `[নিয়ম ১] দ্বৈত বিক্রয় বা প্রতারণা প্রতিরোধ (নিয়ম ১ লঙ্ঘন)`, `[নিয়ম ২] স্বত্বহীন বিক্রেতা প্রতিরোধ (নিয়ম ২ লঙ্ঘন)`.
+    - Localized status badges and severity levels: `জালিয়াতি প্রতিরোধ (বাতিলকৃত)` (instead of `BLOCKED`), `বৈধ ও সুরক্ষিত (অনুমোদিত)` (instead of `VALID`), and `সংকটপূর্ণ` (instead of `CRITICAL`).
+    - Localized all numerical scores and counts using `toBnDigits` (`৬০ / ১০০`).
+    - Localized benchmark scenario chips to `দৃশ্যকল্প ১`, `দৃশ্যকল্প ২`, `দৃশ্যকল্প ৬`.
+    - Localized deed types (`বিক্রয় (কাবলা)`, `হেবা / দানপত্র`, `ওয়ারিশান / বণ্টননামা`, `বন্ধক`) and sub-registry offices (`মিরপুর সাব-রেজিস্ট্রি অফিস`, `ঢাকা সদর সাব-রেজিস্ট্রি অফিস`, `সাভার সাব-রেজিস্ট্রি অফিস`).
+    - Localized plot and person suggestion dropdown items (`দাগ #${toBnDigits(p.dag_no)}`, `প্লট #${toBnDigits(p.id)}`, `আইডি #${toBnDigits(person.id)}`).
+- **Decisions:**
+  - Preserved standard styling and theme classes (`bg-slate-900/80`, `border-rose-500`, `text-rose-900`) while giving the registrar immediate viewport-level visibility without disruption.
+  - Retained both modal pop-up and inline backup state so registrars can dismiss the modal to cross-examine their input values while still having the alert card accessible.
+- **Known gaps:**
+  - None.
+- **Next session:** `S28` (Round 1 Hackathon Submission Packaging & Evaluation Demo Readiness)
+
 
 
 
