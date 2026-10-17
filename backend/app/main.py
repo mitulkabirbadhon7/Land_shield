@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 
 from app.errors import DomainError, FraudBlocked, IllegalTransition
 import app.models  # noqa: F401 - ensure models are registered with Base.metadata
-from app.api.v1 import alerts, audit, auth, deeds, dev, features, meta, mutations, persons, plots, risk
+from app.api.v1 import alerts, audit, auth, deeds, dev, features, ingest, keys, lineage, meta, metrics, mutations, persons, plots, reconcile, reports, risk, transparency
 from app.api.v1.auth import limiter
 
 
@@ -21,6 +21,26 @@ async def lifespan(app: FastAPI):
     if not settings.demo_mode and settings.jwt_secret in ("change-me", "dev-secret-key-change-in-production-32-bytes"):
         raise RuntimeError("Refusing to run: default JWT_SECRET configured when DEMO_MODE is false")
     Base.metadata.create_all(bind=engine)
+
+    # Register active system Ed25519 signing key in signing_keys table
+    try:
+        from sqlalchemy.orm import Session
+        from sqlalchemy import select
+        from app.models.signing_key import SigningKey
+        from app.services.crypto import load_or_create_key, public_key_hex, key_id
+
+        sk = load_or_create_key(settings.signing_key_path)
+        k_id = key_id(sk)
+        pub_hex = public_key_hex(sk)
+
+        with Session(engine) as key_db:
+            existing_key = key_db.scalars(select(SigningKey).where(SigningKey.key_id == k_id)).first()
+            if existing_key is None:
+                new_key = SigningKey(key_id=k_id, public_key_hex=pub_hex, status="ACTIVE")
+                key_db.add(new_key)
+                key_db.commit()
+    except Exception:
+        pass
 
     if settings.should_seed_on_start:
         import sys
@@ -133,6 +153,13 @@ app.include_router(dev.router, prefix="/api/v1")
 app.include_router(persons.router, prefix="/api/v1")
 app.include_router(meta.router, prefix="/api/v1")
 app.include_router(features.router, prefix="/api/v1")
+app.include_router(reconcile.router, prefix="/api/v1")
+app.include_router(lineage.router, prefix="/api/v1")
+app.include_router(keys.router, prefix="/api/v1")
+app.include_router(reports.router, prefix="/api/v1")
+app.include_router(transparency.router, prefix="/api/v1")
+app.include_router(metrics.router, prefix="/api/v1")
+app.include_router(ingest.router, prefix="/api/v1")
 
 # Also include risk, alerts, mutations, audit, dev, persons, meta, features at root for convenient direct routing
 app.include_router(risk.router)
@@ -143,6 +170,13 @@ app.include_router(dev.router)
 app.include_router(persons.router)
 app.include_router(meta.router)
 app.include_router(features.router)
+app.include_router(reconcile.router)
+app.include_router(lineage.router)
+app.include_router(keys.router)
+app.include_router(reports.router)
+app.include_router(transparency.router)
+app.include_router(metrics.router)
+app.include_router(ingest.router)
 
 
 

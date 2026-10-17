@@ -7,7 +7,10 @@
 # ============ PRIVATE PROMPTS ============
 docs/ANTIGRAVITY_PHASE1_PROMPTS.md
 docs/ANTIGRAVITY_PHASE2_PROMPTS.md
+docs/ANTIGRAVITY_PHASE2_BACKEND_PROMPTS.md
+docs/ANTIGRAVITY_PHASE2_FRONTEND_PROMPTS.md
 docs/*PROMPTS*.md
+*PROMPTS*.md
 
 # ============ PRIVATE ORGANIZER FILES ============
 docs/RuleBook.pdf
@@ -33,6 +36,10 @@ keys/
 *.crt
 *.priv
 *.secret
+GeminiAPi_key.txt
+SuperbaseInfo.txt
+*.zip
+data/uploads/
 
 # --- Prohibited Trap 2: SQLite Databases & Storage Binaries ---
 *.db

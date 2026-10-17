@@ -27,6 +27,19 @@ def level_from_score(score: int) -> str:
     return "LOW"
 
 
+def apply_ml_bump(level: str, ml_findings: list[Finding], ml_prob: float) -> str:
+    """Enforce strict advisory scoring boundary per TRD 6A:
+    ML probability >= 0.85 can elevate risk by at most 1 tier (LOW -> MEDIUM, MEDIUM -> HIGH).
+    ML never lowers the risk level and CANNOT set CRITICAL or BLOCKED.
+    """
+    if ml_prob >= 0.85:
+        if level == "LOW":
+            return "MEDIUM"
+        if level == "MEDIUM":
+            return "HIGH"
+    return level
+
+
 def assess(ctx: AnalysisContext, layers: list[Layer]) -> dict[str, Any]:
     """Execute all enabled pipeline layers, aggregate findings, and produce risk assessment report."""
     findings: list[Finding] = []
@@ -63,6 +76,12 @@ def assess(ctx: AnalysisContext, layers: list[Layer]) -> dict[str, Any]:
     final_rank = max(score_rank, max_decisive_rank)
     level = RANK_TO_SEVERITY.get(final_rank, calculated_level)
 
+    # ML Advisory Bump
+    ml_result = getattr(ctx, "ml_result", None)
+    ml_prob = ml_result.get("probability", 0.0) if ml_result else 0.0
+    ml_findings = [f for f in findings if f.layer == "ml"]
+    level = apply_ml_bump(level, ml_findings, ml_prob)
+
     findings_data = [asdict(f) for f in findings]
     lineage_available = getattr(ctx, "lineage_available", False)
 
@@ -74,6 +93,10 @@ def assess(ctx: AnalysisContext, layers: list[Layer]) -> dict[str, Any]:
         "layers": layers_dict,
         "layers_run": layers_run,
         "lineage_available": lineage_available,
+        "ml": {
+            "probability": ml_result["probability"],
+            "top_reasons": ml_result.get("top_reasons", []),
+        } if ml_result else None,
     }
 
     has_critical = any(f.severity.upper() == "CRITICAL" for f in decisive_findings)

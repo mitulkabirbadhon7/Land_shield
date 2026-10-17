@@ -3,20 +3,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.deps import get_current_user
 from app.models.deed import Deed
 from app.models.ledger import LedgerEntry
 from app.models.person import Person
 from app.models.plot import Plot
+from app.models.user import User
 from app.schemas.plots import ChainItem, PlotOut
 from app.services.deeds import verify_deed
-from app.utils.masking import mask_name
+from app.utils.privacy import person_view
 
 router = APIRouter(prefix="/plots", tags=["plots"])
 
 
-def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
+def _to_plot_out(plot: Plot, db: Session, viewer: User | None = None) -> PlotOut:
     initial_owner = db.get(Person, plot.initial_owner_id) if plot.initial_owner_id else None
     current_owner = db.get(Person, plot.current_owner_id) if plot.current_owner_id else None
+
+    p_init = person_view(initial_owner, viewer)
+    p_curr = person_view(current_owner, viewer)
+
+    flags = plot.flags or []
 
     return PlotOut(
         id=plot.id,
@@ -26,11 +33,16 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
         dag_no=plot.dag_no,
         area_decimal=plot.area_decimal,
         land_type=plot.land_type,
-        flags=plot.flags or [],
-        initial_owner_id=plot.initial_owner_id,
-        current_owner_id=plot.current_owner_id,
-        initial_owner_name=mask_name(initial_owner.display_name if initial_owner else None),
-        current_owner_name=mask_name(current_owner.display_name if current_owner else None),
+        flags=flags,
+        initial_owner_id=p_init.identifier if not p_init.is_masked else None,
+        current_owner_id=p_curr.identifier if not p_curr.is_masked else None,
+        initial_owner_name=p_init.name,
+        current_owner_name=p_curr.name,
+        initial_owner_masked=p_init.name,
+        current_owner_masked=p_curr.name,
+        is_khas="KHAS" in flags,
+        is_acquisition="ACQUISITION" in flags,
+        is_disputed="DISPUTED" in flags,
     )
 
 
@@ -38,6 +50,7 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
 def search_plots(
     mouza: str | None = Query(None, description="Mouza name filter"),
     dag_no: str | None = Query(None, description="Dag number filter"),
+    current_user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Search land plots by mouza and/or dag number with public name masking."""
@@ -48,12 +61,13 @@ def search_plots(
         stmt = stmt.where(Plot.dag_no == dag_no.strip())
 
     plots = db.scalars(stmt).all()
-    return [_to_plot_out(plot, db) for plot in plots]
+    return [_to_plot_out(plot, db, viewer=current_user) for plot in plots]
 
 
 @router.get("/{id}", response_model=PlotOut)
 def get_plot(
     id: int,
+    current_user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Retrieve plot summary with privacy-masked owner names."""
@@ -63,12 +77,13 @@ def get_plot(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Plot not found",
         )
-    return _to_plot_out(plot, db)
+    return _to_plot_out(plot, db, viewer=current_user)
 
 
 @router.get("/{id}/chain", response_model=list[ChainItem])
 def get_plot_chain(
     id: int,
+    current_user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Retrieve full chronological ownership chain with masked buyer names and verification statuses."""
@@ -89,7 +104,8 @@ def get_plot_chain(
             continue
 
         buyer = db.get(Person, deed.buyer_id)
-        buyer_masked = mask_name(buyer.display_name if buyer else None)
+        p_buyer = person_view(buyer, viewer=current_user)
+        buyer_masked = p_buyer.name
 
         reg_at = deed.registered_at.isoformat() if hasattr(deed.registered_at, "isoformat") else str(deed.registered_at)
         v_res = verify_deed(db, deed.deed_no)

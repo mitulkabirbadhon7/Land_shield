@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 appuser && \
-    mkdir -p /app/keys /app/data && \
+    mkdir -p /app/keys /app/data /app/data/uploads && \
     chown -R appuser:appuser /app
 
 COPY requirements.txt /app/
@@ -20,9 +20,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=appuser:appuser . /app/
+RUN chmod +x /app/entrypoint.sh
 
 USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

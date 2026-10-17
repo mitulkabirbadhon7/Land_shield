@@ -33,7 +33,7 @@ class MutationOut(BaseModel):
     deed_id: int
     plot_id: int
     state: str
-    applicant_id: int
+    applicant_id: int | None = None
     applicant_name: str | None = None
     officer_id: int | None = None
     requires_override: bool = False

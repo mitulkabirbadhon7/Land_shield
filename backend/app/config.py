@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     feature_transparency: bool = True
     feature_ml: bool = False
     feature_ocr: bool = False
+    lineage_area_tolerance: float = 0.05
 
     # LLM Settings
     llm_provider: str = "openai"

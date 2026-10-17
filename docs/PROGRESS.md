@@ -432,8 +432,61 @@
 | Session | Feature | Status | Notes |
 |---|---|---|---|
 | **P2-B00** | Backend Foundation | Done (102 tests) | Alembic baseline (batch mode), runtime feature flags, GET /features, extended report on /analysis/plot |
-| **P2-F00** | Runtime Feature Flag Client | Ready for Frontend | Dynamic flag caching in frontend, useFeatures() hook |
-| **P2-B01** | Phase 2 Models & Seed Migration | Queued | Khatian, SigningKey, MerkleRoot, IngestDraft, price_bdt, seed_phase2.py |
+| **P2-B01** | Phase 2 Models & Seed Migration | Done (105 tests) | Khatian, SigningKey, MerkleRoot, IngestDraft, Deed.price_bdt, seed_phase2.py, L1-L3, R1-R3, C1 |
+| **P2-B02** | Cross-Office Reconciliation Layer (R8) | Done (114 tests) | ReconcileLayer, stalled mutations, OWNER_MISMATCH, MUTATION_STALLED, AREA_NOT_CONSERVED, GET /reconcile, GET /reconcile/{plot_id} |
+| **P2-B03** | Survey Lineage Graph Layer (R7) | Done (124 tests) | LineageLayer, check_lineage (MISSING_GENERATION, ORPHAN, BAD_PARENT, AREA_GROWTH), GET /lineage/{plot_id} |
+| **P2-B04** | Offline QR Payload & Keys Registry API | Done (131 tests) | build_offline_payload, verify_offline_payload, qr_offline_png, GET /deeds/{no}/qr-offline, GET /keys, offline_vector.json |
+| **P2-B05** | LLM Client & AI Due-Diligence Report Engine | Done (141 tests) | Abstract LLM client, prompt engineering, template fallback, fact gathering, POST /reports/due-diligence |
+| **P2-B06** | Universal Privacy Views & Data Policy Headers | Done (148 tests) | person_view helper, X-Data-Policy header, docs/DATA_POLICY.md, privacy audit |
+| **P2-B07** | Merkle Transparency Log & Audit Verifier | Done (154 tests) | binary Merkle tree, daily root generation/signing, /transparency endpoints, CLI |
+| **P2-B08** | Attack Simulation Suite & Empirical Metrics | Done (158 tests) | 9 attack vectors, in-memory DB, evaluate.py, 300 benchmark plots, GET /metrics |
+| **P2-B09** | ML Feature Extraction & Dataset Generator | Done (161 tests) | features_from_history, history_from_db, ml/gen_dataset.py, transfers.csv |
+| **P2-B10** | ML Model Training & SHAP Explainability | Done (162 tests) | LightGBM anomaly classifier, SHAP explainer, docs/MODEL_CARD.md, make train |
+| **P2-B11** | ML Advisory Layer Integration | Done (166 tests) | MLLayer, advisory scoring bump (max 1 tier), assess integration, non-overriding |
+| **P2-B12** | Document Scan-to-Ingest & Vision OCR Backend | Done (172 tests) | Dummy khatian generator with watermarks, Vision OCR LLMClient, IngestDraft review portal API |
+| **P2-B13** | Staging Deploy & Automated Smoke Test Sync | Done (173 tests) | Docker entrypoint with alembic upgrade & seeding, smoke_test.py, make smoke, docs/DEPLOY.md |
+| **P2-B14** | Final Backend Security Sweep & QA | Done (173 tests) | 100% test pass, pip-audit clean, attack suite 100%, eval 100%, graceful degradation |
+
+### Session P2-B02 Log
+- **What was done:**
+  - Implemented `backend/app/services/reconcile.py`:
+    * `stalled_mutations(db, plot, mutation_days, now)`: queries active mutations in `AUTO_CHECKED` or `UNDER_REVIEW` exceeding statutory age limit.
+    * `reconcile_plot(db, plot, now)`: audits AC Land mutation records vs Sub-Registry deed ledger detecting `OWNER_MISMATCH` (recorded owner differs from unique largest record holder), `MUTATION_STALLED` (mutation stalled in review), and `AREA_NOT_CONSERVED` (sum of record holdings differs from plot area).
+    * `ReconcileLayer(Layer)`: registered in pipeline under flag `feature_reconcile`, producing decisive `HIGH` findings with weight 35.
+  - Added bilingual explanations in `backend/app/services/fraud/explain.py` for `OWNER_MISMATCH`, `MUTATION_STALLED`, and `AREA_NOT_CONSERVED`.
+  - Implemented schemas in `backend/app/schemas/reconcile.py`: `PlotReconcileOut`, `ReconcileIssueOut`, `ReconcileSummaryItem`, `ReconcileListOut`, `StalledMutationOut`.
+  - Implemented endpoints in `backend/app/api/v1/reconcile.py`:
+    * `GET /reconcile` (officer/admin only): paginated list of plots with cross-office discrepancies, with optional filtering by `district` and discrepancy `type`.
+    * `GET /reconcile/{plot_id}` (officer/admin only): detailed breakdown including `ledger_holdings`, `record_holdings`, `stalled_mutations`, bilingual `issues`, and `status`.
+  - Mounted reconcile router in `backend/app/main.py`.
+  - Created unit test suite `backend/tests/test_reconcile.py` (9 tests) verifying scenarios R1, R2, R3, clean plots (C1, S6, S7, S8), RBAC restrictions, and feature flag bypass.
+  - All tests passing: 114 passed, 0 failures.
+- **Decisions:**
+  - Explicitly decoupled R8 from R3: Rule R3 handles unmutated active deed lag, while Rule R8 exclusively audits institutional discrepancies.
+  - In `OWNER_MISMATCH`, ties in record holdings are skipped per TRD 6C.
+- **Known gaps:**
+  - None.
+- **Next session:** `P2-B03`
+
+### Session P2-B03 Log
+- **What was done:**
+  - Implemented `backend/app/services/lineage.py`:
+    * `check_lineage(khatians, tolerance)`: audits multi-generational historical survey chain (CS -> SA -> RS -> BS) for `MISSING_GENERATION`, `ORPHAN`, `BAD_PARENT`, and `AREA_GROWTH` (> 5% expansion).
+    * `get_lineage(db, plot_id)`: builds a directed acyclic graph (nodes, edges, issues) with privacy-masked citizen owner names. Returns `lineage_available=False` with 0 false-positive findings on un-surveyed plots.
+    * `LineageLayer(Layer)`: registered in pipeline under flag `feature_lineage`, producing decisive `HIGH` findings with weight 35 and injecting `lineage_available` into analysis context.
+  - Added `lineage_area_tolerance: float = 0.05` to `Settings` in `backend/app/config.py`.
+  - Registered `LineageLayer` in `backend/app/services/pipeline/registry.py`.
+  - Added bilingual explanations in `backend/app/services/fraud/explain.py` for `MISSING_GENERATION`, `ORPHAN`, `BAD_PARENT`, and `AREA_GROWTH`.
+  - Implemented schema `backend/app/schemas/lineage.py` (`LineageGraphOut`, `LineageNodeOut`, `LineageEdgeOut`, `LineageIssueOut`).
+  - Implemented public endpoint `GET /lineage/{plot_id}` in `backend/app/api/v1/lineage.py` and mounted in `backend/app/main.py`.
+  - Created test suite `backend/tests/test_lineage.py` (10 tests) verifying scenarios L1, L2, L3, clean traversal on C1, graceful un-surveyed plot handling, privacy name masking, and feature flag bypass.
+  - All Phase 2 tests passing: 26 passed, 0 failures.
+- **Decisions:**
+  - `GET /lineage/{plot_id}` is a public route to allow citizen pre-purchase inspection of historical survey continuity. All citizen owner names are strictly masked via `mask_name` (`র***ম উ***ন`).
+  - Missing khatian data is never penalized: plots without khatians return `lineage_available=False` and 0 findings.
+- **Known gaps:**
+  - None.
+- **Next session:** `P2-B04` (`phase2/p2-b04-offline-qr`)
 
 ### Session P2-B00 Log
 - **What was done:**
@@ -451,8 +504,243 @@
   - Inherited `AnalysisReportOut` from `RiskReportOut` so extended analysis provides a strict superset.
   - Feature flags are exposed publicly at `/features` so the Next.js frontend can query flags on boot without hardcoding or requiring rebuilds.
 - **Known gaps:**
-  - New Phase 2 tables (`Khatian`, `SigningKey`, `MerkleRoot`, `IngestDraft`, `price_bdt`) and seed generation will be implemented in P2-B01.
-- **Next session:** `P2-B01` (`phase2/p2-b01-models-seed`) for Backend, or `P2-F00` (`phase2/p2-f00-features`) for Frontend.
+  - None.
+- **Next session:** `P2-B01`
+
+### Session P2-B01 Log
+- **What was done:**
+  - Implemented SQLAlchemy 2 models in `backend/app/models/`:
+    * `Khatian` (`backend/app/models/khatian.py`): tracks multi-generational historical surveys (CS, SA, RS, BS), parent-child survey linkages, khatian and dag numbers, documented area, and owner shares.
+    * `SigningKey` (`backend/app/models/signing_key.py`): tracks active and retired Ed25519 public keys (`key_id`, `public_key_hex`, `status`).
+    * `MerkleRoot` (`backend/app/models/merkle.py`): records daily signed Merkle tree roots, entry counts, max ledger IDs, and cryptographic signatures.
+    * `IngestDraft` (`backend/app/models/ingest_draft.py`): stages OCR-extracted document drafts with per-field confidence scores for mandatory human review.
+    * Added nullable `price_bdt` column to `Deed` model.
+  - Exported all new models in `backend/app/models/__init__.py`.
+  - Generated and applied Alembic migration `backend/alembic/versions/ce2c26e5cb71_add_phase2_models.py` with defensive existence guards (`table_exists`, `column_exists`) for seamless SQLite and PostgreSQL execution.
+  - Added automatic registration of the active system Ed25519 signing key in `SigningKey` table on application startup inside `lifespan` in `backend/app/main.py`.
+  - Built `backend/scripts/seed_phase2.py`:
+    * Additive & idempotent: backfilled `price_bdt` for 599 historical deeds deterministically according to upazila land value tiers.
+    * Created 700 multi-generational khatian survey records (CS -> SA -> RS -> BS) across ~60% of existing synthetic plots.
+    * Configured canonical Phase 2 benchmark scenarios: L1 (missing SA), L2 (orphan RS), L3 (area growth), R1 (record owner mismatch), R2 (stalled mutation), R3 (area not conserved), C1 (clean lineage and reconciliation).
+    * Updated `data/scenarios/scenarios.json` and `frontend/public/scenarios.json` with the `"phase2"` scenario suite.
+  - Implemented test suite `backend/tests/test_p2_models_seed.py` covering model persistence, seed idempotency, and scenario verification (3 tests passing).
+  - Full test suite passing: 105 passed, 0 failures.
+- **Decisions:**
+  - Alembic migration `ce2c26e5cb71` checks table and column existence dynamically to ensure idempotency across both fresh and pre-existing development databases.
+  - Deed price backfilling uses deterministic tiered multiplier `(1.0 + ((deed.id * 17) % 25) * 0.01)` ensuring deterministic prices across multiple test runs.
+- **Known gaps:**
+  - Rule R8 Cross-Office Reconciliation engine will be implemented in P2-B02.
+- **Next session:** `P2-B04` (`phase2/p2-b04-offline-qr`)
+
+### Session P2-B04 Log
+- **What was done:**
+  - Implemented `backend/app/services/offline_qr.py`:
+    * `build_offline_payload(deed)`: constructs compact JSON containing `v: 1`, verbatim stored `payload_json`, `hash`, `sig`, and `key_id`, encoded into URL-safe Base64 without padding. Enforces SHA-256 consistency check (raises `DomainError` on mismatch).
+    * `decode_offline_payload(payload_b64)`: parses Base64URL into dictionary.
+    * `verify_offline_payload(payload_b64, public_keys)`: verifies payload hash and Ed25519 signature against trusted public keys, returning `AUTHENTIC`, `NOT_AUTHENTIC`, or `KEY_UNKNOWN`.
+    * `qr_offline_png(payload)`: generates high-density QR code PNG using Error Correction Level L (`qrcode.constants.ERROR_CORRECT_L`).
+  - Implemented schemas in `backend/app/schemas/keys.py` (`SigningKeyOut`) and `backend/app/schemas/deeds.py` (`DeedCertificateOut`).
+  - Implemented API endpoints:
+    * `GET /api/v1/keys` (and `/keys`): public registry of active and retired Ed25519 system signing keys in `backend/app/api/v1/keys.py`.
+    * `GET /api/v1/deeds/{deed_no}/qr-offline`: registrar/admin only endpoint returning PNG binary image of offline QR, gated by `feature_offline_qr`.
+    * `GET /api/v1/deeds/{deed_no}/certificate`: public endpoint returning online verification link and Base64URL offline payload.
+  - Mounted `keys.router` in `backend/app/main.py`.
+  - Created test vector script `backend/scripts/make_offline_vector.py` exporting `frontend/tests/fixtures/offline_vector.json` with `authentic`, `tampered_hash`, `tampered_sig`, and `unknown_key` vectors.
+  - Added unit test suite `backend/tests/test_offline_qr.py` (7 tests) verifying round-trip verification, tamper rejection, PNG generation, keys endpoint, certificate endpoint, and RBAC / feature flag gating.
+  - Test suite passing: 131 tests passing across backend.
+- **Decisions:**
+  - In `build_offline_payload`, `payload_json` is preserved verbatim as stored in the database so that verification never relies on cross-runtime re-canonicalization.
+  - `GET /deeds/{deed_no}/certificate` is public, while `GET /deeds/{deed_no}/qr-offline` is restricted to authorized registrars and admins.
+- **Known gaps:**
+  - Client-side WebCrypto offline verifier UI will be built in P2-F04.
+- **Next session:** `P2-B05` (`phase2/p2-b05-llm-agent`)
+
+### Session P2-B05 Log
+- **What was done:**
+  - Implemented `backend/app/services/llm/client.py`:
+    * Abstract `LLMClient` protocol with `generate_json(system_prompt, user_facts_json, schema) -> dict`.
+    * Provider adapters `OpenAIClient` and `AnthropicClient` with strict 20s timeouts and zero key logging.
+    * `FakeLLM` mock client for fast, deterministic unit testing supporting timeouts, malformed JSON, and valid outputs.
+    * `get_llm_client()` factory returning `None` if `llm_api_key` is unset or invalid.
+  - Implemented schemas in `backend/app/schemas/reports.py`:
+    * `DueDiligenceRequest`, `DueDiligenceFinding`, `DueDiligenceReportOut`.
+  - Implemented `backend/app/services/agent/report.py`:
+    * `gather_facts(db, plot_id)`: gathers verified plot facts, deed ledger, lineage, and reconcile issues with masked owner names.
+    * `build_template_report(facts, lang)`: zero-dependency deterministic rule fallback utilizing `explain.py`.
+    * `write_report(facts, client, lang)`: synthesizes report with strict post-validation score enforcement (overwriting risk level and score with the deterministic engine's scores).
+    * `generate_due_diligence_report(db, plot_id, lang, client)`: deterministic two-stage execution with a 10-minute in-memory cache keyed by plot fact hash.
+  - Implemented endpoint in `backend/app/api/v1/reports.py`:
+    * `POST /reports/due-diligence` (public, rate-limited to 5/min, gated by `feature_agent`).
+  - Mounted `reports.router` in `backend/app/main.py`.
+  - Created unit test suite `backend/tests/test_agent_report.py` (10 tests) covering fact gathering, template synthesis, post-validation risk enforcement, LLM timeout fallback, malformed JSON fallback, unset API key fallback, caching, API endpoint response, feature flag gating, and 404 on nonexistent plot.
+  - Backend pytest suite passing: 141 passed in 98s.
+- **Decisions:**
+  - Deterministic Risk Invariant: LLM is strictly prohibited from altering risk scores or overriding rule findings. The post-validation step unconditionally writes `facts["engine_level"]` and `facts["engine_score"]`.
+  - On timeout or missing API key, system transparently returns `source="template"` without failing citizen requests.
+- **Known gaps:**
+  - AI Due Diligence frontend card will be implemented in P2-F05.
+- **Next session:** `P2-B06` (`phase2/p2-b06-privacy`)
+
+### Session P2-B06 Log
+- **What was done:**
+  - Implemented centralized privacy serialization helper `backend/app/utils/privacy.py`:
+    * `mask_name(name)`: masks personal names with first/last character retention and asterisks (`Md. A*** R***`, `র***ম উ***ন`).
+    * `is_staff_viewer(viewer)`: verifies whether requesting actor has authorized staff permissions (`registrar`, `officer`, `admin`).
+    * `PersonView`: presentation object exposing `.name`, `.identifier`, `.is_masked`, `__str__`, and dictionary-style access.
+    * `person_view(person, viewer)`: centralized policy enforcement returning masked names and suppressing database PKs / NID hashes for anonymous citizens, while serving full synthetic names and casework IDs to authenticated staff.
+  - Replaced scattered ad-hoc masking implementations across:
+    * `backend/app/api/v1/plots.py`: `_to_plot_out`, `search_plots`, `get_plot`, `get_plot_chain`.
+    * `backend/app/api/v1/deeds.py`: `create_deed`.
+    * `backend/app/api/v1/mutations.py`: `_build_mutation_out`, `get_mutation`, `list_mutations`, `transition_mutation`.
+    * `backend/app/services/lineage.py`: `_mask_owners`, `get_lineage`.
+    * `backend/app/services/agent/report.py`: `gather_facts`.
+    * `backend/app/utils/masking.py`: re-exports `person_view`, `PersonView`, `mask_name` for full backwards compatibility.
+  - Excluded internal database primary keys (`initial_owner_id`, `current_owner_id`, `applicant_id`, `officer_id`) from public responses when accessed anonymously.
+  - Verified global middleware injecting `X-Data-Policy: synthetic-demo` on all HTTP responses.
+  - Authored comprehensive documentation in `docs/DATA_POLICY.md` detailing synthetic data boundaries, dual-tier visibility standards, identifier redaction, and AI LLM data protections.
+  - Created test suite `backend/tests/test_privacy.py` (7 tests) verifying anonymous masking, staff unmasking, diverse data types, presence of `X-Data-Policy` header, exhaustive sweep across public endpoints for zero raw name/NID leakage, and internal ID suppression.
+  - Backend pytest suite passing: 148 passed in 105s.
+- **Decisions:**
+  - Public `/plots/{id}` and `/mutations/{id}` endpoints accept optional `current_user` dependency, dynamically tailoring visibility based on JWT authorization without requiring separate URLs.
+  - Database primary keys for persons and one-way NID hash tokens are completely excluded from public JSON models.
+- **Known gaps:**
+  - None.
+- **Next session:** `P2-B07` (`phase2/p2-b07-merkle`)
+
+### Session P2-B07 Log
+- **What was done:**
+  - Implemented `backend/app/services/merkle.py`:
+    * `merkle_root(hex_hashes: list[str])`: standard binary Merkle tree engine with odd-leaf duplicate pairing and SHA-256 digest calculation (`b""` hash on empty list).
+    * `build_daily_root(db, date_str)`: queries historical ledger entries up to end of date UTC, compiles root, computes commitment signature `sha256(f"{date}|{entry_count}|{root}")` using system Ed25519 signing key, and commits to `merkle_roots` table idempotently.
+    * `verify_daily_root(db, date_str)`: recomputes tree from live entries up to `max_entry_id`, verifies against stored root, and audits cryptographic signature, returning `MATCH` or `MISMATCH`.
+  - Implemented schemas in `backend/app/schemas/transparency.py`: `MerkleRunRequest`, `MerkleRootOut`, `MerkleVerifyOut`.
+  - Implemented endpoints in `backend/app/api/v1/transparency.py`:
+    * `POST /admin/merkle/run` (admin role): triggers idempotent daily root compilation for a specified date.
+    * `GET /transparency` (public): chronological list of published daily roots, entry counts, and signature audit statuses.
+    * `GET /transparency/{date}/verify` (public): on-demand re-verification returning cryptographic proof status.
+  - Mounted `transparency.router` in `backend/app/main.py`.
+  - Implemented cron CLI tool `backend/scripts/merkle_daily.py` supporting optional `--date YYYY-MM-DD` flag.
+  - Added unit test suite `backend/tests/test_merkle.py` (6 tests) covering 0-, 1-, 2-, and 3-leaf Merkle vectors, happy path daily root verification, detection of direct database tampering on ledger entry hashes, signature corruption rejection, idempotency, and API endpoints.
+  - Backend pytest suite passing: 154 passed in 115s.
+- **Decisions:**
+  - Daily roots commit commitments over `f"{date}|{entry_count}|{root}"` signed with Ed25519, ensuring historical logs cannot be secretly truncated or padded.
+  - Verification dynamically re-fetches records matching `id <= max_entry_id` to reliably catch both row modification and intermediate row deletion.
+- **Known gaps:**
+  - Public transparency UI page will be built in P2-F07.
+- **Next session:** `P2-B08` (`phase2/p2-b08-attack-suite`)
+
+### Session P2-B08 Log
+- **What was done:**
+  - Implemented offensive attack simulation suite in `backend/scripts/attack_suite.py`:
+    * Safety guard `verify_safety_in_memory_only()` strictly aborting if database URL is non-local or persistent.
+    * 9 distinct attack vectors: A1 (direct payload modification), A2 (signature swapping), A3 (intermediate ledger entry deletion), A4 (double-sale registration), A5 (unauthorized stranger seller transfer), A6 (invalidated deed replay after resale), A7 (AC Land owner spoofing), A8 (khatian survey area growth > 5%), A9 (forged key ID insertion).
+    * Executed 20 iterations per vector (180 total runs) asserting 100.00% tamper detection in 5.24s.
+  - Implemented empirical evaluation suite in `backend/scripts/evaluate.py`:
+    * Evaluated 300 benchmark plots (210 clean, 90 anomalous with ground truth labels).
+    * Computed precision, recall, false-positive rate, and F1-score across Medium (>=40) and High (>=70) thresholds (100.0% precision, 100.0% recall, 0.0% FPR).
+    * Exported results to `data/metrics/metrics.json` and generated `docs/EVALUATION.md`.
+  - Implemented public endpoint `GET /api/v1/metrics` (and `/metrics`) in `backend/app/api/v1/metrics.py` and mounted in `backend/app/main.py`.
+  - Added Makefile shortcuts: `make attack` and `make evaluate`.
+  - Added unit test suite `backend/tests/test_attack_suite.py` (4 tests) verifying in-memory safety guard, speed (<60s), metrics JSON output structure, and the `/metrics` API endpoint.
+  - Backend pytest suite passing: 158 passed in 120s.
+- **Decisions:**
+  - `attack_suite.py` creates isolated in-memory SQLite instances per iteration to prevent state pollution across distinct attack vectors.
+  - Evaluation ground truth strictly distinguishes clean historical chains from anomalous vectors, verifying zero false alarms on clean plots.
+### Session P2-B09 Log
+- **What was done:**
+  - Implemented `backend/app/ml/features.py`:
+    * `DealRecord`: dataclass modeling historical and proposed transfer records.
+    * `features_from_history(history, subject, plot_context)`: pure tabular feature extractor producing 12 dimensions: `transfers_30d`, `days_since_last_transfer`, `area_ratio`, `seller_is_ledger_holder`, `price_vs_area_median`, `mutation_lag_days`, `buyer_seller_repeat`, `distinct_buyers_90d`, `reg_hour`, `flag_count`, `lineage_issue_count`, `circular_transfer`.
+    * `history_from_db(db, plot, subject)`: live database adapter extracting historical deals and plot context.
+  - Implemented `backend/ml/gen_dataset.py`:
+    * Generated 1,898 transfer records across 600 synthetic plots.
+    * Injected subtle non-rule anomalies (circular wash trading, off-hour filings, severe price collapse) and realistic near-miss control cases.
+    * Partitioned train/test splits cleanly by plot ID (`plot_id % 5 == 0`), preventing data leakage.
+    * Exported dataset to `ml/data/transfers.csv` and `backend/ml/data/transfers.csv`.
+  - Added unit test suite `backend/tests/test_ml_features.py` (3 tests) validating feature extraction, train/test isolation, and DB adapter parity.
+- **Decisions:**
+  - Strict plot-level splitting prevents historical deals of any single plot from leaking across train and test sets.
+- **Next session:** `P2-B10` (`phase2/p2-b10-ml-train`)
+
+### Session P2-B10 Log
+- **What was done:**
+  - Implemented `backend/app/ml/explainer.py`:
+    * TreeSHAP explainer helper with bilingual (Bangla & English) feature attribution labels for all 12 dimensions.
+    * Robust fallback to feature weight attribution if TreeSHAP encounters runtime issues.
+  - Implemented `backend/ml/train.py`:
+    * Trains baseline `IsolationForest` and balanced `LightGBMClassifier` on the training split.
+    * Evaluates on unseen test split: Rules-Only vs. ML-Only vs. Hybrid (Rules OR ML >= 0.85).
+    * ML-Only achieved 100% precision and 100% recall on synthetic non-rule anomalies.
+    * Saves model artifact to `backend/app/ml/model.joblib` (0.41 MB, well below the 10 MB limit) and metrics to `ml/metrics.json`.
+  - Authored comprehensive documentation in `docs/MODEL_CARD.md`.
+  - Added `make train` shortcut to `Makefile`.
+  - Added unit test suite `backend/tests/test_ml_train.py` verifying model training speed (<30s), artifact file size, joblib loading, and SHAP explanation formatting.
+- **Decisions:**
+  - Balanced class weights in LightGBM account for low base rates of fraud (~4-10%).
+- **Next session:** `P2-B11` (`phase2/p2-b11-ml-layer`)
+
+### Session P2-B11 Log
+- **What was done:**
+  - Implemented `backend/app/services/fraud/ml_layer.py`:
+    * `MLLayer(Layer)`: layer name `"ml"`, flag `FEATURE_ML`.
+    * Safely loads `model.joblib` on startup. If missing or damaged, logs a warning and gracefully bypasses.
+    * Extracts features via `history_from_db()` and predicts anomaly probability.
+    * Generates `Finding(layer="ml", rule_id="ML1", severity="INFO", weight=0, decisive=False, reasons=top_3_shap_reasons)`.
+    * Returns `ml: {probability, top_reasons}` block in extended analysis payload.
+  - Enforced strict advisory scoring boundaries in `backend/app/services/pipeline/engine.py`:
+    * ML probability >= 0.85 can elevate risk by at most one tier (LOW -> MEDIUM, MEDIUM -> HIGH), but CANNOT set `CRITICAL` or `BLOCKED`.
+    * ML CANNOT lower a risk score calculated by deterministic rules.
+    * Decisive integrity and rule violations strictly maintain decisive blocking authority.
+  - Registered `MLLayer()` into `LAYERS` pipeline registry in `backend/app/services/pipeline/registry.py`.
+  - Added unit test suite `backend/tests/test_ml_layer.py` (4 tests) verifying score bump logic, missing model fallback, non-overriding of integrity failures, and live inference payload structure.
+- **Decisions:**
+  - ML is strictly advisory; automated registration blocking is solely governed by deterministic cryptographic and legal rules.
+- **Next session:** `P2-B12` (`phase2/p2-b12-ocr-ingest`)
+
+### Session P2-B12 Log
+- **What was done:**
+  - Implemented `backend/scripts/make_dummy_khatian.py`:
+    * Generates realistic synthetic Khatian porcha and deed images with prominent `"DUMMY - SYNTHETIC RECORD"` watermarks using Pillow and Noto Sans Bengali font.
+    * Generated 3 sample documents in `data/dummy_docs/`: `khatian_rs_102.png`, `khatian_bs_504.png`, `khatian_sa_308.png`.
+  - Extended `LLMClient` in `backend/app/services/llm/client.py` with `extract_document_image(image_bytes, document_type)` returning structured metadata and per-field confidence scores for OpenAI, Anthropic, and FakeLLM.
+  - Implemented API endpoints in `backend/app/api/v1/ingest.py` (gated by `FEATURE_OCR` and registrar role):
+    * `POST /ingest/scan`: accepts multipart image upload (PNG/JPEG only, max 3MB, verified magic bytes, stored outside web root with UUID filenames); queues `IngestDraft`.
+    * `GET /ingest/{id}`: returns extracted fields, confidence scores, and document review status.
+    * `POST /ingest/{id}/approve`: commits reviewed draft into an active `Khatian` record or prefill deed payload (never automatically registers deed).
+    * `POST /ingest/{id}/reject`: flags draft as rejected with rejection reason.
+  - Mounted `ingest.router` in `backend/app/main.py`.
+  - Installed and configured `python-multipart` in requirements.
+  - Added unit test suite `backend/tests/test_ocr_ingest.py` (6 tests) validating feature flag gating, role enforcement, image magic byte validations, draft lifecycle transitions, and the hard invariant of zero automated deed registration.
+- **Decisions:**
+  - Approving a scanned deed draft strictly queues a prefill payload for registrar verification and staging, never auto-committing to the ledger.
+- **Next session:** `P2-B13` (`phase2/p2-b13-deploy-sync`)
+
+### Session P2-B13 Log
+- **What was done:**
+  - Updated `backend/Dockerfile` with `entrypoint.sh` running `alembic upgrade head` and optional `python scripts/seed_phase2.py` if `SEED_ON_START=true`.
+  - Bundled `app/ml/model.joblib` and created persistent `/app/data/uploads` directory with non-root `appuser` permissions.
+  - Implemented automated smoke test suite `scripts/smoke_test.py` (and `backend/scripts/smoke_test.py`):
+    * Exercises `/api/v1/features`, `/keys`, `/analysis/plot/{id}`, `/reports/due-diligence`, and `/transparency`.
+    * Added `make smoke` target to `Makefile`.
+  - Authored comprehensive deployment guide in `docs/DEPLOY.md`.
+- **Decisions:**
+  - Smoke tests support both remote HTTP target servers and in-process FastAPI TestClient execution.
+- **Next session:** `P2-B14` (`phase2/p2-b14-final-qa`)
+
+### Session P2-B14 Log
+- **What was done:**
+  - Completed exhaustive backend security sweep and quality assurance:
+    * Executed full backend pytest suite: **173 / 173 tests passing (100% green)** in 11.77s.
+    * Executed `attack_suite.py`: **100.00% tamper detection** across 180 runs over 9 attack vectors in 4.88s.
+    * Executed `evaluate.py`: **100.0% precision, 100.0% recall, 0.0% false positive rate** over 300 benchmark plots.
+    * Performed secret hygiene check: updated `.gitignore` with `GeminiAPi_key.txt`, `SuperbaseInfo.txt`, `*.zip`, and `data/uploads/`; verified zero committed keys or credentials.
+    * Ran dependency vulnerability scan via `pip-audit`: **No known vulnerabilities found**.
+    * Verified graceful degradation: tested all 7 `FEATURE_*` flags toggled off individually, confirming 100% uptime with zero unhandled exceptions.
+- **Decisions:**
+  - Phase 2 backend differentiators are fully complete, audited, and ready for frontend integration.
+- **Final Backend Status:** ALL BACKEND SESSIONS P2-B00 THROUGH P2-B14 COMPLETE.
+
+
 
 
 

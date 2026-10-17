@@ -6,9 +6,7 @@ from app.services.pipeline.base import AnalysisContext, Finding, Layer
 from app.services.pipeline.engine import assess
 
 
-@pytest.fixture
-def client():
-    return TestClient(app)
+
 
 
 def test_features_endpoint(client):

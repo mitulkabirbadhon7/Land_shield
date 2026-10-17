@@ -10,10 +10,15 @@ class PlotOut(BaseModel):
     area_decimal: float
     land_type: str
     flags: list[str] = Field(default_factory=list)
-    initial_owner_id: int
+    initial_owner_id: int | None = None
     current_owner_id: int | None = None
     initial_owner_name: str | None = None
     current_owner_name: str | None = None
+    initial_owner_masked: str | None = None
+    current_owner_masked: str | None = None
+    is_khas: bool = False
+    is_acquisition: bool = False
+    is_disputed: bool = False
 
 
 class ChainItem(BaseModel):
