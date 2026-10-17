@@ -169,7 +169,15 @@ export function Header() {
           {user ? (
             <div className="hidden sm:flex items-center gap-2">
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                {user.name} ({user.role})
+                {user.name} ({lang === "bn"
+                  ? user.role === "officer"
+                    ? "কর্মকর্তা"
+                    : user.role === "registrar"
+                    ? "সাব-রেজিস্ট্রার"
+                    : user.role === "admin"
+                    ? "অ্যাডমিন"
+                    : user.role
+                  : user.role})
               </span>
               <button
                 type="button"

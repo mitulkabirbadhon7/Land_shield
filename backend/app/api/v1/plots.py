@@ -9,7 +9,7 @@ from app.models.person import Person
 from app.models.plot import Plot
 from app.schemas.plots import ChainItem, PlotOut
 from app.services.deeds import verify_deed
-from app.services.holdings import ledger_holdings
+from app.services.holdings import largest_holder, ledger_holdings
 from app.utils.masking import mask_name
 
 router = APIRouter(prefix="/plots", tags=["plots"])
@@ -17,13 +17,31 @@ router = APIRouter(prefix="/plots", tags=["plots"])
 
 def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
     initial_owner = db.get(Person, plot.initial_owner_id) if plot.initial_owner_id else None
-    current_owner = db.get(Person, plot.current_owner_id) if plot.current_owner_id else None
 
     # Calculate live holding balances from ledger
     holdings = ledger_holdings(db, plot)
-    curr_holding = holdings.get(plot.current_owner_id, 0.0) if plot.current_owner_id else 0.0
-    total_sold = round(sum(area for pid, area in holdings.items() if pid != plot.initial_owner_id and area > 0), 2)
-    remaining = round(curr_holding, 2)
+    largest_id = largest_holder(holdings)
+
+    # Check for fraudulent overselling (negative balance anywhere in holdings)
+    has_negative = any(area < -1e-6 for area in holdings.values())
+
+    # Resolve active current owner: use current_owner_id if positive balance, else largest holder
+    active_owner_id = plot.current_owner_id
+    if not active_owner_id or holdings.get(active_owner_id, 0.0) <= 0:
+        if largest_id:
+            active_owner_id = largest_id
+
+    current_owner = db.get(Person, active_owner_id) if active_owner_id else None
+    curr_holding = holdings.get(active_owner_id, float(plot.area_decimal)) if active_owner_id else float(plot.area_decimal)
+
+    if has_negative:
+        # Fraudulent overselling: total sold is sum of positive buyer holdings (exceeds plot area)
+        total_sold = round(sum(area for area in holdings.values() if area > 0), 2)
+        remaining = 0.0
+    else:
+        # Legitimate plot: remaining is active owner's holding; sold is area held by other buyers
+        remaining = round(max(0.0, curr_holding), 2)
+        total_sold = round(sum(area for pid, area in holdings.items() if pid != active_owner_id and area > 0), 2)
 
     return PlotOut(
         id=plot.id,
@@ -43,6 +61,13 @@ def _to_plot_out(plot: Plot, db: Session) -> PlotOut:
     )
 
 
+BN_TO_EN_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+
+
+def _normalize_digits(s: str) -> str:
+    return s.translate(BN_TO_EN_DIGITS)
+
+
 @router.get("/search", response_model=list[PlotOut])
 def search_plots(
     mouza: str | None = Query(None, description="Mouza name filter"),
@@ -50,11 +75,15 @@ def search_plots(
     db: Session = Depends(get_db),
 ):
     """Search land plots by mouza and/or dag number with public name masking."""
+    from sqlalchemy import or_
+
     stmt = select(Plot)
     if mouza and mouza.strip():
         stmt = stmt.where(Plot.mouza.ilike(f"%{mouza.strip()}%"))
     if dag_no and dag_no.strip():
-        stmt = stmt.where(Plot.dag_no == dag_no.strip())
+        raw_dag = dag_no.strip()
+        norm_dag = _normalize_digits(raw_dag)
+        stmt = stmt.where(or_(Plot.dag_no == raw_dag, Plot.dag_no == norm_dag))
 
     plots = db.scalars(stmt).all()
     return [_to_plot_out(plot, db) for plot in plots]

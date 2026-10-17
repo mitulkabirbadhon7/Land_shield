@@ -45,9 +45,55 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const { t } = useLanguage();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<unknown>(null);
   const hasScannedRef = useRef(false);
   const elementId = "html5qr-code-full-region";
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setErrorMessage(null);
+
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+
+      if (scannerRef.current) {
+        const s = scannerRef.current as {
+          isScanning?: boolean;
+          stop: () => Promise<void>;
+          clear: () => void;
+        };
+        try {
+          if (s.isScanning) {
+            await s.stop();
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      const fileScanner = new Html5Qrcode("html5qr-file-engine");
+      const decodedText = await fileScanner.scanFile(file, false);
+      const parsedDeed = parseDeedFromQR(decodedText);
+      try {
+        fileScanner.clear();
+      } catch {
+        // ignore
+      }
+      onScanSuccess(parsedDeed);
+    } catch {
+      setErrorMessage(t("verify.upload_qr_error"));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -240,6 +286,55 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
             ) : (
               <div id={elementId} className="w-full" />
             )}
+          </div>
+
+          {/* Hidden file engine container for Html5Qrcode.scanFile */}
+          <div id="html5qr-file-engine" className="hidden" />
+
+          {/* Hidden File Input for Deed QR Image Upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
+          {/* QR Code Image Upload Button Area */}
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-teal-500/30 bg-teal-50/70 px-4 py-2.5 text-xs font-bold text-teal-700 hover:bg-teal-100 transition-all active:scale-95 shadow-2xs dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800 dark:hover:bg-teal-900/60"
+            >
+              {isUploading ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>{t("verify.upload_qr_scanning")}</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4 text-teal-600 dark:text-teal-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>{t("verify.upload_qr_modal_btn")}</span>
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
+              {t("verify.upload_qr_desc")}
+            </p>
           </div>
         </div>
 

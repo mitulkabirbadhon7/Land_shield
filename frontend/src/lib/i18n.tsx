@@ -6,6 +6,12 @@ import enDict from "../locales/en.json";
 
 export type Language = "bn" | "en";
 
+export function toBnDigits(val: number | string | undefined | null): string {
+  if (val === undefined || val === null || val === "") return "";
+  const bn = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+  return String(val).replace(/[0-9]/g, (d) => bn[parseInt(d, 10)]);
+}
+
 type Dictionary = Record<string, unknown>;
 
 const dictionaries: Record<Language, Dictionary> = {
@@ -56,31 +62,29 @@ const LanguageContext = createContext<LanguageContextType>({
 const STORAGE_KEY = "landshield_lang";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  // Always default to Bangla ("bn") on initial load as required
   const [lang, setLangState] = useState<Language>("bn");
   const [, startTransition] = useTransition();
 
   useEffect(() => {
+    // When project opens or is loaded, 1st language must always be Bangla ("bn").
+    // Clean up any previously persisted language in storage so it never forces English on reload/open.
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
-      if (saved && (saved === "bn" || saved === "en")) {
-        setLangState(saved);
-        document.documentElement.lang = saved;
-      } else {
-        document.documentElement.lang = "bn";
-      }
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Ignore localStorage errors (e.g. private browsing)
+      // Ignore storage errors (e.g. private browsing)
     }
+    document.documentElement.lang = "bn";
   }, []);
 
   const setLang = (nextLang: Language) => {
     startTransition(() => {
       setLangState(nextLang);
       try {
-        localStorage.setItem(STORAGE_KEY, nextLang);
         document.documentElement.lang = nextLang;
       } catch {
-        // Ignore localStorage errors
+        // Ignore DOM errors
       }
     });
   };

@@ -25,6 +25,12 @@
 | **S18** | Cloud deploy preparation | Done (104 tests, build ok) | SIGNING_KEY_HEX loading, PORT dynamic binding, postgres:// normalization, /health/deep, render.yaml blueprint, docs/DEPLOY.md guide |
 | **S19** | Docs, README, concept note draft | Done (build ok, 105 tests) | Authoritative README, 3-minute DEMO_SCRIPT, AI_USAGE disclosure, MODULE_OWNERS, CHANGELOG, ARCHITECTURE, and 4-page CONCEPT_NOTE draft |
 | **S20** | Final QA, security sweep, tag | Done (105 tests, 12/12 smoke tests, build ok) | Automated security sweep, scripts/smoke_test.py, make smoke, SUBMISSION_CHECKLIST.md |
+| **S21** | Deed QR upload, area conservation, Bengali UI purity | Done (107 tests, build ok) | Direct QR file upload, partial sale area conservation, Bengali numerals & pure localization |
+| **S22** | Pre-purchase check state isolation & API cache prevention | Done (107 tests, build ok) | Fixed cross-scenario card verdict persistence, no-store fetch cache headers, language toggle ref guard |
+| **S23** | Cloud key drift diagnosis & Admin reseed endpoint | Done (108 tests, build ok) | Diagnosed Render KEY_UNKNOWN key drift, added POST /dev/reseed and Admin portal 1-click reseed |
+| **S24** | Edge case hardening & 100% pure Bengali Admin UI | Done (108 tests, build ok) | Self-dealing deed block, case-insensitive verify, BN numerals in dag queries, 401 redirect, 100% pure Bengali in /admin |
+| **S25** | Database sequence drift immunity, cold start retry & resilient scenario lookup | Done (109 tests, build ok) | Reset autoincrement sequences during reseed, exponential backoff retry in apiFetch, canonical deed/mouza fallback in /check |
+| **S26** | Registrar benchmark scenarios & resilient plot dropdown selection | Done (109 tests, build ok) | Resilient scenario resolution for S6/S1/S2 in /registrar, on-focus/click plot fetching, onMouseDown dropdown selection |
 
 ---
 
@@ -840,6 +846,269 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Known gaps:**
   - None.
 - **Next session:** Demo video recording and final judge presentation rehearsal.
+
+### Session SYNC-MAIN-AND-VERIFY Log
+- **What was done:**
+  - Fast-forward pulled all latest commits from `origin/main` into local `main` branch (commits `0634673` through `20320ef` including cadastral background, edge-case stress test suite, real-time decimal balance tracking, bilingual fixes, and lint zero-warning cleanups across 37 files).
+  - Protected local secrets and font archives in `.gitignore` (`GeminiAPi_key.txt`, `SuperbaseInfo.txt`, `Noto_Sans_Bengali.zip`).
+  - Created `frontend/.env.local` (`NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`) to satisfy the production build assertion for local Next.js builds.
+  - Executed and verified the full test and build matrix:
+    - Backend Pytest Suite: 107/107 passed in 126s (`pytest`).
+    - Edge Case Stress Suite: 9/9 executed, 0 unhandled failures (`backend/scripts/run_edge_cases.py`).
+    - Frontend ESLint: 0 errors, 0 warnings (`npm run lint`).
+    - Frontend Next.js Production Build: 10/10 routes compiled and statically prerendered with Turbopack (`npm run build`).
+- **Decisions:**
+  - Maintained strict git safety by not auto-committing or auto-pushing.
+  - Preserved untracked local secrets outside of version control.
+- **Known gaps:**
+  - None. All code and test suites are 100% verified.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
+### Session DEFAULT-BANGLA-LOAD Log
+- **What was done:**
+  - Configured `frontend/src/lib/i18n.tsx` so the project strictly defaults to and loads in Bangla (`bn`) every time the project is opened or loaded.
+  - Removed persistent local storage loading of previously toggled English language on initial mount, ensuring no previous session can force English on fresh load or page reload.
+  - Automatically cleans up any previously stored `landshield_lang` keys from `localStorage` and `sessionStorage`.
+  - Maintained interactive language toggle (`বাং` / `EN` in Header) so users can still freely switch to English on demand, retaining English across client-side page routing during their active session.
+  - Verified code quality: `npm run lint` passed with 0 errors and 0 warnings.
+  - Verified static compilation: `npm run build` compiled and prerendered 10/10 routes successfully.
+- **Decisions:**
+  - Language state is managed in React Context for active in-session navigation without polluting long-term browser storage.
+- **Known gaps:**
+  - None.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
+### Session LOCALHOST-RUN-FIX Log
+- **What was done:**
+  - Resolved localhost execution obstacles on Windows environments:
+    - Added local `.env` and `frontend/.env.local` to fulfill environment configurations.
+    - Synchronized `./keys/registrar_ed25519.hex` with `./keys/registrar.key` so both configuration paths load the genuine Ed25519 seed without regenerating incompatible keys.
+    - Verified live execution of both FastAPI backend (`http://localhost:8000`) and Next.js frontend (`http://localhost:3000`) returning HTTP 200 on all routes.
+    - Created Windows 1-click launchers (`run_all.bat`, `run_backend.bat`, `run_frontend.bat`) targeting the project `.venv` directly to bypass PowerShell script execution restrictions.
+- **Decisions:**
+  - Executable launchers use `%~dp0` absolute directory anchoring so they can be launched from any working directory or by double-clicking in Windows Explorer.
+- **Known gaps:**
+  - None. Both servers are verified running and responding on localhost.
+- **Next session:** Demo video recording and final hackathon deliverables submission.
+
+### Session CHECK-PAGE-SIMPLIFY & ILLITERACY-OPTIMIZATION Log
+- **What was done:**
+  - Conducted skeptical review and comprehensive overhaul of the Citizen Pre-Purchase Check page (`/check`) to guarantee maximum accessibility for illiterate and non-technical rural citizens:
+    - **Initial State Spoken Guidance:** Added a prominent, animated audio instruction button right on the empty home search state (🔊 "কীভাবে ব্যবহার করবেন মুখে শুনুন" / "Listen How to Use"), verbally explaining how to check a plot and how to test sample plots.
+    - **4 Big Visual 1-Tap Sample Plot Cards:** Provided large, high-contrast sample cards on the initial screen (🟢 নিরাপদ জমি দাগ ১০১, 🔴 দ্বৈত বিক্রয় জালিয়াতি দাগ ১, 🏛️ সরকারি খাস জমি দাগ ৫, 📜 নামজারি বাকি জমি দাগ ৩) allowing illiterate users to test with 1 tap without typing.
+    - **Bengali Numeral Localization:** Integrated dynamic Bengali numeral conversion (`toBnDigits`) across Dag numbers, plot IDs, decimal areas, transfer steps, and mutation counts when viewed in Bangla.
+    - **Fixed Court Dispute & Khas Detection Bug:** Corrected Card 2 & Card 3 logic to cross-examine both `plot.flags` and rule findings (`R6` / `FLAGGED_LAND`), preventing active court cases and acquisition restrictions from being falsely marked "Safe".
+    - **Individual Card Voice Readout:** Added dedicated audio listen buttons ("🔊") on all 4 visual safety question cards so citizens can hear plain spoken explanations for fraud, government land, court cases, and mutation status individually.
+    - **Robust Web Speech Synthesis:** Added asynchronous voice pre-loading (`onvoiceschanged`), garbage-collection retention ref (`utteranceRef`), and automatic cancellation on language toggle, plot load, or unmount.
+    - **Resolved Pre-existing Backend Unit Test Failure:** Fixed keyword argument override for `PORT` in `backend/app/config.py`, making all 107/107 backend pytest tests pass 100%.
+    - **Preserved 100% of Technical Audit Features:** Kept the circular SVG risk gauge (0-100), rule IDs (R1-R6), weights, mutation summary counters, scenario test drawer (S1-S8), and the complete cryptographic ledger timeline intact via mode switch and in-place expander.
+  - Verified code quality: `npm run lint` passed with 0 errors and 0 warnings.
+  - Verified static compilation: `npm run build` compiled and prerendered 10/10 routes successfully with 0 errors.
+  - Verified backend test suite: `pytest` passed 107/107 tests with 0 failures.
+- **Decisions:**
+  - Audio instructions and 1-tap sample cards on the initial screen bridge the accessibility gap for users who cannot read search placeholders or type numbers.
+  - Bengali numerals provide authentic localization for rural citizens while English numbers remain intact in English mode.
+- **Known gaps:**
+  - None. All features are verified and working across all routes and test suites.
+### Session CHECK-PAGE-REFINEMENT & BUG-FIXES Log
+- **What was done:**
+  - Resolved **"Land Quantity 0" bug**:
+    - Identified that `_to_plot_out` in `backend/app/api/v1/plots.py` looked up holdings for `plot.current_owner_id`. When land was transferred in the ledger, the old owner's balance was 0.0, returning `remaining_decimal=0.0`. In JavaScript, `0.0 ?? 45.0` evaluated to `0`, rendering "০ শতাংশ".
+    - Resolved the active owner in `_to_plot_out` using `largest_holder(holdings)` and defaulted holding to `plot.area_decimal`.
+    - Hardened the frontend UI in `frontend/src/app/check/page.tsx` and the print layout to fall back to `selectedPlot.area_decimal` whenever `remaining_decimal <= 0`, ensuring citizens always see the genuine khatian plot area (e.g. ৪৫ শতাংশ).
+  - Fixed **Missing i18n Key `check.dag_no`**:
+    - Added `"dag_no": "দাগ নম্বর"` in `frontend/src/locales/bn.json` and `"dag_no": "Dag Number"` in `frontend/src/locales/en.json`, eliminating the raw key display.
+  - Simplified **"নামজারি ও রেকর্ড হালনাগাদ" Formatting**:
+    - Replaced the mathematical format `"নামজারি বাকি (>৯০ দিন)"` with clean, plain language: `"নামজারি বাকি রয়েছে"` / `"Mutation pending"`, eliminating all mathematical operators (`>`).
+  - Streamlined **Citizen View vs. Official View**:
+    - For public citizens (`!isOfficial`): Page strictly displays only the **সহজ নাগরিক ভিউ** without mode switches or technical expander clutter.
+    - For officials (`isOfficial`): Preserved the full technical audit view, circular gauge, and view switcher.
+  - Removed Audio Readout & Sample Cards per User Request:
+    - Removed "ফলাফল মুখে শুনুন" and individual card audio buttons for a silent, fast, and dignified interface.
+    - Removed the 1-tap sample cards block while retaining clean quick search pills and the benchmark scenarios drawer.
+  - Dedicated **PDF / Print View**:
+    - Configured `@media print` layout so printing or downloading PDF isolates only the official verification output, land details, 4-point safety status, and deed records, while hiding search bars, chips, buttons, and navigation.
+  - Verified full test matrix:
+    - `npm run lint`: 0 errors, 0 warnings.
+    - `npm run build`: Turbopack compiled successfully, TypeScript passed, 10/10 routes prerendered.
+    - `pytest backend/tests`: 107/107 passed (100% green).
+- **Decisions:**
+  - `_to_plot_out` safely detects active ledger holders without overriding official database foreign keys.
+  - Land quantity is always positive total land quantity; oversold plots display an explicit fraud alert rather than mathematical negative values.
+  - Number formats, gauge scores, and status badges are 100% localized in Bengali mode.
+- **Known gaps:**
+  - None.
+- **Next session:** `S21` (Deed QR Upload, Area Conservation, and Bengali UI Purity)
+
+### Session S21 Log (Deed QR Upload, Area Conservation, and Bengali UI Purity)
+- **What was done:**
+  - **Area Calculation Fix (`_to_plot_out` in `backend/app/api/v1/plots.py`)**:
+    - Fixed holding computation so that for legitimate multi-party transactions, `total_sold` counts only genuine secondary buyer transfers (`pid != active_owner_id`), restoring mathematical conservation: `remaining (15.0) + sold (20.0) = total (35.0)` on Plot 6 instead of erroneously counting 35 decimals sold.
+    - Clamped remaining land to `0.0` when `has_negative` is detected so remaining land is never rendered as negative; oversold quantities trigger prominent critical fraud alerts.
+  - **Bilingual Purity & Bengali Localization**:
+    - Eliminated raw English leaks in Bengali mode across `/officer`, `/registrar`, `/verify`, and header badges.
+    - Exported and integrated `toBnDigits` for Bengali numerals across all table counts, plot IDs, dag numbers, and holding areas.
+    - Updated benchmark S3 scenario description from mathematical syntax `(>৯০ দিন)` to natural Bangla `(৯০ দিনের অধিক)`.
+    - Formatted collapsible action with `সরিয়ে ফেলুন` instead of `লুকান`.
+    - Replaced color-code labels with clear risk directives (`নিরাপদ জমি`, `সতর্কতা প্রয়োজন`, `উচ্চ ঝুঁকিপূর্ণ`, `চরম বিপদজনক`).
+  - **QR Code Image Upload (`/verify` & `QRScanner.tsx`)**:
+    - Added image file upload capability (`📁 কিউআর কোডের ছবি আপলোড করুন`) inside the `QRScanner` modal and directly on the `/verify` page (`📁 ছবি আপলোড`).
+    - Uses `Html5Qrcode.prototype.scanFile` on dedicated engine containers (`html5qr-file-engine` and `verify-direct-qr-engine`), enabling complete desktop and webcam-free deed verification testing.
+  - **Check Page Streamlining (`/check`)**:
+    - Removed redundant quick search chips block (`দ্রুত টেস্ট নমুনা: ...`) per citizen UX request, since canonical benchmark scenarios (`S1-S8`) already provide complete test coverage.
+  - **Seed CLI Direct Execution (`backend/scripts/seed.py`)**:
+    - Anchored `sys.path` to backend root so `python backend/scripts/seed.py --reset` can be executed cleanly from any directory without manual `PYTHONPATH` environment variable exports.
+  - **Validation & Quality Assurance**:
+    - Backend: 107/107 pytest tests passed (100% green).
+    - Frontend: `next build` compiled with Turbopack, TypeScript checked 0 errors, 10/10 routes prerendered.
+    - Frontend: `eslint` passed with 0 errors and 0 warnings.
+- **Decisions:**
+  - `Html5Qrcode.scanFile` requires its scanner instance to be in the `NOT_STARTED` state; separate containers (`html5qr-file-engine` and `verify-direct-qr-engine`) prevent conflicts with active camera streams.
+  - In mass citizen view, all complex technical terms are translated into natural, formal Bengali directives while retaining full cryptographic auditing for officials.
+- **Known gaps:**
+  - None. Both backend (107/107 pytest tests) and frontend (`next build` with Turbopack) pass with 100% success.
+- **Next session:** `S22` (Pre-purchase Check State Isolation & API Cache Prevention)
+
+### Session S22 Log (Pre-purchase Check State Isolation & API Cache Prevention)
+- **What was done:**
+  - **Identified & Resolved "All Plots Show Critical" Discrepancy**:
+    - **Frontend State Isolation (`frontend/src/app/check/page.tsx`)**:
+      - Inside `loadPlotDetails`, explicitly reset `setSelectedPlot(null)`, `setRiskReport(null)`, and `setChain([])` synchronously before sending async requests. This eliminates the edge case where navigating from a fraudulent plot (S1/S2/S4) to a safe plot (S6/S7/S8) temporarily displayed the previous critical red warning while the new request was in flight.
+    - **API Fetch Cache Elimination (`frontend/src/lib/api.ts`)**:
+      - Configured `apiFetch` with `cache: "no-store"`, preventing Next.js Turbopack client and browser HTTP caching from serving stale risk reports or plots.
+    - **Language Toggle Deduplication (`frontend/src/app/check/page.tsx`)**:
+      - Introduced `lastRiskLang` ref to guard the language change `useEffect`, preventing an unnecessary duplicate `getRisk` API call upon initial plot load.
+    - **Database State Benchmark Seed Verification**:
+      - Verified that re-running `python backend/scripts/seed.py --reset` clears any residual unregistered test deeds registered during manual testing of `/registrar` or `/officer`, restoring exact scenario outcomes:
+        - Plot 1 (S1): `CRITICAL` (Double Sale)
+        - Plot 2 (S2): `CRITICAL` (Not Owner)
+        - Plot 3 (S3): `MEDIUM` (Pending Mutation >90d)
+        - Plot 4 (S4): `HIGH` (Rapid Transfers)
+        - Plot 5 (S5): `HIGH` (Khas / Disputed Land)
+        - Plot 6 (S6): `LOW` (Clean Deal)
+        - Plot 7 (S7): `LOW` (Legitimate Pending Resale)
+        - Plot 8 (S8): `LOW` (Valid Partial Sale)
+  - **Quality Assurance & Verification**:
+    - **Backend Tests**: 107/107 pytest tests passing in 109s (100% green).
+    - **Frontend Linter**: `npm run lint` passed with 0 errors and 0 warnings.
+    - **Frontend Production Build**: `npm run build` compiled 10/10 routes cleanly with Turbopack.
+- **Decisions:**
+  - Using `cache: "no-store"` across `apiFetch` ensures real-time parity between backend ledger state and citizen pre-purchase checks.
+  - Resetting React state to `null` prior to data fetching enforces clean UI isolation across scenario transitions.
+- **Known gaps:**
+  - None. All pages and test suites are verified clean.
+- **Next session:** `S23` (Cloud Key Drift Resolution & Production Admin Reseed)
+
+### Session S23 Log (Cloud Key Drift Resolution & Production Admin Reseed)
+- **What was done:**
+  - **Live Cloud Health & Deployment Diagnostic (`https://landshield-frontend.vercel.app`)**:
+    - Extracted the production API endpoint from the deployed Vercel bundles: `https://bhumi-prohori-9uk2.onrender.com/api/v1`.
+    - Tested live backend health and verified HTTP 200 `{"status": "ok"}` on Render.
+    - Executed live deed verification against `DHAKA-2026-000009` and pinpointed the exact root cause of the live site showing `CRITICAL` on all plots:
+      - `"status": "TAMPERED", "reasons": ["KEY_UNKNOWN: Unrecognized signer key ID"]`
+      - Render cloud containers use ephemeral disks. Without `SIGNING_KEY_HEX` set in Render environment variables, the backend auto-generates a new Ed25519 key on startup, invalidating the signatures of all previously seeded deeds in PostgreSQL.
+  - **Backend Production Reseed Endpoint (`backend/app/api/v1/dev.py`)**:
+    - Implemented `POST /api/v1/dev/reseed` (protected by Admin role and `demo_mode=True`), which deletes records in safe reverse foreign key dependency order and deterministically reseeds 300 plots, 120 persons, 3 staff accounts, and scenarios S1–S8 with the canonical Ed25519 signing key.
+    - Added unit test `test_dev_reseed_endpoint` to `backend/tests/test_hardening.py` verifying successful reseeding and 404 response when `demo_mode` is False.
+  - **Frontend Admin Portal 1-Click Reseed (`frontend/src/app/admin/page.tsx` & `api.ts`)**:
+    - Exported `reseedDatabase()` in `frontend/src/lib/api.ts`.
+    - Added a dedicated "🔄 ডাটাবেস পুনর্গঠন (Reseed Scenarios)" button inside Tamper Lab with a Bengali confirmation modal and real-time success alert banner.
+  - **Quality Assurance & Verification**:
+    - Backend Pytest Suite: 108/108 passed in 126s (100% green).
+    - Frontend ESLint: 0 errors, 0 warnings.
+    - Frontend Next.js Production Build: 10/10 routes compiled and prerendered cleanly with Turbopack.
+- **Decisions:**
+  - `POST /dev/reseed` uses cascading model deletions rather than table drops to preserve table schemas and sequence state across both SQLite and PostgreSQL.
+  - Provided exact human action steps for setting `SIGNING_KEY_HEX` in Render's dashboard.
+- **Known gaps:**
+  - None. Both local and cloud paths verified.
+- **Next session:** `S24` (Edge Case Hardening, Failure Mode Immunity, and 100% Pure Bengali Admin Localization)
+
+### Session S24 Log (Edge Case Hardening, Failure Mode Immunity & Pure Bengali Admin UI)
+- **What was done:**
+  - **Comprehensive Edge Case Audit & Resolution**:
+    - **Self-Dealing / Sham Sales Prevention**: In `backend/app/schemas/deeds.py` and `backend/app/services/deeds.py`, enforced schema and domain-level validation rejecting deed registrations where `seller_id == buyer_id`.
+    - **Case-Insensitive Deed Lookup**: In `backend/app/services/deeds.py`, `frontend/src/lib/api.ts`, and `frontend/src/app/verify/page.tsx`, normalized deed queries with `.strip().upper()`, preventing 404/INVALID false alarms when lowercase deed identifiers (e.g. `dhaka-2026-000010`) are submitted.
+    - **Bengali Numeral Dag & Mouza Search**: In `backend/app/api/v1/plots.py` and `frontend/src/lib/api.ts`, added `BN_TO_EN_DIGITS` normalization mapping Bengali numerals (e.g. `১০১`, `প্লট ৬`) to ASCII digits (`101`, `6`), resolving empty search results when citizens type Bengali numerals into the search bar.
+    - **Expired Auth Auto-Recovery**: In `frontend/src/lib/api.ts`, intercepted HTTP 401 Unauthorized responses to clear stale localStorage tokens and automatically redirect expired sessions to `/login?next=...` with full return URL preservation.
+    - **Database Reseed Safety**: In `backend/app/api/v1/dev.py`, fixed an `ObjectDeletedError` 500 failure during reseed by preserving the actor's username and re-querying the admin entity after commit before writing the audit log.
+    - **QR Code Content Validation**: In `frontend/src/app/verify/page.tsx`, enhanced QR code parser to validate URL scheme and deed parameter presence, cleanly alerting users if a non-deed QR code image is uploaded.
+  - **100% Pure Bengali Admin Portal Localization (`/admin`)**:
+    - Audited every user-facing string, modal, button, table header, timestamp, and audit trail pill in `frontend/src/app/admin/page.tsx`.
+    - Updated `frontend/src/locales/bn.json` and `frontend/src/locales/en.json` with all dictionary keys under the `"admin"` namespace.
+    - Localized all administrative elements when Bengali is selected: Root badge, tab headers, Tamper Lab controls, deed input, inline live verification cards, audit trail table headers (`আইডি`, `সময়`, `কার্যক্রম`, `নথি`, `ব্যবহারকারী`, `বিস্তারিত বিবরণ`), pagination controls (`পৃষ্ঠা ১`, `পূর্ববর্তী`, `পরবর্তী`), and confirmation dialog modals.
+    - Converted all numbers, IDs, and timestamps to Bengali script using `toBnDigits` and `toLocaleString("bn-BD")`.
+  - **Quality Assurance & Verification**:
+    - **Backend Pytest Suite**: 108/108 passed in 152s (100% green).
+    - **Frontend ESLint**: 0 errors, 0 warnings.
+    - **Frontend Next.js Production Build**: 10/10 routes compiled and prerendered cleanly in 9.5s with Turbopack.
+- **Decisions:**
+    - `seller_id == buyer_id` rejection is handled at both Pydantic schema validation and domain logic layers to guarantee self-dealing can never penetrate the database or ledger.
+    - Bengali numeral mapping is implemented symmetrically on both frontend search inputs and backend API query parameters.
+- **Known gaps:**
+    - None. All identified edge cases and localization requirements are resolved and verified.
+- **Next session:** `S25` (Database Sequence Drift Immunity, Cold Start Retry & Resilient Scenario Lookup)
+
+### Session S25 Log (Database Sequence Drift Immunity, Cold Start Retry & Resilient Scenario Lookup)
+- **What was done:**
+  - **Database Autoincrement Sequence Reset (`backend/app/api/v1/dev.py`)**:
+    - Identified root cause of plot ID drift on PostgreSQL / Render: `DELETE FROM <table>` does not restart identity sequences, causing plot IDs to shift to 301..308 or higher after reseed.
+    - Updated `reseed_database()` to explicitly execute sequence restarts for PostgreSQL (`ALTER SEQUENCE IF EXISTS <seq> RESTART WITH 1;`) and SQLite (`DELETE FROM sqlite_sequence WHERE name IN (...);`) across all 10 core tables (`plots`, `persons`, `deeds`, `users`, `mutations`, `mutation_events`, `alerts`, `audit_logs`, `ledger_entries`, `cases`).
+    - Added automated backend regression test `test_dev_reseed_resets_sequences` in `backend/tests/test_hardening.py` verifying that consecutive reseed operations always preserve plot IDs starting at 1.
+  - **Transient Network & Cold Start Resilience (`frontend/src/lib/api.ts`)**:
+    - Added retry loop with backoff to `apiFetch` for transient network errors and Render spin-up gateway statuses (502, 503, 504).
+    - Preserves non-retryable client errors (400, 401, 404, 409, 422) without unnecessary repeated queries.
+  - **Resilient Pre-Purchase Check Scenario & Plot Lookup (`frontend/src/app/check/page.tsx`)**:
+    - Defined `CANONICAL_SCENARIO_MAP` mapping benchmark test scenarios S1–S8 to their immutable canonical deeds and mouza/dag coordinates (e.g. S8 target deed `DHAKA-2026-000014`, S1 `DHAKA-2026-000002`, S5 mouza Padmapara / dag 101).
+    - Implemented `resolveScenarioPlotId` fallback in `frontend/src/app/check/page.tsx`: if `getPlot(id)` returns HTTP 404 due to sequence drift, automatically resolves the plot by verifying the canonical deed or querying by mouza and dag number.
+    - Connected fallback to scenario pill clicks, explicit plot searches (`Plot 8`, `#8`), direct numeric searches (`8`), scenario code searches (`S1`–`S8`), and direct URL query visits (`/check?plot=8`).
+    - Kept UI layout, fonts, colors, and styling completely intact.
+- **Decisions:**
+  - Sequence resets are wrapped in safe try-except blocks with dialect autodetection to maintain 100% compatibility across PostgreSQL and SQLite.
+  - In `frontend/src/app/check/page.tsx`, `resolveScenarioPlotId` is invoked strictly on 404 errors for benchmark scenarios (1..8 or hint), preserving native 404 error handling for non-existent citizen queries.
+- **Known gaps:**
+  - None.
+- **Next session:** `S26` (Registrar Benchmark Scenarios & Resilient Plot Dropdown Selection)
+
+| **S26** | Registrar benchmark scenarios & resilient plot dropdown selection | Done (109 tests, build ok) | Resilient scenario resolution for S6/S1/S2 in /registrar, on-focus/click plot fetching, onMouseDown dropdown selection |
+| **S27** | Viewport pop-up fraud modal & 100% pure Bengali localization | Done (109 tests, build ok) | Fixed-position viewport pop-up modal on 409 fraud block (no scroll needed), 100% pure Bengali localization across fraud findings, rules, badges, and form controls |
+
+### Session S27 Log (Viewport Pop-up Fraud Modal & 100% Pure Bengali Localization)
+- **What was done:**
+  - **Immediate Viewport Pop-up Modal (`frontend/src/app/registrar/page.tsx`)**:
+    - Converted pre-registration fraud rejection into an immediate fixed-position modal overlay (`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-md overflow-y-auto`).
+    - Eliminates the need to scroll: when the registrar clicks "দলিল নিবন্ধন ও ডিজিটাল স্বাক্ষর সম্পাদন করুন" at the bottom of the page, the fraud alert card appears centered directly in the user's active viewport.
+    - Added backdrop-click dismissal and dual action buttons: `পপ-আপ বন্ধ করুন` (Close pop-up to review form inputs) and `আবেদন সংশোধন ও নতুন করে শুরু` (Reset form and dismiss modal).
+    - Added secondary inline alert card with `পপ-আপে দেখুন` button if the user dismisses the pop-up modal to inspect or edit form fields.
+    - Added smooth scroll to top on successful registration (`window.scrollTo({ top: 0, behavior: "smooth" })`) so the issued cryptographic QR code and deed metadata are brought directly into view.
+  - **100% Pure Bengali Localization (`frontend/src/locales/bn.json`, `frontend/src/app/registrar/page.tsx`)**:
+    - Localized all rule titles, rule IDs, and sub-codes to pure Bengali numerals and terminology: `[নিয়ম ১] দ্বৈত বিক্রয় বা প্রতারণা প্রতিরোধ (নিয়ম ১ লঙ্ঘন)`, `[নিয়ম ২] স্বত্বহীন বিক্রেতা প্রতিরোধ (নিয়ম ২ লঙ্ঘন)`.
+    - Localized status badges and severity levels: `জালিয়াতি প্রতিরোধ (বাতিলকৃত)` (instead of `BLOCKED`), `বৈধ ও সুরক্ষিত (অনুমোদিত)` (instead of `VALID`), and `সংকটপূর্ণ` (instead of `CRITICAL`).
+    - Localized all numerical scores and counts using `toBnDigits` (`৬০ / ১০০`).
+    - Localized benchmark scenario chips to `দৃশ্যকল্প ১`, `দৃশ্যকল্প ২`, `দৃশ্যকল্প ৬`.
+    - Localized deed types (`বিক্রয় (কাবলা)`, `হেবা / দানপত্র`, `ওয়ারিশান / বণ্টননামা`, `বন্ধক`) and sub-registry offices (`মিরপুর সাব-রেজিস্ট্রি অফিস`, `ঢাকা সদর সাব-রেজিস্ট্রি অফিস`, `সাভার সাব-রেজিস্ট্রি অফিস`).
+    - Localized plot and person suggestion dropdown items (`দাগ #${toBnDigits(p.dag_no)}`, `প্লট #${toBnDigits(p.id)}`, `আইডি #${toBnDigits(person.id)}`).
+  - **Live Dynamic Actor Resolution (`frontend/src/app/registrar/page.tsx`)**:
+    - Replaced hardcoded actor IDs (`sellerId: 1`, `buyerId: 99`) in `handleLoadScenario` with dynamic directory lookup (`searchPersons("", 20)`).
+    - For S1 (Double Sale): dynamically assigns `p.initial_owner_id` (the person who already sold this plot) and a distinct live buyer, preventing `Seller with id 1 does not exist` 422 errors when running on cloud databases with sequence drift.
+    - For S2 (Stranger): dynamically picks an existing live person who has no title to `p`, guaranteeing the fraud check hook evaluates Rule R2.
+    - For S6 (Clean): dynamically uses `p.current_owner_id` and a distinct live buyer.
+  - **Atomic PostgreSQL Sequence Reset (`backend/app/api/v1/dev.py`, `backend/scripts/seed.py`)**:
+    - Used native `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` for PostgreSQL in `/dev/reseed`, eliminating transaction aborted errors and safely resetting sequence counters to 1.
+    - Made filesystem metadata generation non-fatal in cloud environments.
+- **Decisions:**
+  - Preserved standard styling and theme classes (`bg-slate-900/80`, `border-rose-500`, `text-rose-900`) while giving the registrar immediate viewport-level visibility without disruption.
+  - Retained both modal pop-up and inline backup state so registrars can dismiss the modal to cross-examine their input values while still having the alert card accessible.
+- **Known gaps:**
+  - None.
+- **Next session:** `S28` (Round 1 Hackathon Submission Packaging & Evaluation Demo Readiness)
+
+
+
+
+
+
+
 
 
 

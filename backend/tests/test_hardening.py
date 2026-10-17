@@ -109,6 +109,57 @@ def test_dev_routes_rbac_and_demo_mode_false(client: TestClient, seeded_db: Sess
     # All other dev endpoints return 404
     assert client.post("/api/v1/dev/tamper/DHAKA-2026-000009", headers=admin_headers).status_code == 404
     assert client.post("/api/v1/dev/restore/DHAKA-2026-000009", headers=admin_headers).status_code == 404
+    assert client.post("/api/v1/dev/reseed", headers=admin_headers).status_code == 404
+
+
+def test_dev_reseed_endpoint(client: TestClient, tokens: dict, monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", True)
+    admin_headers = {"Authorization": f"Bearer {tokens['admin']}"}
+    res = client.post("/api/v1/dev/reseed", headers=admin_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "reseeded"
+    assert "plots" in data["detail"]
+
+
+def test_dev_reseed_resets_sequences(client: TestClient, tokens: dict, monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", True)
+    admin_headers = {"Authorization": f"Bearer {tokens['admin']}"}
+
+    # Reseed first time
+    res1 = client.post("/api/v1/dev/reseed", headers=admin_headers)
+    assert res1.status_code == 200
+    plot1 = client.get("/api/v1/plots/1")
+    assert plot1.status_code == 200
+    assert plot1.json()["id"] == 1
+
+    # Reseed second time - sequences should restart with 1, not continue to 301
+    res2 = client.post("/api/v1/dev/reseed", headers=admin_headers)
+    assert res2.status_code == 200
+    plot1_again = client.get("/api/v1/plots/1")
+    assert plot1_again.status_code == 200
+    assert plot1_again.json()["id"] == 1
+    plot8 = client.get("/api/v1/plots/8")
+    assert plot8.status_code == 200
+    assert plot8.json()["id"] == 8
+
+    # Verify deed verification endpoints return plot_id == 8 for S8 and plot_id == 1 for S1
+    verify8 = client.get("/api/v1/deeds/DHAKA-2026-000014/verify")
+    assert verify8.status_code == 200
+    assert verify8.json()["plot_id"] == 8
+
+    verify1 = client.get("/api/v1/deeds/DHAKA-2026-000002/verify")
+    assert verify1.status_code == 200
+    assert verify1.json()["plot_id"] == 1
+
+    # Verify audit_log sequence was reset (audit log id restarted, so max id after 2nd reseed is <= 650, not 1200+)
+    audit_res = client.get("/api/v1/audit?limit=10", headers=admin_headers)
+    assert audit_res.status_code == 200
+    audit_logs = audit_res.json()
+    assert len(audit_logs) >= 1
+    assert max(log["id"] for log in audit_logs) <= 650
+
+
 
 
 # -----------------------------------------------------------------------------

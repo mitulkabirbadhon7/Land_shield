@@ -75,10 +75,14 @@ export interface RiskFinding {
 }
 
 export interface MutationSummary {
-  total: number;
-  completed: number;
-  pending: number;
-  rejected: number;
+  total?: number;
+  completed?: number;
+  pending?: number;
+  rejected?: number;
+  total_deeds?: number;
+  mutated_deeds?: number;
+  pending_mutations?: number;
+  missing_mutations?: number;
 }
 
 export interface RiskReportOut {

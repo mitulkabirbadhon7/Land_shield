@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, toBnDigits } from "@/lib/i18n";
 import {
   getAuditLogs,
   getDevStatus,
   restoreDeed,
+  reseedDatabase,
   tamperDeed,
   verifyDeed,
   ApiError,
@@ -19,7 +20,7 @@ import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
 
 function AdminPageContent() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
 
   // Active Tab: "tamper" | "audit"
@@ -115,7 +116,7 @@ function AdminPageContent() {
       } else if (err instanceof Error) {
         setTamperError(err.message);
       } else {
-        setTamperError("Tamper simulation failed");
+        setTamperError(lang === "bn" ? "টেম্পার সিমুলেশন ব্যর্থ হয়েছে।" : "Tamper simulation failed.");
       }
     } finally {
       setTamperLoading(false);
@@ -141,10 +142,39 @@ function AdminPageContent() {
       } else if (err instanceof Error) {
         setTamperError(err.message);
       } else {
-        setTamperError("Restore failed");
+        setTamperError(lang === "bn" ? "দলিল পুনরুদ্ধার ব্যর্থ হয়েছে।" : "Restore failed.");
       }
     } finally {
       setTamperLoading(false);
+    }
+  };
+
+  // Run Reseed Action
+  const [reseedLoading, setReseedLoading] = useState(false);
+  const [reseedSuccess, setReseedSuccess] = useState<string | null>(null);
+
+  const handleReseed = async () => {
+    if (!window.confirm(t("admin.reseed_confirm"))) {
+      return;
+    }
+    setReseedLoading(true);
+    setTamperError(null);
+    setReseedSuccess(null);
+    try {
+      const res = await reseedDatabase();
+      setReseedSuccess(res.detail || (lang === "bn" ? "ডাটাবেস সফলভাবে পুনর্গঠিত হয়েছে।" : "Database reseeded successfully."));
+      handleInspectDeed(targetDeedNo.trim());
+      if (activeTab === "audit") {
+        fetchAuditLogs(1);
+      }
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setTamperError(err.detail || err.message);
+      } else {
+        setTamperError(t("admin.op_failed"));
+      }
+    } finally {
+      setReseedLoading(false);
     }
   };
 
@@ -158,7 +188,7 @@ function AdminPageContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>Root Administrator Security Center</span>
+            <span>{t("admin.root_badge")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {t("admin.title")}
@@ -178,14 +208,14 @@ function AdminPageContent() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-900 dark:text-white">
-                {user?.name || "System Admin"}
+                {user?.name || (lang === "bn" ? "সিস্টেম অ্যাডমিন" : "System Admin")}
               </span>
               <span className="rounded bg-indigo-100 px-1.5 py-0.2 text-[10px] font-bold text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 uppercase">
-                {user?.role || "admin"}
+                {lang === "bn" ? (user?.role === "admin" ? "অ্যাডমিন" : user?.role) : (user?.role || "admin")}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Full Administrative Privileges
+              {t("admin.full_privileges")}
             </p>
           </div>
         </div>
@@ -222,7 +252,7 @@ function AdminPageContent() {
           </svg>
           <span>{t("admin.tab_audit")}</span>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            Trail
+            {t("admin.trail_badge")}
           </span>
         </button>
       </div>
@@ -240,7 +270,7 @@ function AdminPageContent() {
                 {t("admin.demo_disabled_msg")}
               </p>
               <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
-                Tamper Lab endpoints are strictly blocked when DEMO_MODE is false to protect production databases.
+                {t("admin.demo_disabled_desc")}
               </p>
             </div>
           ) : (
@@ -261,7 +291,7 @@ function AdminPageContent() {
               </div>
 
               {/* Tamper Control Panel */}
-              <Card title="Simulate Database Payload Tampering" animate>
+              <Card title={t("admin.tamper_control_title")} animate>
                 <div className="space-y-5">
                   {/* Deed input and presets */}
                   <div>
@@ -332,11 +362,34 @@ function AdminPageContent() {
                       </svg>
                       <span>{t("admin.restore_btn")}</span>
                     </button>
+
+                    <button
+                      type="button"
+                      disabled={reseedLoading}
+                      onClick={handleReseed}
+                      className="btn-interactive inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {reseedLoading ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      )}
+                      <span>{t("admin.reseed_btn")}</span>
+                    </button>
                   </div>
 
                   {/* Operation Results / Errors */}
+                  {reseedSuccess && (
+                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200 animate-fade-in-down">
+                      <p className="font-bold">✓ {t("admin.reseed_success")}</p>
+                      <p className="mt-1 font-mono text-[11px]">{reseedSuccess}</p>
+                    </div>
+                  )}
+
                   {tamperError && (
-                    <ErrorBox title="Operation Failed" message={tamperError} />
+                    <ErrorBox title={t("admin.op_failed")} message={tamperError} />
                   )}
 
                   {tamperResult && (
@@ -354,8 +407,9 @@ function AdminPageContent() {
                       </p>
                       {tamperResult.original_area !== undefined && (
                         <p className="mt-1 font-mono text-[11px]">
-                          Original Area: {tamperResult.original_area} decimals → Tampered Area:{" "}
-                          {tamperResult.tampered_area} decimals (+1.0)
+                          {t("admin.area_diff_label")
+                            .replace("{orig}", toBnDigits(tamperResult.original_area))
+                            .replace("{tamp}", toBnDigits(tamperResult.tampered_area))}
                         </p>
                       )}
                     </div>
@@ -373,7 +427,7 @@ function AdminPageContent() {
 
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-400">Deed No:</span>
+                          <span className="text-slate-400">{t("admin.deed_no_label")}</span>
                           <span className="font-mono font-bold text-slate-900 dark:text-white">
                             {verifyResult.deed_no}
                           </span>
@@ -381,7 +435,7 @@ function AdminPageContent() {
 
                         {verifyResult.reasons && verifyResult.reasons.length > 0 && (
                           <div>
-                            <span className="text-slate-400">Cryptographic Observations:</span>
+                            <span className="text-slate-400">{t("admin.crypto_obs_label")}</span>
                             <div className="mt-1 flex flex-wrap gap-1.5">
                               {verifyResult.reasons.map((r, i) => (
                                 <span
@@ -401,7 +455,7 @@ function AdminPageContent() {
                             target="_blank"
                             className="text-indigo-600 hover:underline dark:text-indigo-400 font-bold hover:translate-x-1 inline-block transition-transform duration-150"
                           >
-                            Open in Citizen Public Verify Page ↗
+                            {t("admin.open_public_verify")}
                           </Link>
                         </div>
                       </div>
@@ -432,7 +486,7 @@ function AdminPageContent() {
               onClick={() => fetchAuditLogs(auditPage)}
               className="text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-400 transition-colors"
             >
-              ↻ Refresh Logs
+              {t("admin.refresh_logs_btn")}
             </button>
           </div>
 
@@ -451,7 +505,7 @@ function AdminPageContent() {
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
                 <thead className="bg-slate-50 font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                   <tr>
-                    <th className="px-4 py-3.5">ID</th>
+                    <th className="px-4 py-3.5">{lang === "bn" ? "আইডি" : "ID"}</th>
                     <th className="px-4 py-3.5">{t("admin.audit_timestamp")}</th>
                     <th className="px-4 py-3.5">{t("admin.audit_action")}</th>
                     <th className="px-4 py-3.5">{t("admin.audit_entity")}</th>
@@ -466,10 +520,10 @@ function AdminPageContent() {
                       className="hover:bg-indigo-50/30 transition-colors duration-150 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3 font-mono font-bold text-slate-500">
-                        #{log.id}
+                        #{toBnDigits(log.id)}
                       </td>
                       <td className="px-4 py-3 font-mono text-[11px] text-slate-500">
-                        {new Date(log.at).toLocaleString()}
+                        {new Date(log.at).toLocaleString(lang === "bn" ? "bn-BD" : "en-US")}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -487,10 +541,10 @@ function AdminPageContent() {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-mono text-[11px]">
-                        {log.entity} {log.entity_id ? `(#${log.entity_id})` : ""}
+                        {log.entity} {log.entity_id ? `(#${toBnDigits(log.entity_id)})` : ""}
                       </td>
                       <td className="px-4 py-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                        {log.actor_id ? `User #${log.actor_id}` : "System"}
+                        {log.actor_id ? t("admin.user_actor").replace("{id}", toBnDigits(log.actor_id)) : t("admin.system_actor")}
                       </td>
                       <td className="px-4 py-3 text-[11px] text-slate-600 dark:text-slate-300 max-w-sm truncate">
                         {log.detail || "—"}
@@ -503,7 +557,7 @@ function AdminPageContent() {
               {/* Pagination controls */}
               <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
                 <span className="text-xs text-slate-500">
-                  {t("admin.page")} {auditPage}
+                  {t("admin.page")} {toBnDigits(auditPage)}
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -534,7 +588,7 @@ function AdminPageContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-scale-in">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              {confirmModal.type === "tamper" ? "Confirm Tamper Simulation" : "Confirm Deed Restore"}
+              {confirmModal.type === "tamper" ? t("admin.modal_tamper_title") : t("admin.modal_restore_title")}
             </h3>
             <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               {confirmModal.type === "tamper"
@@ -547,7 +601,7 @@ function AdminPageContent() {
                 onClick={() => setConfirmModal({ open: false, type: "tamper" })}
                 className="btn-interactive rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-150 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98]"
               >
-                Cancel
+                {t("admin.cancel")}
               </button>
               <button
                 type="button"
@@ -558,7 +612,7 @@ function AdminPageContent() {
                     : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20"
                 }`}
               >
-                Proceed
+                {t("admin.proceed")}
               </button>
             </div>
           </div>

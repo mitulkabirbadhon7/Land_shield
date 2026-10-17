@@ -118,13 +118,14 @@ export function logout(): void {
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
+  retries?: number;
 }
 
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { requiresAuth = false, headers = {}, ...rest } = options;
+  const { requiresAuth = false, retries = 1, headers = {}, ...rest } = options;
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
 
   const reqHeaders = new Headers(headers);
@@ -139,42 +140,88 @@ export async function apiFetch<T>(
     throw new ApiError(401, "UNAUTHORIZED", "Authentication required");
   }
 
-  const res = await fetch(url, {
-    ...rest,
-    headers: reqHeaders,
-  });
+  let attempt = 0;
+  const maxRetries = Math.max(0, retries);
 
-  if (!res.ok) {
-    let errBody: { code?: string; detail?: unknown; report?: unknown } = {};
+  while (true) {
     try {
-      errBody = await res.json();
-    } catch {
-      // Body was not JSON
+      const res = await fetch(url, {
+        cache: "no-store",
+        ...rest,
+        headers: reqHeaders,
+      });
+
+      // Transient gateway / server errors during Render cold starts
+      if (
+        (res.status === 502 || res.status === 503 || res.status === 504) &&
+        attempt < maxRetries
+      ) {
+        attempt++;
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+
+      if (!res.ok) {
+        if (res.status === 401 && typeof window !== "undefined") {
+          logout();
+          if (!window.location.pathname.startsWith("/login")) {
+            const next = encodeURIComponent(window.location.pathname + window.location.search);
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = `/login?next=${next}`;
+          }
+        }
+
+        let errBody: { code?: string; detail?: unknown; report?: unknown } = {};
+        try {
+          errBody = await res.json();
+        } catch {
+          // Body was not JSON
+        }
+
+        const code = errBody.code || `HTTP_${res.status}`;
+        let detail: string | undefined;
+        if (typeof errBody.detail === "string") {
+          detail = errBody.detail;
+        } else if (Array.isArray(errBody.detail) && errBody.detail.length > 0) {
+          const first = errBody.detail[0] as { msg?: string } | undefined;
+          detail = first?.msg || "Validation error";
+        }
+
+        throw new ApiError(res.status, code, detail, errBody.report);
+      }
+
+      // Handle empty or 204 responses
+      if (res.status === 204) {
+        return {} as T;
+      }
+
+      return (await res.json()) as T;
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      if (attempt < maxRetries) {
+        attempt++;
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+      throw err;
     }
-
-    const code = errBody.code || `HTTP_${res.status}`;
-    let detail: string | undefined;
-    if (typeof errBody.detail === "string") {
-      detail = errBody.detail;
-    } else if (Array.isArray(errBody.detail) && errBody.detail.length > 0) {
-      const first = errBody.detail[0] as { msg?: string } | undefined;
-      detail = first?.msg || "Validation error";
-    }
-
-    throw new ApiError(res.status, code, detail, errBody.report);
   }
-
-  // Handle empty or 204 responses
-  if (res.status === 204) {
-    return {} as T;
-  }
-
-  return (await res.json()) as T;
 }
 
 // -------------------------------------------------------------
 // Typed API Methods
 // -------------------------------------------------------------
+
+const BN_TO_EN_MAP: Record<string, string> = {
+  "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+  "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+};
+
+export function normalizeBnDigits(val: string): string {
+  return val.replace(/[০-৯]/g, (d) => BN_TO_EN_MAP[d] || d);
+}
 
 export async function login(username: string, password: string): Promise<LoginResponse> {
   const data = await apiFetch<LoginResponse>("/auth/login", {
@@ -187,7 +234,8 @@ export async function login(username: string, password: string): Promise<LoginRe
 }
 
 export async function verifyDeed(deedNo: string): Promise<VerifyOut> {
-  return apiFetch<VerifyOut>(`/deeds/${encodeURIComponent(deedNo)}/verify`);
+  const cleanDeedNo = deedNo.trim().toUpperCase();
+  return apiFetch<VerifyOut>(`/deeds/${encodeURIComponent(cleanDeedNo)}/verify`);
 }
 
 export async function getPlot(plotId: number): Promise<PlotOut> {
@@ -423,8 +471,8 @@ export async function searchPlots(
   dagNo?: string
 ): Promise<PlotOut[]> {
   const params = new URLSearchParams();
-  if (mouza) params.set("mouza", mouza);
-  if (dagNo) params.set("dag_no", dagNo);
+  if (mouza) params.set("mouza", mouza.trim());
+  if (dagNo) params.set("dag_no", normalizeBnDigits(dagNo.trim()));
   const query = params.toString();
   return apiFetch<PlotOut[]>(`/plots/search${query ? `?${query}` : ""}`);
 }
@@ -554,6 +602,13 @@ export async function tamperDeed(deedNo: string): Promise<TamperResult> {
 
 export async function restoreDeed(deedNo: string): Promise<TamperResult> {
   return apiFetch<TamperResult>(`/dev/restore/${encodeURIComponent(deedNo)}`, {
+    method: "POST",
+    requiresAuth: true,
+  });
+}
+
+export async function reseedDatabase(): Promise<{ status: string; detail: string }> {
+  return apiFetch<{ status: string; detail: string }>("/dev/reseed", {
     method: "POST",
     requiresAuth: true,
   });
