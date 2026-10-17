@@ -176,12 +176,16 @@ def test_risk_api_alias_and_masked_public(client: TestClient, seeded_db: Session
     res_risk = client.get("/api/v1/risk/plot/1")
     assert res_risk.status_code == 200
 
-    # Alias /api/v1/analysis/plot/1 returns same body
+    # /api/v1/analysis/plot/1 returns common base risk fields plus extended Phase 2 payload
     res_analysis = client.get("/api/v1/analysis/plot/1")
     assert res_analysis.status_code == 200
-    assert res_risk.json() == res_analysis.json()
+    risk_data = res_risk.json()
+    analysis_data = res_analysis.json()
+    for k in ["mode", "score", "level", "has_critical", "findings", "chain_ok", "flags", "mutation_summary"]:
+        assert risk_data[k] == analysis_data[k]
+    assert "layers_run" in analysis_data
 
-    # Root paths also work
+    # Root path also works
     res_root = client.get("/risk/plot/1")
     assert res_root.status_code == 200
     assert res_root.json() == res_risk.json()

@@ -57,7 +57,23 @@ class Layer:
     def is_enabled(self) -> bool:
         if not self.enabled_flag:
             return True
-        return bool(getattr(settings, self.enabled_flag.lower(), True))
+        flag = self.enabled_flag.lower()
+        if hasattr(settings, f"is_{flag}_enabled"):
+            return bool(getattr(settings, f"is_{flag}_enabled"))
+        if flag.startswith("feature_"):
+            stripped = flag[len("feature_"):]
+            if hasattr(settings, f"is_{stripped}_enabled"):
+                return bool(getattr(settings, f"is_{stripped}_enabled"))
+        if hasattr(settings, flag):
+            val = getattr(settings, flag)
+            if val is not None:
+                return bool(val)
+        upper_flag = self.enabled_flag.upper()
+        if hasattr(settings, upper_flag):
+            val = getattr(settings, upper_flag)
+            if val is not None:
+                return bool(val)
+        return True
 
     def analyze(self, ctx: AnalysisContext) -> list[Finding]:
         raise NotImplementedError

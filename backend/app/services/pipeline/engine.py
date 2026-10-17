@@ -30,13 +30,18 @@ def level_from_score(score: int) -> str:
 def assess(ctx: AnalysisContext, layers: list[Layer]) -> dict[str, Any]:
     """Execute all enabled pipeline layers, aggregate findings, and produce risk assessment report."""
     findings: list[Finding] = []
+    layers_run: list[str] = []
+    layers_dict: dict[str, list[dict[str, Any]]] = {}
 
     for layer in layers:
         if not layer.is_enabled():
             continue
+        layers_run.append(layer.name)
+        layers_dict[layer.name] = []
         try:
             layer_findings = layer.analyze(ctx)
             findings.extend(layer_findings)
+            layers_dict[layer.name] = [asdict(f) for f in layer_findings]
         except Exception as exc:
             logger.warning("Pipeline layer %s failed during analysis: %s", layer.name, exc)
 
@@ -59,12 +64,16 @@ def assess(ctx: AnalysisContext, layers: list[Layer]) -> dict[str, Any]:
     level = RANK_TO_SEVERITY.get(final_rank, calculated_level)
 
     findings_data = [asdict(f) for f in findings]
+    lineage_available = getattr(ctx, "lineage_available", False)
 
     report: dict[str, Any] = {
         "mode": ctx.mode,
         "score": score,
         "level": level,
         "findings": findings_data,
+        "layers": layers_dict,
+        "layers_run": layers_run,
+        "lineage_available": lineage_available,
     }
 
     has_critical = any(f.severity.upper() == "CRITICAL" for f in decisive_findings)

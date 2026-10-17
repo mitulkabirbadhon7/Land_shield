@@ -426,7 +426,33 @@
   - Added mock `NEXT_PUBLIC_API_URL` to GitHub Actions CI to satisfy the production build assertion.
 - **Known gaps:**
   - Awaiting PR approval / merge review on GitHub.
-- **Next session:** `PR-MERGE` / `S18`
+
+## Phase 2 Progress (Final Round)
+
+| Session | Feature | Status | Notes |
+|---|---|---|---|
+| **P2-B00** | Backend Foundation | Done (102 tests) | Alembic baseline (batch mode), runtime feature flags, GET /features, extended report on /analysis/plot |
+| **P2-F00** | Runtime Feature Flag Client | Ready for Frontend | Dynamic flag caching in frontend, useFeatures() hook |
+| **P2-B01** | Phase 2 Models & Seed Migration | Queued | Khatian, SigningKey, MerkleRoot, IngestDraft, price_bdt, seed_phase2.py |
+
+### Session P2-B00 Log
+- **What was done:**
+  - Initialized Alembic in `backend/alembic` with `render_as_batch=True` in `env.py` for full SQLite compatibility and dynamic `settings.normalized_database_url` connection.
+  - Generated baseline migration `backend/alembic/versions/2dc6c7f1c4ac_baseline_round1.py` capturing all 10 Round 1 tables. Tested both `alembic upgrade head` and `alembic stamp head`.
+  - Added Phase 2 feature flags to `backend/app/config.py`: `feature_reconcile`, `feature_lineage`, `feature_offline_qr`, `feature_agent`, `feature_transparency`, `feature_ml`, `feature_ocr`, alongside LLM settings (`llm_provider`, `llm_model`, `llm_api_key`, `agent_timeout_seconds`).
+  - Implemented `GET /api/v1/features` (and root `/features`) returning active boolean flags via `backend/app/api/v1/features.py` and schema `backend/app/schemas/features.py`.
+  - Updated `Layer.is_enabled()` in `backend/app/services/pipeline/base.py` to respect settings flags dynamically.
+  - Extended pipeline engine `assess()` in `backend/app/services/pipeline/engine.py` to collect `layers_run`, `layers` dictionary, and `lineage_available`.
+  - Defined `AnalysisReportOut` in `backend/app/schemas/risk.py` inheriting all Round 1 `RiskReportOut` fields and exposing `layers`, `layers_run`, `lineage_available`.
+  - Updated `backend/app/api/v1/risk.py`: `GET /risk/plot/{id}` strictly preserves Round 1 shape while `GET /analysis/plot/{id}` delivers the extended payload.
+  - Added unit test suite `backend/tests/test_p2_foundation.py` covering flags, layer bypass, and schema validation (all 4 tests passing).
+- **Decisions:**
+  - Kept `RiskReportOut` unchanged to ensure zero breaking changes for existing Round 1 citizen check clients.
+  - Inherited `AnalysisReportOut` from `RiskReportOut` so extended analysis provides a strict superset.
+  - Feature flags are exposed publicly at `/features` so the Next.js frontend can query flags on boot without hardcoding or requiring rebuilds.
+- **Known gaps:**
+  - New Phase 2 tables (`Khatian`, `SigningKey`, `MerkleRoot`, `IngestDraft`, `price_bdt`) and seed generation will be implemented in P2-B01.
+- **Next session:** `P2-B01` (`phase2/p2-b01-models-seed`) for Backend, or `P2-F00` (`phase2/p2-f00-features`) for Frontend.
 
 
 
