@@ -21,8 +21,13 @@ def test_ml_training_and_artifact_generation(tmp_path):
     assert "hybrid" in summary["comparison"]
 
     # Verify model artifact exists and is smaller than 10MB
-    model_path = Path("backend/app/ml/model.joblib")
-    assert model_path.exists(), "backend/app/ml/model.joblib was not generated"
+    candidates = [
+        Path("app/ml/model.joblib"),
+        Path("backend/app/ml/model.joblib"),
+        Path(__file__).resolve().parent.parent / "app" / "ml" / "model.joblib",
+    ]
+    model_path = next((p for p in candidates if p.exists()), candidates[0])
+    assert model_path.exists(), "app/ml/model.joblib was not generated"
     file_size_mb = model_path.stat().st_size / (1024 * 1024)
     assert file_size_mb < 10.0, f"Model file too large: {file_size_mb:.2f}MB"
 

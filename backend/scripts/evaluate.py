@@ -9,6 +9,7 @@ from typing import Any
 
 # Ensure backend root is on sys.path
 backend_dir = Path(__file__).resolve().parent.parent
+repo_root = backend_dir.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
@@ -270,13 +271,20 @@ def evaluate_benchmarks(export_json_path: str = "data/metrics/metrics.json") -> 
         }
 
         # Save metrics.json
-        out_file = Path(export_json_path)
-        out_file.parent.mkdir(parents=True, exist_ok=True)
-        out_file.write_text(json.dumps(output_payload, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"[+] Metrics exported to: {out_file}")
+        if export_json_path != "data/metrics/metrics.json":
+            out_file = Path(export_json_path)
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+            out_file.write_text(json.dumps(output_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            print(f"[+] Metrics exported to: {out_file}")
+        else:
+            out_file = repo_root / "data" / "metrics" / "metrics.json"
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+            out_file.write_text(json.dumps(output_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            print(f"[+] Metrics exported to: {out_file}")
 
         # Update docs/EVALUATION.md
-        eval_md_path = Path("docs/EVALUATION.md")
+        eval_md_path = repo_root / "docs" / "EVALUATION.md"
+        eval_md_path.parent.mkdir(parents=True, exist_ok=True)
         eval_md_content = f"""# LandShield Empirical Evaluation Report
 
 Generated: {output_payload['evaluation_date']} | Benchmark: 300 Synthetic Plots (210 Clean, 90 Anomalous)

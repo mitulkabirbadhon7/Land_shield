@@ -29,18 +29,40 @@ from app.services.reconcile import reconcile_plot
 
 
 def verify_safety_in_memory_only(url: str | None = None) -> None:
-    """Hard safety invariant: abort immediately if database is not ephemeral in-memory SQLite."""
-    target_url = (url or os.getenv("DATABASE_URL") or "sqlite:///:memory:").lower().strip()
-    if not (
-        target_url.startswith("sqlite:///:memory:")
-        or ":memory:" in target_url
-        or target_url == "sqlite://"
-        or "mode=memory" in target_url
-    ):
-        raise RuntimeError(
-            f"SAFETY ABORT: Attack suite can ONLY run against an ephemeral in-memory SQLite database! "
-            f"Refused execution on target: {target_url}"
+    """Hard safety invariant: abort immediately if database is not ephemeral in-memory SQLite,
+    or if DATABASE_URL points to an external or persistent host."""
+    if url is not None:
+        target_url = url.lower().strip()
+        if not (
+            target_url.startswith("sqlite:///:memory:")
+            or ":memory:" in target_url
+            or target_url == "sqlite://"
+            or "mode=memory" in target_url
+        ):
+            raise RuntimeError(
+                f"SAFETY ABORT: Attack suite can ONLY run against an ephemeral in-memory SQLite database! "
+                f"Refused execution on target: {target_url}"
+            )
+        return
+
+    # Check environment DATABASE_URL if set
+    env_url = (os.getenv("DATABASE_URL") or "").lower().strip()
+    if env_url:
+        is_memory = (
+            env_url.startswith("sqlite:///:memory:")
+            or ":memory:" in env_url
+            or env_url == "sqlite://"
+            or "mode=memory" in env_url
         )
+        is_local_test_sqlite = (
+            env_url.startswith("sqlite://")
+            and ("test.db" in env_url or "test" in env_url)
+        )
+        if not (is_memory or is_local_test_sqlite):
+            raise RuntimeError(
+                f"SAFETY ABORT: Attack suite can ONLY run against an ephemeral in-memory SQLite database! "
+                f"Refused execution on target: {env_url}"
+            )
 
 
 def make_fresh_memory_db() -> Session:

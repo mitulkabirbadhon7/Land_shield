@@ -166,16 +166,12 @@ def train_and_evaluate(dataset_csv: Path | None = None) -> dict[str, Any]:
     }
 
     # Save to backend/app/ml/model.joblib
-    artifact_paths = [
-        backend_root / "app" / "ml" / "model.joblib",
-        Path("backend/app/ml/model.joblib"),
-    ]
-    for ap in artifact_paths:
-        ap.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model_artifact, ap, compress=3)
-        file_size_mb = ap.stat().st_size / (1024 * 1024)
-        logger.info("Saved model artifact to %s (%.2f MB)", ap, file_size_mb)
-        assert file_size_mb < 10.0, f"Model artifact exceeds 10MB limit: {file_size_mb:.2f} MB"
+    model_path = backend_root / "app" / "ml" / "model.joblib"
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model_artifact, model_path, compress=3)
+    file_size_mb = model_path.stat().st_size / (1024 * 1024)
+    logger.info("Saved model artifact to %s (%.2f MB)", model_path, file_size_mb)
+    assert file_size_mb < 10.0, f"Model artifact exceeds 10MB limit: {file_size_mb:.2f} MB"
 
     # Export metrics JSON
     summary_metrics = {
@@ -195,10 +191,10 @@ def train_and_evaluate(dataset_csv: Path | None = None) -> dict[str, Any]:
         "trained_at": datetime.now(timezone.utc).isoformat(),
     }
 
+    repo_root = backend_root.parent
     metrics_export_paths = [
-        Path("ml/metrics.json"),
-        Path("backend/ml/metrics.json"),
         backend_root / "ml" / "metrics.json",
+        repo_root / "ml" / "metrics.json",
     ]
     for mp in metrics_export_paths:
         mp.parent.mkdir(parents=True, exist_ok=True)
