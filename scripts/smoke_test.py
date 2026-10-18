@@ -289,8 +289,11 @@ def run_smoke_test(base_url: str, timeout: float = 25.0) -> bool:
     # 3.1 Sub-Registrar Login
     t0 = time.time()
     tests_run += 1
-    reg_login = {"username": "registrar1", "password": "registrar123"}
+    reg_login = {"username": "registrar1", "password": "RegistrarPass123!"}
     code, body = client.post("/auth/login", json_data=reg_login)
+    if code != 200:
+        reg_login = {"username": "registrar1", "password": "registrar123"}
+        code, body = client.post("/auth/login", json_data=reg_login)
     dt = (time.time() - t0) * 1000
     reg_token = body.get("access_token") if isinstance(body, dict) else None
     ok = code == 200 and bool(reg_token)
@@ -302,8 +305,11 @@ def run_smoke_test(base_url: str, timeout: float = 25.0) -> bool:
     # 3.2 Admin Login
     t0 = time.time()
     tests_run += 1
-    admin_login = {"username": "admin1", "password": "admin123"}
+    admin_login = {"username": "admin1", "password": "AdminPass123!"}
     code, body = client.post("/auth/login", json_data=admin_login)
+    if code != 200:
+        admin_login = {"username": "admin1", "password": "admin123"}
+        code, body = client.post("/auth/login", json_data=admin_login)
     dt = (time.time() - t0) * 1000
     admin_token = body.get("access_token") if isinstance(body, dict) else None
     ok = code == 200 and bool(admin_token)
