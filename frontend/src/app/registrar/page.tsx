@@ -827,11 +827,6 @@ function RegistrarPageContent() {
               {t("registrar.quick_scenarios")}
             </h2>
           </div>
-          <span className="text-[11px] text-slate-400">
-            {lang === "bn"
-              ? "হ্যাকাথন টেস্ট ডেটাসেট অনুযায়ী ফরম স্বয়ংক্রিয় পূরণ"
-              : "Pre-fills form with hackathon test dataset"}
-          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
