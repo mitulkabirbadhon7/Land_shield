@@ -84,7 +84,6 @@ function TransparencyContent() {
       const res = await verifyDeed(raw);
       if (
         res.status === "UNKNOWN" ||
-        res.status === "NOT_FOUND" ||
         (res.reasons && res.reasons.some((r: string) => r.toLowerCase().includes("not found")))
       ) {
         setProofResult({
