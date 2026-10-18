@@ -8,6 +8,10 @@ from app.models.mutation_event import MutationEvent
 from app.models.case import Case
 from app.models.alert import Alert
 from app.models.audit import AuditLog
+from app.models.khatian import Khatian
+from app.models.signing_key import SigningKey
+from app.models.merkle import MerkleRoot
+from app.models.ingest_draft import IngestDraft
 
 __all__ = [
     "User",
@@ -20,4 +24,8 @@ __all__ = [
     "Case",
     "Alert",
     "AuditLog",
+    "Khatian",
+    "SigningKey",
+    "MerkleRoot",
+    "IngestDraft",
 ]

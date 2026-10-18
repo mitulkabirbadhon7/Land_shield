@@ -1,0 +1,57 @@
+{
+  "dataset": {
+    "total_records": 1898,
+    "train_records": 1517,
+    "test_records": 381,
+    "total_anomalies": 75,
+    "anomaly_rate": 0.0395
+  },
+  "comparison": {
+    "rules_only": {
+      "precision": 0.5,
+      "recall": 0.0667,
+      "f1": 0.1176,
+      "fpr": 0.0027,
+      "tp": 1,
+      "fp": 1,
+      "tn": 365,
+      "fn": 14
+    },
+    "ml_only": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "fpr": 0.0,
+      "tp": 15,
+      "fp": 0,
+      "tn": 366,
+      "fn": 0,
+      "pr_auc": 1.0
+    },
+    "hybrid": {
+      "precision": 0.9375,
+      "recall": 1.0,
+      "f1": 0.9677,
+      "fpr": 0.0027,
+      "tp": 15,
+      "fp": 1,
+      "tn": 365,
+      "fn": 0
+    }
+  },
+  "feature_columns": [
+    "transfers_30d",
+    "days_since_last_transfer",
+    "area_ratio",
+    "seller_is_ledger_holder",
+    "price_vs_area_median",
+    "mutation_lag_days",
+    "buyer_seller_repeat",
+    "distinct_buyers_90d",
+    "reg_hour",
+    "flag_count",
+    "lineage_issue_count",
+    "circular_transfer"
+  ],
+  "trained_at": "2026-10-17T20:41:25.406865+00:00"
+}
