@@ -1526,6 +1526,26 @@ The following placeholders have been clearly marked in the documentation pack an
   - Ensure fallback inline labels for all modal identity fields to eliminate any risk of raw dictionary key display.
 - **Next Step:** Commit to `phase2` and fast-forward merge into `main` so the live deployment immediately updates.
 
+---
+
+### Authoritative README Update & Team Mentorship Alignment Log
+- **What was done:**
+  - **Rule Book & LANDTECH_GITHUB_SPECIFICATION Compliance**:
+    * Structured `README.md` strictly according to the official Rule Book Sections 7, 8, 9, 12 and `docs/LANDTECH_GITHUB_SPECIFICATION.md`.
+    * Enforced mandatory synthetic data disclosure (Section 8) and AI tool disclosure (Section 9).
+  - **Team Directory Integration**:
+    * Team Name: **Avengers Assemble**.
+    * Team Leader: **Md Mitul Kabir Badhon** (`0242310005101635`, Dept. of CSE, DIU, `mitulkabirbadhon7@gmail.com`).
+    * Teammate: **Sabbir Hossan Sani** (`0242310005101776`, Dept. of CSE, DIU, `sani2305101776@diu.edu.bd`).
+    * Faculty Mentor: **Tanzina Afroz Rimi**, Lecturer (Senior Scale) · CSE (`tanzinaafroz.cse@diu.edu.bd`).
+    * Industry Support Mentor: **Rahat Shahriar Reyad**, CSE-TECH (`reyad2305101691@diu.edu.bd`).
+  - **Verification**:
+    * Checked and formatted all sections, tables, and links cleanly.
+- **Decisions:**
+  - Strictly preserve only requirements specified in the Rule Book and repository specification.
+- **Next Step:** Commit and push to `main`.
+
+
 
 
 
