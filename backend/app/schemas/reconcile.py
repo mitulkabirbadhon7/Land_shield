@@ -53,6 +53,7 @@ class ReconcileSummaryItem(BaseModel):
     area_decimal: float
     issues_count: int
     sub_codes: list[str]
+    issues: list[ReconcileIssueOut] = Field(default_factory=list)
 
 
 class ReconcileListOut(BaseModel):

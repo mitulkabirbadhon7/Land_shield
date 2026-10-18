@@ -272,7 +272,7 @@ function CitizenCheckContent() {
               "status" in plotErr &&
               (plotErr as { status: number }).status === 404);
 
-          if (is404 && ((targetId >= 1 && targetId <= 8) || scenarioHint)) {
+          if (is404 && ((targetId >= 1 && targetId <= 27) || scenarioHint)) {
             const resolvedId = await resolveScenarioPlotId(targetId, scenarioHint);
             if (resolvedId && resolvedId !== targetId) {
               targetId = resolvedId;
@@ -523,6 +523,42 @@ function CitizenCheckContent() {
       (f.text && (f.text.includes("স্বত্বহীন") || f.text.toLowerCase().includes("not owner") || f.text.toLowerCase().includes("not the owner")))
   );
 
+  // Layer & Rule findings detection
+  const hasOwnerMismatch = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "OWNER_MISMATCH") ||
+      f.sub_code === "OWNER_MISMATCH" ||
+      (f.text && (f.text.includes("মালিকের অমিল") || f.text.toLowerCase().includes("owner mismatch")))
+  );
+
+  const hasMutationStalled = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "MUTATION_STALLED") ||
+      f.sub_code === "MUTATION_STALLED" ||
+      (f.text && (f.text.includes("প্রশাসনিক বিলম্ব") || f.text.toLowerCase().includes("stalled")))
+  );
+
+  const hasAreaNotConserved = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "AREA_NOT_CONSERVED") ||
+      f.sub_code === "AREA_NOT_CONSERVED" ||
+      (f.text && (f.text.includes("জমির পরিমাণে অসঙ্গতি") || f.text.toLowerCase().includes("not conserved")))
+  );
+
+  const hasLineageIssue = findings.some(
+    (f) =>
+      f.layer === "LINEAGE" ||
+      ["MISSING_GENERATION", "ORPHAN", "BAD_PARENT", "AREA_GROWTH"].includes(f.sub_code || "") ||
+      f.rule_id === "R7"
+  );
+
+  const hasRapidTransfers = findings.some(
+    (f) =>
+      f.rule_id === "R4" ||
+      f.sub_code === "RAPID_TRANSFERS" ||
+      (f.text && (f.text.includes("দ্রুত হস্তান্তর") || f.text.toLowerCase().includes("rapid")))
+  );
+
   const hasCriticalOrFraud =
     Boolean(riskReport?.has_critical) ||
     hasIntegrityTamper ||
@@ -531,14 +567,37 @@ function CitizenCheckContent() {
     findings.some((f) => f.severity === "CRITICAL");
 
   let fraudCardText = t("check.q_fraud_ok");
+  let fraudCardIcon = "🛡️";
+  let fraudCardStyle = "border-slate-200/80 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white";
+
   if (hasIntegrityTamper) {
     fraudCardText = t("check.q_fraud_tampered");
+    fraudCardIcon = "❌";
+    fraudCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
   } else if (hasDoubleSale) {
     fraudCardText = t("check.q_fraud_double");
+    fraudCardIcon = "❌";
+    fraudCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
   } else if (hasNotOwner) {
     fraudCardText = t("check.q_fraud_not_owner");
+    fraudCardIcon = "❌";
+    fraudCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
+  } else if (hasOwnerMismatch) {
+    fraudCardText = lang === "bn" ? "খতিয়ান মালিকানায় অমিল" : "Record Owner Mismatch";
+    fraudCardIcon = "⚠️";
+    fraudCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
+  } else if (hasAreaNotConserved) {
+    fraudCardText = lang === "bn" ? "জমির পরিমাপে অসঙ্গতি" : "Area Discrepancy";
+    fraudCardIcon = "⚠️";
+    fraudCardStyle = "border-orange-300 bg-orange-50/70 text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-200";
+  } else if (hasLineageIssue) {
+    fraudCardText = lang === "bn" ? "জরিপ শৃঙ্খলে ত্রুটি" : "Survey Lineage Gap";
+    fraudCardIcon = "⚠️";
+    fraudCardStyle = "border-amber-300 bg-amber-50/70 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200";
   } else if (hasCriticalOrFraud) {
     fraudCardText = t("check.q_fraud_bad");
+    fraudCardIcon = "❌";
+    fraudCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
   }
 
   // 2. Government Khas Land or Acquisition
@@ -611,6 +670,10 @@ function CitizenCheckContent() {
     mutationCardText = t("check.q_mutation_rejected");
     mutationCardIcon = "❌";
     mutationCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
+  } else if (hasMutationStalled) {
+    mutationCardText = lang === "bn" ? "সংবিধিবদ্ধ বিলম্ব (৯০+ দিন)" : "Stalled Mutation (> 90 Days)";
+    mutationCardIcon = "⚠️";
+    mutationCardStyle = "border-amber-300 bg-amber-50/70 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200";
   } else if (hasMissingMutation) {
     mutationCardText = t("check.q_mutation_pending");
     mutationCardIcon = "📜";
@@ -642,6 +705,66 @@ function CitizenCheckContent() {
   } else if (hasNotOwner) {
     criticalVerdictTitle = t("check.verdict_critical_owner_title");
     criticalVerdictDesc = t("check.verdict_critical_owner_desc");
+  }
+
+  // Dynamic High Risk Verdict Title & Description
+  let highVerdictTitle = t("check.verdict_high_title");
+  let highVerdictDesc = t("check.verdict_high_desc");
+
+  if (hasOwnerMismatch) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: খতিয়ানের সাথে মালিকানা অমিল (দপ্তর গরমিল)"
+        : "High Risk: Owner Mismatch Between Offices";
+    highVerdictDesc =
+      lang === "bn"
+        ? "সহকারী কমিশনার (ভূমি) অফিসের রেকর্ডভুক্ত মালিকের সাথে সাব-রেজিস্ট্রির দলিল সূত্রে প্রাপ্ত মালিকের অমিল পাওয়া গেছে। এটি প্রশাসনিক বা নামজারি সংক্রান্ত বড় ধরনের অসঙ্গতি।"
+        : "The recorded owner at the AC Land office differs from the mutation-derived deed owner. Formal reconciliation required.";
+  } else if (hasMutationStalled) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: নামজারি প্রক্রিয়াকরণে সংবিধিবদ্ধ বিলম্ব (৯০+ দিন)"
+        : "High Risk: Statutory Delay in Mutation (> 90 Days)";
+    highVerdictDesc =
+      lang === "bn"
+        ? "এই দাগের একটি নামজারি আবেদন সংবিধিবদ্ধ সময়সীমা (৯০ দিন) পার হলেও এখনো পর্যালোচনাধীন অবস্থায় আটকে আছে। কোনো জমি কেনার পূর্বে নামজারি সম্পন্ন নিশ্চিত করুন।"
+        : "A mutation application on this plot has stalled in review beyond statutory limits. Ensure mutation is completed before purchase.";
+  } else if (hasAreaNotConserved) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: জমির পরিমাপে অসঙ্গতি (মোট পরিমাপের অমিল)"
+        : "High Risk: Area Conservation Discrepancy";
+    highVerdictDesc =
+      lang === "bn"
+        ? "রেকর্ডভুক্ত অংশীদারদের মোট জমির সমষ্টি প্লটের মূল আয়তনের সাথে মিলছে না। জমি হস্তান্তর বা নামজারিতে অতিরিক্ত জমি অন্তর্ভুক্তির ঝুঁকি রয়েছে।"
+        : "The sum of citizen holdings does not match the documented plot area. Risk of boundary conflict or phantom area.";
+  } else if (hasLineageIssue) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: ঐতিহাসিক খতিয়ান ধারাবাহিকতায় ত্রুটি (CS-SA-RS-BS)"
+        : "High Risk: Historical Survey Chain Discontinuity";
+    highVerdictDesc =
+      lang === "bn"
+        ? "ঐতিহাসিক জরিপ শৃঙ্খলে মধ্যবর্তী খতিয়ান অনুপস্থিত, মূলহীন খতিয়ান অথবা অযৌক্তিক জমির বৃদ্ধি শনাক্ত হয়েছে। মূল মালিকানার শিকড়ে ত্রুটি থাকতে পারে।"
+        : "Discrepancy detected in historical survey lineage (missing survey generation, orphan khatian, or unexplained area growth).";
+  } else if (hasRapidTransfers) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: অস্বাভাবিক দ্রুত হস্তান্তর (Rapid Transfers)"
+        : "High Risk: Suspicious Rapid Transfers";
+    highVerdictDesc =
+      lang === "bn"
+        ? "অল্প সময়ের মধ্যে একাধিকবার জমি হস্তান্তর হয়েছে। এটি বেনামী লেনদেন বা জমি দখলের পূর্ব লক্ষণ হতে পারে।"
+        : "Multiple ownership transfers occurred within a short duration. Suspicious transaction velocity detected.";
+  } else if (hasActiveCase || hasKhasOrAcquisition) {
+    highVerdictTitle =
+      lang === "bn"
+        ? "উচ্চ ঝুঁকি: মামলা বা সরকারি সম্পত্তি (খাস/অধিগ্রহণ)"
+        : "High Risk: Litigation or Restricted Land";
+    highVerdictDesc =
+      lang === "bn"
+        ? "এই জমিতে সরকারি নিষেধাজ্ঞা, আদালতে বিচারাধীন মামলা অথবা খাস খতিয়ানভুক্ত থাকার তথ্য পাওয়া গেছে। কোনো আর্থিক লেনদেন করবেন না।"
+        : "Active court litigation or restricted government land status detected on this plot.";
   }
 
   const level = (riskReport?.level as string) || "LOW";
@@ -994,14 +1117,14 @@ function CitizenCheckContent() {
                       <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
                         {level === "LOW" && t("check.verdict_safe_title")}
                         {level === "MEDIUM" && t("check.verdict_medium_title")}
-                        {level === "HIGH" && t("check.verdict_high_title")}
+                        {level === "HIGH" && highVerdictTitle}
                         {level === "CRITICAL" && criticalVerdictTitle}
                       </h2>
 
                       <p className="text-xs sm:text-sm opacity-90 font-medium max-w-2xl leading-relaxed">
                         {level === "LOW" && t("check.verdict_safe_desc")}
                         {level === "MEDIUM" && t("check.verdict_medium_desc")}
-                        {level === "HIGH" && t("check.verdict_high_desc")}
+                        {level === "HIGH" && highVerdictDesc}
                         {level === "CRITICAL" && criticalVerdictDesc}
                       </p>
                     </div>
@@ -1037,13 +1160,13 @@ function CitizenCheckContent() {
                 {/* 1. Fraud / Double Sale */}
                 <div
                   className={`rounded-xl border p-4 transition-all duration-200 shadow-2xs ${
-                    hasCriticalOrFraud
-                      ? "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"
+                    hasCriticalOrFraud || hasOwnerMismatch || hasAreaNotConserved || hasLineageIssue
+                      ? fraudCardStyle
                       : "border-slate-200/80 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl shrink-0">{hasCriticalOrFraud ? "❌" : "🛡️"}</span>
+                    <span className="text-xl shrink-0">{fraudCardIcon}</span>
                     <div>
                       <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
                         {t("check.q_fraud")}
@@ -1418,14 +1541,14 @@ function CitizenCheckContent() {
                   <h2 className="text-xl font-black mt-0.5">
                     {level === "LOW" && t("check.verdict_safe_title")}
                     {level === "MEDIUM" && t("check.verdict_medium_title")}
-                    {level === "HIGH" && t("check.verdict_high_title")}
-                    {level === "CRITICAL" && t("check.verdict_critical_title")}
+                    {level === "HIGH" && highVerdictTitle}
+                    {level === "CRITICAL" && criticalVerdictTitle}
                   </h2>
                   <p className="text-xs mt-1 text-slate-700">
                     {level === "LOW" && t("check.verdict_safe_desc")}
                     {level === "MEDIUM" && t("check.verdict_medium_desc")}
-                    {level === "HIGH" && t("check.verdict_high_desc")}
-                    {level === "CRITICAL" && t("check.verdict_critical_desc")}
+                    {level === "HIGH" && highVerdictDesc}
+                    {level === "CRITICAL" && criticalVerdictDesc}
                   </p>
                 </div>
                 <div className="text-right font-mono text-sm font-bold">

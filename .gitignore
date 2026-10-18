@@ -43,6 +43,8 @@ GeminiAPi_key.txt
 SuperbaseInfo.txt
 *.zip
 data/uploads/
+backend/data/uploads/
+backend/data/
 
 # --- Prohibited Trap 2: SQLite Databases & Storage Binaries ---
 *.db

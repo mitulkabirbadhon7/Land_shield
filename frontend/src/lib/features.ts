@@ -27,16 +27,16 @@ export interface Features {
   feature_ocr?: boolean;
 }
 
-/** Safe defaults — all phase-2 features enabled by default during dev/demo so UI is not locked out */
+/** Safe defaults — phase-2 features enabled by default; FEATURE_RECONCILE disabled as requested */
 const DEFAULT_FEATURES: Features = {
-  FEATURE_RECONCILE: true,
+  FEATURE_RECONCILE: false,
   FEATURE_LINEAGE: true,
   FEATURE_OFFLINE_QR: true,
   FEATURE_AGENT: true,
   FEATURE_TRANSPARENCY: true,
   FEATURE_ML: true,
   FEATURE_OCR: true,
-  feature_reconcile: true,
+  feature_reconcile: false,
   feature_lineage: true,
   feature_offline_qr: true,
   feature_agent: true,
@@ -55,7 +55,6 @@ function normalizeFeatures(data: Record<string, unknown>): Features {
     return def;
   };
 
-  const reconcile = getFlag("FEATURE_RECONCILE", "feature_reconcile", true);
   const lineage = getFlag("FEATURE_LINEAGE", "feature_lineage", true);
   const offlineQr = getFlag("FEATURE_OFFLINE_QR", "feature_offline_qr", true);
   const agent = getFlag("FEATURE_AGENT", "feature_agent", true);
@@ -64,14 +63,14 @@ function normalizeFeatures(data: Record<string, unknown>): Features {
   const ocr = getFlag("FEATURE_OCR", "feature_ocr", true);
 
   return {
-    FEATURE_RECONCILE: reconcile,
+    FEATURE_RECONCILE: false,
     FEATURE_LINEAGE: lineage,
     FEATURE_OFFLINE_QR: offlineQr,
     FEATURE_AGENT: agent,
     FEATURE_TRANSPARENCY: transparency,
     FEATURE_ML: ml,
     FEATURE_OCR: ocr,
-    feature_reconcile: reconcile,
+    feature_reconcile: false,
     feature_lineage: lineage,
     feature_offline_qr: offlineQr,
     feature_agent: agent,

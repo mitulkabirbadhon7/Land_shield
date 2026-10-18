@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.models.deed import Deed
-from app.services.crypto import load_or_create_key, public_key_hex, sha256_hex, verify_sig
+from app.services.crypto import key_id, load_or_create_key, public_key_hex, sha256_hex, verify_sig
 from app.services.ledger import verify_chain
 from app.services.pipeline.base import AnalysisContext, Finding, Layer
 
@@ -33,7 +33,18 @@ class IntegrityLayer(Layer):
         stmt = select(Deed).where(Deed.plot_id == plot_id, Deed.status == "ACTIVE")
         deeds = ctx.db.scalars(stmt).all()
 
-        configured_pub_key = None
+        active_keys: dict[str, str] = {}
+        if ctx.db:
+            try:
+                from app.models.signing_key import SigningKey
+                rows = ctx.db.scalars(
+                    select(SigningKey).where(SigningKey.status == "ACTIVE")
+                ).all()
+                for r in rows:
+                    active_keys[r.key_id] = r.public_key_hex
+            except Exception:
+                pass
+
         sk = ctx.signer_key
         if sk is None:
             try:
@@ -42,7 +53,7 @@ class IntegrityLayer(Layer):
                 pass
         if sk is not None:
             try:
-                configured_pub_key = public_key_hex(sk)
+                active_keys[key_id(sk)] = public_key_hex(sk)
             except Exception:
                 pass
 
@@ -62,7 +73,15 @@ class IntegrityLayer(Layer):
                     )
                 )
 
-            if configured_pub_key and not verify_sig(configured_pub_key, deed.deed_hash, deed.signature):
+            # Check if signature is valid against the deed's signer_key_id or any registered active key
+            is_valid_sig = False
+            pub_key = active_keys.get(deed.signer_key_id) if deed.signer_key_id else None
+            if pub_key:
+                is_valid_sig = verify_sig(pub_key, deed.deed_hash, deed.signature)
+            elif active_keys:
+                is_valid_sig = any(verify_sig(pk, deed.deed_hash, deed.signature) for pk in active_keys.values())
+
+            if not is_valid_sig:
                 findings.append(
                     Finding(
                         layer="integrity",

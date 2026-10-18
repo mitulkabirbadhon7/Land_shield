@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useLanguage, toBnDigits } from "@/lib/i18n";
@@ -15,7 +15,6 @@ import {
 import { AlertOut, MutationOut } from "@/lib/types";
 import { Spinner } from "@/components/Spinner";
 import { ErrorBox } from "@/components/ErrorBox";
-import { useFeatures } from "@/lib/features";
 
 const WORKFLOW_STEPS = [
   "SUBMITTED",
@@ -169,7 +168,6 @@ function StatusStepper({ currentState, lang }: { currentState: string; lang: str
 function OfficerPageContent() {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
-  const features = useFeatures();
 
   // Active Tab: "mutations" | "alerts"
   const [activeTab, setActiveTab] = useState<"mutations" | "alerts">("mutations");
@@ -177,8 +175,39 @@ function OfficerPageContent() {
   // Mutations state
   const [mutations, setMutations] = useState<MutationOut[]>([]);
   const [mutationFilter, setMutationFilter] = useState<string>("ALL");
+  const [mutationSearch, setMutationSearch] = useState<string>("");
   const [mutationsLoading, setMutationsLoading] = useState(false);
   const [selectedMutation, setSelectedMutation] = useState<MutationOut | null>(null);
+
+  // Filter mutations by search query (primarily deed number, but also ID/plot/applicant)
+  const filteredMutations = useMemo(() => {
+    if (!mutationSearch.trim()) return mutations;
+    const query = mutationSearch.trim().toLowerCase();
+
+    // Map Bengali digits to English for numerical search
+    const bnToEnMap: Record<string, string> = {
+      "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+      "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+    };
+    const normalizedQuery = query.replace(/[০-৯]/g, (d) => bnToEnMap[d] || d);
+
+    return mutations.filter((m) => {
+      const deedNo = (m.deed_no || "").toLowerCase();
+      const deedId = String(m.deed_id ?? "");
+      const mutationId = String(m.id ?? "");
+      const plotId = String(m.plot_id ?? "");
+      const applicant = (m.applicant_name || "").toLowerCase();
+
+      return (
+        deedNo.includes(query) ||
+        deedNo.includes(normalizedQuery) ||
+        deedId.includes(normalizedQuery) ||
+        mutationId.includes(normalizedQuery) ||
+        plotId.includes(normalizedQuery) ||
+        applicant.includes(query)
+      );
+    });
+  }, [mutations, mutationSearch]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [actionNote, setActionNote] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -420,65 +449,92 @@ function OfficerPageContent() {
               : `${alerts.filter((a) => a.status === "OPEN").length} ${t("officer.open_count")}`}
           </span>
         </button>
-
-        {features.FEATURE_RECONCILE && (
-          <Link
-            href="/officer/reconcile"
-            className="flex items-center gap-2 border-b-2 border-transparent px-6 py-3 text-sm font-bold text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition-all duration-200"
-          >
-            <svg className="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            <span>{t("reconcile.title")}</span>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold">
-              R8
-            </span>
-          </Link>
-        )}
       </div>
 
       {/* TAB 1: MUTATIONS (NAMJARI) */}
       {activeTab === "mutations" && (
         <div className="space-y-6 animate-fade-in-up stagger-1">
-          {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {t("officer.filter_state")}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  "ALL",
-                  "SUBMITTED",
-                  "AUTO_CHECKED",
-                  "UNDER_REVIEW",
-                  "APPROVED",
-                  "KHATIAN_UPDATED",
-                  "REJECTED",
-                ].map((st) => (
+          {/* Search Bar & Filter Controls */}
+          <div className="space-y-3">
+            {/* Dedicated Search Bar for Deed Number & IDs */}
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={mutationSearch}
+                onChange={(e) => setMutationSearch(e.target.value)}
+                placeholder={
+                  lang === "bn"
+                    ? "দলিল নম্বর দিয়ে নামজারি আবেদন খুঁজুন... (যেমন: DHAKA-2026-000599 বা ৫৯৯)"
+                    : "Search mutations by deed number... (e.g. DHAKA-2026-000599 or 599)"
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-32 text-xs font-semibold text-slate-900 placeholder-slate-400 shadow-2xs transition-all focus:border-teal-500 focus:shadow-xs focus:outline-hidden dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 gap-2">
+                {mutationSearch && (
                   <button
-                    key={st}
                     type="button"
-                    onClick={() => setMutationFilter(st)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
-                      mutationFilter === st
-                        ? "bg-slate-900 text-white dark:bg-teal-600 shadow-2xs"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
+                    onClick={() => setMutationSearch("")}
+                    className="p-1 text-slate-400 hover:text-slate-600 transition-colors rounded-md"
+                    title={lang === "bn" ? "সার্চ মুছুন" : "Clear search"}
                   >
-                    {formatMutationState(st, lang)}
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
-                ))}
+                )}
+                <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  {lang === "bn"
+                    ? `${toBnDigits(filteredMutations.length)} টি আবেদন`
+                    : `${filteredMutations.length} found`}
+                </span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={fetchMutations}
-              className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
-            >
-              ↻ {t("officer.refresh_btn")}
-            </button>
+            {/* Filter Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {t("officer.filter_state")}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "ALL",
+                    "SUBMITTED",
+                    "AUTO_CHECKED",
+                    "UNDER_REVIEW",
+                    "APPROVED",
+                    "KHATIAN_UPDATED",
+                    "REJECTED",
+                  ].map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setMutationFilter(st)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+                        mutationFilter === st
+                          ? "bg-slate-900 text-white dark:bg-teal-600 shadow-2xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                      }`}
+                    >
+                      {formatMutationState(st, lang)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={fetchMutations}
+                className="text-xs font-bold text-teal-600 hover:underline dark:text-teal-400 transition-colors"
+              >
+                ↻ {t("officer.refresh_btn")}
+              </button>
+            </div>
           </div>
 
           {/* Mutations Table / Cards */}
@@ -486,11 +542,38 @@ function OfficerPageContent() {
             <div className="flex min-h-[300px] items-center justify-center">
               <Spinner size="lg" />
             </div>
-          ) : mutations.length === 0 ? (
+          ) : filteredMutations.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900 animate-fade-in">
-              <p className="text-sm font-semibold text-slate-500">
-                {t("officer.no_mutations")}
-              </p>
+              {mutationSearch ? (
+                <>
+                  <span className="text-3xl block mb-2">🔍</span>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {lang === "bn"
+                      ? `"${mutationSearch}" দলিল নম্বরের কোনো নামজারি আবেদন পাওয়া যায়নি`
+                      : `No mutation applications found matching deed "${mutationSearch}"`}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {lang === "bn"
+                      ? "দলিল নম্বরটি সঠিকভাবে লেখা হয়েছে কিনা যাচাই করুন অথবা ফিল্টার রিসেট করুন।"
+                      : "Please check the deed number or reset your stage filter."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMutationSearch("");
+                      setMutationFilter("ALL");
+                    }}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition"
+                  >
+                    <span>✕</span>
+                    <span>{lang === "bn" ? "সার্চ ও ফিল্টার রিসেট করুন" : "Reset Search & Filters"}</span>
+                  </button>
+                </>
+              ) : (
+                <p className="text-sm font-semibold text-slate-500">
+                  {t("officer.no_mutations")}
+                </p>
+              )}
             </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-shadow duration-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
@@ -507,7 +590,7 @@ function OfficerPageContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-800 dark:text-slate-200">
-                  {mutations.map((m) => (
+                  {filteredMutations.map((m) => (
                     <tr
                       key={m.id}
                       className="hover:bg-teal-50/40 transition-colors duration-150 dark:hover:bg-slate-800/50 group"

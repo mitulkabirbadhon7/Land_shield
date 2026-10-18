@@ -261,12 +261,14 @@ def seed_phase2_scenarios(db: Session, signer_key) -> None:
     # -------------------------------------------------------------------------
     p23 = db.get(Plot, 23)
     if p23 and not db.scalars(select(Khatian).where(Khatian.plot_id == 23)).first():
+        base_area = float(p23.area_decimal)
+        prior_area = round(base_area * 0.6, 2)
         cs = Khatian(
             plot_id=23,
             survey_type="CS",
             khatian_no="CS-23",
             dag_no=p23.dag_no,
-            area_decimal=20.0,
+            area_decimal=prior_area,
             owners_json="[]",
             parent_id=None,
             created_at=SEED_REFERENCE_DATE - timedelta(days=365 * 70),
@@ -278,20 +280,20 @@ def seed_phase2_scenarios(db: Session, signer_key) -> None:
             survey_type="SA",
             khatian_no="SA-23",
             dag_no=p23.dag_no,
-            area_decimal=20.0,
+            area_decimal=prior_area,
             owners_json="[]",
             parent_id=cs.id,
             created_at=SEED_REFERENCE_DATE - timedelta(days=365 * 45),
         )
         db.add(sa)
         db.flush()
-        # Area growth from 20.0 to 35.0 decimals (+75% > 5%)
+        # Area growth from prior_area to base_area (+66% > 5%)
         rs = Khatian(
             plot_id=23,
             survey_type="RS",
             khatian_no="RS-23",
             dag_no=p23.dag_no,
-            area_decimal=35.0,
+            area_decimal=base_area,
             owners_json="[]",
             parent_id=sa.id,
             created_at=SEED_REFERENCE_DATE - timedelta(days=365 * 20),

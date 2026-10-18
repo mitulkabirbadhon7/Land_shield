@@ -48,6 +48,20 @@ def list_reconciliation_discrepancies(
         if type and type.upper() not in sub_codes:
             continue
 
+        issues_out: list[ReconcileIssueOut] = []
+        for sub_code, default_msg, details in issues:
+            tmpl = TEMPLATES.get(sub_code, {})
+            issues_out.append(
+                ReconcileIssueOut(
+                    sub_code=sub_code,
+                    severity="HIGH",
+                    rule_id="R8",
+                    message_bn=tmpl.get("bn", default_msg),
+                    message_en=tmpl.get("en", default_msg),
+                    details=details,
+                )
+            )
+
         flagged_items.append(
             ReconcileSummaryItem(
                 plot_id=p.id,
@@ -58,6 +72,7 @@ def list_reconciliation_discrepancies(
                 area_decimal=float(p.area_decimal),
                 issues_count=len(issues),
                 sub_codes=sub_codes,
+                issues=issues_out,
             )
         )
 

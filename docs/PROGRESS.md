@@ -1723,20 +1723,148 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Known gaps:** None.
 - **Next Step:** Commit merge and push `phase2-frontend` to origin to conclude PR #9.
 
+---
 
+### Session: Reconciliation Cross-Office Link & Dynamic Plot Analysis Hardening
+- **What was done:**
+  - **Reconciliation Benchmark Linking:** Corrected `/officer/reconcile` fallback items to point to canonical benchmark plots (Plot 24 for `OWNER_MISMATCH`, Plot 25 for `MUTATION_STALLED`, and Plot 26 for `AREA_NOT_CONSERVED`) instead of unrelated Phase 1 fraud plots (Plots 1-3).
+  - **Cryptographic Signature Verification Hardening:** In `backend/app/services/fraud/integrity.py` and `backend/app/services/deeds.py`, updated deed signature verification to resolve active signing keys from the database `signing_keys` registry in addition to the configured local key file. This prevents false positive `BAD_SIGNATURE` integrity findings on seeded Phase 2 plots.
+  - **Dynamic High-Risk Verdicts on `/check`:** Updated `frontend/src/app/check/page.tsx` with dynamic high-risk banners and descriptions for:
+    - `OWNER_MISMATCH`: "উচ্চ ঝুঁকি: খতিয়ানের সাথে মালিকানা অমিল (দপ্তর গরমিল)"
+    - `MUTATION_STALLED`: "উচ্চ ঝুঁকি: নামজারি প্রক্রিয়াকরণে সংবিধিবদ্ধ বিলম্ব (৯০+ দিন)"
+    - `AREA_NOT_CONSERVED`: "উচ্চ ঝুঁকি: জমির পরিমাপে অসঙ্গতি (মোট পরিমাপের অমিল)"
+    - `LINEAGE` (`MISSING_GENERATION`, `ORPHAN`, `BAD_PARENT`, `AREA_GROWTH`): "উচ্চ ঝুঁকি: ঐতিহাসিক খতিয়ান ধারাবাহিকতায় ত্রুটি (CS-SA-RS-BS)"
+    - `RAPID_TRANSFERS`: "উচ্চ ঝুঁকি: অস্বাভাবিক দ্রুত হস্তান্তর (Rapid Transfers)"
+  - **Core Safety Verification Cards Synchronization:**
+    - Updated Card 1 (Fraud/Discrepancy) to reflect "খতিয়ান মালিকানায় অমিল" on `OWNER_MISMATCH` and "জমির পরিমাপে অসঙ্গতি" on `AREA_NOT_CONSERVED`.
+    - Updated Card 4 (Mutation Status) to reflect "সংবিধিবদ্ধ বিলম্ব (৯০+ দিন)" with amber styling when `MUTATION_STALLED` occurs.
+  - **Reconcile API Response Harmonization:**
+    - Updated `backend/app/schemas/reconcile.py` and `backend/app/api/v1/reconcile.py` to include detailed `issues: list[ReconcileIssueOut]` alongside `sub_codes` on `ReconcileSummaryItem`.
+    - Added defensive issue array mapping in `frontend/src/app/officer/reconcile/page.tsx` to handle both API shapes cleanly.
+  - **Benchmark Scenarios Strip Extension:**
+    - Loaded Phase 2 scenarios (`L1-L3`, `R1-R3`, `C1`) into `/check`'s benchmark strip from `scenarios.json` and registered localized Bengali/English names.
+- **Verification:**
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm test`: 4/4 offline browser crypto unit tests passed.
+  - `npm run build`: 15/15 static pages successfully compiled with Turbopack.
+  - `pytest backend/tests/`: 184/184 tests passed (100% green).
+- **Decisions:**
+  - Cross-office reconciliation items (`R8`) and survey lineage issues (`R7`) must have distinct, context-specific high-risk titles so citizens and officers immediately understand the root cause of the risk.
+  - Signing keys persisted in the `SigningKey` table are canonical for verifying signatures of deeds signed across system lifecycles.
+- **Known gaps:** None.
+- **Next Step:** Commit and push changes.
 
+---
 
+### Session: Reconcile False Discrepancy Cleanup (Plot 23 Khatian Area Calibration)
+- **What was done:**
+  - **Spurious Discrepancy Root Cause Analysis:** Diagnosed why Plot 23 (`দাগ #102, মধুবন, কর্ণফুলী, ঢাকা`) spuriously appeared in `/officer/reconcile` with `AREA_NOT_CONSERVED`. Plot 23 was seeded for survey lineage benchmark L3 (`AREA_GROWTH`) with CS=20, SA=20, RS=35 decimals, while `plot.area_decimal` was 79.0 decimals (with active deeds totaling 79.0 decimals). The reconciliation service checks `sum(record_holdings) == plot.area_decimal`, using the latest khatian as baseline; the discrepancy between RS (35.0) and plot area (79.0) triggered `AREA_NOT_CONSERVED`.
+  - **Khatian Area Calibration in `backend/scripts/seed_phase2.py`:** Calibrated Plot 23's latest khatian (RS) area to match `plot.area_decimal` (79.0 decimals), and prior survey generations (CS, SA) to 60% of base area (47.4 decimals).
+  - **Preserved L3 Benchmark Integrity:** Maintained `AREA_GROWTH` (+66.7% > 5% threshold) on Plot 23 for Scenario L3 in survey lineage graph, while ensuring `reconcile_plot(db, p23)` evaluates clean (`[]`).
+  - **Database Synchronization:** Updated SQLite databases (`backend/landshield.db` and root `landshield.db`) with calibrated khatian records.
+  - **Canonical Reconcile Verification:** Verified `/api/v1/reconcile` strictly outputs only the 3 canonical Phase 2 reconciliation benchmark plots:
+    - Plot 24 (`OWNER_MISMATCH` - Scenario R1)
+    - Plot 25 (`MUTATION_STALLED` - Scenario R2)
+    - Plot 26 (`AREA_NOT_CONSERVED` - Scenario R3)
+- **Verification:**
+  - `pytest backend/tests/test_lineage.py backend/tests/test_reconcile.py`: 19/19 tests passed (100% green).
+  - `npm test`: 4/4 offline browser crypto unit tests passed.
+  - Live backend verification: `GET /api/v1/reconcile` outputs only Plots 24, 25, 26 with correct sub-codes.
+- **Decisions:**
+  - Historical survey lineage scenarios (`L1-L3`) and cross-office reconciliation scenarios (`R1-R3`) are isolated to their designated benchmark plots to avoid cross-contamination in officer review lists.
+- **Known gaps:** None.
+- **Next Step:** User can review the clean reconciliation table on `/officer/reconcile`.
 
+---
 
+### Session: Official Technical Record Dynamic Risk Box Harmonization
+- **What was done:**
+  - **Identified Hardcoded Static Risk Issue:** In the official technical record view (viewMode === 'technical'), the primary risk card (RiskCard.tsx) rendered a static generic risk text ('এই জমিতে দ্রুত মালিকানা পরিবর্তন অথবা আদালতের মামলা সংক্রান্ত ঝুঁকি রয়েছে।') and generic title ('উচ্চ ঝুঁকি (ঝুঁকিপূর্ণ জমি)') whenever level === 'HIGH', regardless of whether the actual finding was AREA_NOT_CONSERVED (Plot 26), MUTATION_STALLED (Plot 25), OWNER_MISMATCH (Plot 24), or LINEAGE (Plots 21-23).
+  - **Dynamic Institutional Finding Detectors:** Added comprehensive detectors in RiskCard.tsx covering:
+    - AREA_NOT_CONSERVED: 'উচ্চ ঝুঁকি (জমির পরিমাপে অসঙ্গতি)' + specific badge + clear conservation discrepancy description.
+    - MUTATION_STALLED: 'উচ্চ ঝুঁকি (নামজারি সংবিধিবদ্ধ বিলম্ব)' + specific badge + 90+ day delay warning.
+    - OWNER_MISMATCH: 'উচ্চ ঝুঁকি (খতিয়ানের সাথে মালিকানা অমিল)' + specific badge + AC Land vs Sub-Registry mismatch description.
+    - LINEAGE (AREA_GROWTH, MISSING_GENERATION, ORPHAN, BAD_PARENT): specific badge + historical survey generation discontinuity explanation.
+    - RAPID_TRANSFERS: specific badge + suspicious rapid transfer warning.
+    - FLAGGED_LAND (Khas, Acquisition, Dispute): specific badge + government restriction/lawsuit explanation.
+    - Critical alerts (Double Sale, Seller Not Owner, Tampered Deed): specific badges + fraud warnings.
+  - **Specific Cause Badge:** Added an actionable, color-coded tag right next to the risk level pill in the gauge card for immediate visual recognition.
+- **Verification:**
+  - npm run lint: 0 errors, 0 warnings.
+  - npm run build: 15/15 static pages successfully compiled with Turbopack.
+  - npm test: 4/4 offline browser crypto unit tests passed.
+- **Decisions:**
+  - Both Citizen Simple View and Official Technical Audit View now share identical, context-aware institutional violation descriptions so officers and citizens never receive contradictory or generic information.
+- **Known gaps:** None.
+- **Next Step:** User can review the updated dynamic risk box in the official technical record.
 
+---
 
+### Session: Deletion of Reconciliation UI Part (দপ্তর সমন্বয় ও গরমিল পর্যবেক্ষণ)
+- **What was done:**
+  - As requested by user ('github er latest version theke দপ্তর সমন্বয় ও গরমিল পর্যবেক্ষণ (Reconciliation) part delete koro'), completely deleted the Reconciliation frontend UI module:
+    - Removed 'দপ্তর সমন্বয় ও গরমিল পর্যবেক্ষণ (Reconciliation)' tab and link from the AC Land Officer Portal (frontend/src/app/officer/page.tsx).
+    - Deleted the dedicated page frontend/src/app/officer/reconcile/page.tsx and removed directory.
+    - Set FEATURE_RECONCILE to false in frontend/src/lib/features.ts (both in DEFAULT_FEATURES and normalizeFeatures) to ensure the feature flag is cleanly disabled.
+    - Cleaned up unused imports and variables in officer/page.tsx and features.ts.
+- **Verification:**
+  - npm run lint: 0 errors, 0 warnings (100% clean).
+  - npm run build: Compiled 14 static pages cleanly with Turbopack (officer/reconcile route removed).
+  - npm test: 4/4 offline browser crypto unit tests passed.
+  - pytest backend/tests/test_lineage.py: 10/10 tests passed.
+- **Decisions:**
+  - Backend analysis and lineage integrity remain intact, while the separate reconciliation inspection page and tab have been completely eliminated from the user interface.
+- **Known gaps:** None.
+- **Next Step:** Commit and push deletion to GitHub.
 
+---
 
+### Session: Mutation Deed Search Bar in Officer Portal
+- **What was done:**
+  - Added deed number search bar in the AC Land Officer Portal (frontend/src/app/officer/page.tsx) under the Mutations tab:
+    - Dedicated search input with search icon, clear button (✕), and real-time result count badge.
+    - Added filteredMutations with useMemo that searches primarily by deed number (e.g. DHAKA-2026-000599), supporting both English and Bengali digits.
+    - Also resiliently matches deed ID, mutation ID, plot ID, and applicant name.
+    - Added clean zero-state message with a one-click 'সার্চ ও ফিল্টার রিসেট করুন' reset button.
+- **Verification:**
+  - npm run lint: 0 errors, 0 warnings (100% clean).
+  - npm run build: 14 static pages compiled cleanly with Turbopack.
+  - npm test: 4/4 offline browser crypto unit tests passed.
+- **Decisions:**
+  - Search bar allows land officers to instantly filter across 500+ seeded mutations by deed number without manual paging or endless scrolling.
+- **Known gaps:** None.
+- **Next Step:** Commit and push to GitHub.
 
+---
 
+### Session: GitHub Benchmark Alignment - Removed Phase 2 Scenarios from /check
+- **What was done:**
+  - Removed Phase 2 benchmark buttons (`L1..L3`, `R1..R3`, `C1`) from `/check` page to strictly match GitHub's latest `origin/main` repository state:
+    - Removed Phase 2 identifiers from `scenarioNames` dictionary in `frontend/src/app/check/page.tsx`.
+    - Removed `data.phase2` dynamic loading from `useEffect` in `frontend/src/app/check/page.tsx` so only `data.scenarios` (`S1..S8`) are loaded.
+    - Verified the benchmark scenario strip only displays scenarios S1 through S8.
+- **Verification:**
+  - npm run lint: 0 errors, 0 warnings.
+  - npm run build: 14/14 static pages compiled cleanly with Turbopack.
+- **Decisions:**
+  - Kept `/check` benchmark scenario strip strictly aligned with GitHub `origin/main` (scenarios S1 to S8 only).
+- **Known gaps:** None.
+- **Next Step:** Commit and push changes.
 
+---
 
-
-
-
-
+### Session: Transparency Log Live Merkle Validation & Failure Demonstration
+- **What was done:**
+  - Upgraded `/transparency` (মারকেল স্বচ্ছতা লগ) interactive verifier to live API-driven verification:
+    - Integrated `verifyDeed` from `@/lib/api` to check actual cryptographic authenticity.
+    - Added comprehensive failure states:
+      1. **TAMPERED (জালিয়াতি/হ্যাশ অমিল):** When a deed has been altered in the database (e.g. `MIR-2026-000001`), displays red alert with Merkle Leaf Hash Mismatch.
+      2. **NOT_INCLUDED (ভুয়া/অস্তিত্বহীন দলিল):** When an unrecorded or fake deed is searched (e.g. `FAKE-2026-999999`), displays amber alert stating the deed was not found in any published batch.
+      3. **PROVEN (গাণিতিকভাবে প্রমাণিত):** For genuine deeds (e.g. `DHAKA-2026-000010`), displays green check with 3-hop Merkle proof path.
+    - Added color-coded quick-pill sample buttons so judges and evaluators can immediately test both PASS and FAIL scenarios.
+- **Verification:**
+  - npm run build: 14/14 static pages generated cleanly with Turbopack.
+- **Decisions:**
+  - Transparency log now dynamically proves both successful inclusion and tampering/fake deed rejection.
+- **Known gaps:** None.
+- **Next Step:** Commit and push updates.

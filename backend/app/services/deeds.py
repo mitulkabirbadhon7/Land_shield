@@ -205,22 +205,38 @@ def verify_deed(
         }
 
     # Step 2: Resolve public key by signer_key_id
-    if configured_key is None:
-        configured_key = load_or_create_key(settings.signing_key_path)
+    pub_hex = None
+    if deed.signer_key_id:
+        try:
+            from app.models.signing_key import SigningKey
+            sk_rec = db.scalars(
+                select(SigningKey).where(
+                    SigningKey.key_id == deed.signer_key_id,
+                    SigningKey.status == "ACTIVE",
+                )
+            ).first()
+            if sk_rec:
+                pub_hex = sk_rec.public_key_hex
+        except Exception:
+            pass
 
-    expected_key_id = key_id(configured_key)
-    if deed.signer_key_id != expected_key_id:
-        return {
-            "status": "TAMPERED",
-            "reasons": ["KEY_UNKNOWN: Unrecognized signer key ID"],
-            "deed_no": deed.deed_no,
-            "plot_id": deed.plot_id,
-            "chain_position": chain_pos,
-            "registered_at": deed.registered_at,
-        }
+    if pub_hex is None:
+        if configured_key is None:
+            configured_key = load_or_create_key(settings.signing_key_path)
+
+        expected_key_id = key_id(configured_key)
+        if deed.signer_key_id != expected_key_id:
+            return {
+                "status": "TAMPERED",
+                "reasons": ["KEY_UNKNOWN: Unrecognized signer key ID"],
+                "deed_no": deed.deed_no,
+                "plot_id": deed.plot_id,
+                "chain_position": chain_pos,
+                "registered_at": deed.registered_at,
+            }
+        pub_hex = public_key_hex(configured_key)
 
     # Step 3: Signature verification
-    pub_hex = public_key_hex(configured_key)
     if not verify_sig(pub_hex, deed.deed_hash, deed.signature):
         return {
             "status": "TAMPERED",

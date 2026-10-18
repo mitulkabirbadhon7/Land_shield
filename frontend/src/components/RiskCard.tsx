@@ -112,6 +112,300 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
 
   const findings = Array.isArray(report.findings) ? report.findings : [];
 
+  // Institutional and Fraud Issue Detectors
+  const hasIntegrityTamper = findings.some(
+    (f) =>
+      f.layer === "INTEGRITY" ||
+      f.rule_id === "R5" ||
+      f.rule_id === "INTEGRITY" ||
+      f.sub_code === "TAMPERED_HASH" ||
+      f.sub_code === "BAD_SIGNATURE"
+  );
+
+  const hasDoubleSale = findings.some(
+    (f) =>
+      (f.rule_id === "R1" && f.sub_code === "DOUBLE_SALE") ||
+      f.sub_code === "DOUBLE_SALE" ||
+      (f.text && (f.text.includes("দ্বৈত বিক্রয়") || f.text.toLowerCase().includes("double sale")))
+  );
+
+  const hasNotOwner = findings.some(
+    (f) =>
+      (f.rule_id === "R2" && f.sub_code === "SELLER_NOT_OWNER") ||
+      f.sub_code === "SELLER_NOT_OWNER" ||
+      (f.text && (f.text.includes("স্বত্বহীন") || f.text.toLowerCase().includes("not owner")))
+  );
+
+  const hasOwnerMismatch = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "OWNER_MISMATCH") ||
+      f.sub_code === "OWNER_MISMATCH" ||
+      (f.text && (f.text.includes("মালিকানা অমিল") || f.text.toLowerCase().includes("mismatch")))
+  );
+
+  const hasMutationStalled = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "MUTATION_STALLED") ||
+      f.sub_code === "MUTATION_STALLED" ||
+      (f.text && (f.text.includes("প্রশাসনিক বিলম্ব") || f.text.toLowerCase().includes("stalled")))
+  );
+
+  const hasAreaNotConserved = findings.some(
+    (f) =>
+      (f.rule_id === "R8" && f.sub_code === "AREA_NOT_CONSERVED") ||
+      f.sub_code === "AREA_NOT_CONSERVED" ||
+      (f.text &&
+        (f.text.includes("জমির পরিমাণে অসঙ্গতি") ||
+          f.text.includes("পরিমাপের অমিল") ||
+          f.text.toLowerCase().includes("not conserved")))
+  );
+
+  const lineageFinding = findings.find(
+    (f) =>
+      f.layer === "LINEAGE" ||
+      ["MISSING_GENERATION", "ORPHAN", "BAD_PARENT", "AREA_GROWTH"].includes(f.sub_code || "") ||
+      f.rule_id === "R7"
+  );
+  const hasLineageIssue = Boolean(lineageFinding);
+
+  const hasRapidTransfers = findings.some(
+    (f) =>
+      f.rule_id === "R4" ||
+      f.sub_code === "RAPID_TRANSFERS" ||
+      (f.text && (f.text.includes("দ্রুত হস্তান্তর") || f.text.toLowerCase().includes("rapid")))
+  );
+
+  const hasKhasOrAcquisition =
+    isKhas ||
+    isAcquisition ||
+    findings.some(
+      (f) =>
+        (f.rule_id === "R6" || f.sub_code === "FLAGGED_LAND") &&
+        (f.text?.toLowerCase().includes("খাস") ||
+          f.text?.toLowerCase().includes("khas") ||
+          f.text?.toLowerCase().includes("অধিগ্রহণ") ||
+          f.text?.toLowerCase().includes("acquisition"))
+    );
+
+  const hasActiveCase =
+    isDisputed ||
+    activeCases > 0 ||
+    findings.some(
+      (f) =>
+        (f.rule_id === "R6" || f.sub_code === "FLAGGED_LAND") &&
+        (f.text?.toLowerCase().includes("মামলা") ||
+          f.text?.toLowerCase().includes("dispute") ||
+          f.text?.toLowerCase().includes("litigation"))
+    );
+
+  const hasMissingMutation =
+    findings.some((f) => f.rule_id?.startsWith("R3") || f.sub_code === "MISSING_MUTATION") ||
+    (typeof mutation.missing_mutations === "number" && Number(mutation.missing_mutations) > 0);
+
+  // Dynamic Specific Cause Badge
+  let specificBadge: { icon: string; text: string; bg: string } | null = null;
+  if (hasIntegrityTamper) {
+    specificBadge = {
+      icon: "❌",
+      text: lang === "bn" ? "দলিল বিকৃত / ডিজিটাল স্বাক্ষর জাল" : "Deed Tampered / Bad Signature",
+      bg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300",
+    };
+  } else if (hasDoubleSale) {
+    specificBadge = {
+      icon: "❌",
+      text: lang === "bn" ? "দ্বৈত বিক্রয় প্রতারণা" : "Double Sale Attempt",
+      bg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300",
+    };
+  } else if (hasNotOwner) {
+    specificBadge = {
+      icon: "❌",
+      text: lang === "bn" ? "স্বত্বহীন বিক্রেতা" : "Seller Not Owner",
+      bg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300",
+    };
+  } else if (hasOwnerMismatch) {
+    specificBadge = {
+      icon: "⚠️",
+      text: lang === "bn" ? "খতিয়ান মালিকানায় অমিল" : "Owner Mismatch",
+      bg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300",
+    };
+  } else if (hasMutationStalled) {
+    specificBadge = {
+      icon: "⏳",
+      text: lang === "bn" ? "নামজারি সংবিধিবদ্ধ বিলম্ব" : "Mutation Stalled (> 90 Days)",
+      bg: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300",
+    };
+  } else if (hasAreaNotConserved) {
+    specificBadge = {
+      icon: "⚠️",
+      text: lang === "bn" ? "জমির পরিমাপে অসঙ্গতি" : "Area Discrepancy",
+      bg: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300",
+    };
+  } else if (hasLineageIssue) {
+    const code = lineageFinding?.sub_code || "";
+    const lineageText =
+      code === "AREA_GROWTH"
+        ? (lang === "bn" ? "জরিপ খতিয়ানে জমি বৃদ্ধি" : "Survey Area Growth")
+        : code === "MISSING_GENERATION"
+        ? (lang === "bn" ? "মধ্যবর্তী জরিপ অনুপস্থিত" : "Missing Survey")
+        : (lang === "bn" ? "জরিপ শৃঙ্খলে ত্রুটি" : "Survey Lineage Gap");
+    specificBadge = {
+      icon: "📜",
+      text: lineageText,
+      bg: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300",
+    };
+  } else if (hasRapidTransfers) {
+    specificBadge = {
+      icon: "⚠️",
+      text: lang === "bn" ? "অস্বাভাবিক দ্রুত হস্তান্তর" : "Rapid Transfers",
+      bg: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300",
+    };
+  } else if (hasKhasOrAcquisition) {
+    specificBadge = {
+      icon: "🏛️",
+      text: lang === "bn" ? "সরকারি খাস/অধিগ্রহণকৃত জমি" : "Khas / Acquired Land",
+      bg: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300",
+    };
+  } else if (hasActiveCase) {
+    specificBadge = {
+      icon: "⚖️",
+      text: lang === "bn" ? "আদালতে বিচারাধীন মামলা" : "Active Court Case",
+      bg: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300",
+    };
+  } else if (hasMissingMutation) {
+    specificBadge = {
+      icon: "📜",
+      text: lang === "bn" ? "নামজারি বাকি রয়েছে" : "Missing Mutation",
+      bg: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300",
+    };
+  }
+
+  // Dynamic Risk Level & Cause Heading
+  let dynamicRiskTitle = t(`risk_level.${level}`, level);
+  if (hasIntegrityTamper) {
+    dynamicRiskTitle = lang === "bn" ? "চরম ঝুঁকি (দলিল বিকৃত / ডিজিটাল স্বাক্ষর জাল)" : "Critical Risk (Tampered Deed)";
+  } else if (hasDoubleSale) {
+    dynamicRiskTitle = lang === "bn" ? "চরম ঝুঁকি (দ্বৈত বিক্রয় প্রতারণা)" : "Critical Risk (Double Sale)";
+  } else if (hasNotOwner) {
+    dynamicRiskTitle = lang === "bn" ? "চরম ঝুঁকি (স্বত্বহীন বিক্রেতা)" : "Critical Risk (Seller Not Owner)";
+  } else if (hasOwnerMismatch) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (খতিয়ানের সাথে মালিকানা অমিল)" : "High Risk (Record Owner Mismatch)";
+  } else if (hasMutationStalled) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (নামজারি সংবিধিবদ্ধ বিলম্ব)" : "High Risk (Stalled Mutation)";
+  } else if (hasAreaNotConserved) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (জমির পরিমাপে অসঙ্গতি)" : "High Risk (Area Conservation Discrepancy)";
+  } else if (hasLineageIssue) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (ঐতিহাসিক খতিয়ান শৃঙ্খলে ত্রুটি)" : "High Risk (Survey Lineage Discontinuity)";
+  } else if (hasRapidTransfers) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (অস্বাভাবিক দ্রুত হস্তান্তর)" : "High Risk (Suspicious Rapid Transfers)";
+  } else if (hasKhasOrAcquisition) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (সরকারি খাস/অধিগ্রহণকৃত জমি)" : "High Risk (Government Khas Land)";
+  } else if (hasActiveCase) {
+    dynamicRiskTitle = lang === "bn" ? "উচ্চ ঝুঁকি (আদালতে বিচারাধীন মামলা)" : "High Risk (Active Court Dispute)";
+  } else if (hasMissingMutation) {
+    dynamicRiskTitle = lang === "bn" ? "মাঝারি ঝুঁকি (নামজারি বাকি রয়েছে)" : "Medium Risk (Pending Mutation)";
+  }
+
+  // Dynamic Risk Description
+  let dynamicRiskDesc = "";
+  if (level === "LOW") {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "এই প্লটের রেকর্ড ও মালিকানা স্বাভাবিক। কোনো ক্রিপ্টোগ্রাফিক বা দ্বৈত বিক্রয়ের ঝুঁকি নেই।"
+        : "The records and ownership chain on this plot are clean and intact. No double-sale or tampering risks detected.";
+  } else if (hasIntegrityTamper) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "দলিলের ডিজিটাল স্বাক্ষর অথবা ক্রিপ্টোগ্রাফিক হ্যাশ যাচাইয়ে গরমিল পাওয়া গেছে। এটি একটি বিকৃত বা জাল দলিল হতে পারে।"
+        : "Cryptographic hash or digital signature verification failed. Deed tampering detected.";
+  } else if (hasDoubleSale) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "একই জমি পূর্বে অন্য ব্যক্তির কাছে বিক্রি করা হয়েছে। এই জমি পুনরায় বিক্রির চেষ্টা অবৈধ ও চরম প্রতারণা।"
+        : "Double-sale attempt detected. The land was already sold in an earlier deed.";
+  } else if (hasNotOwner) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "বিক্রেতা এই জমির বৈধ মালিক নন অথবা তার বিক্রয়যোগ্য অবশিষ্ট জমি নেই। স্বত্বহীন ব্যক্তির জমি বিক্রি অবৈধ।"
+        : "Seller does not own the property or lacks sufficient remaining holdings.";
+  } else if (hasOwnerMismatch) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "সহকারী কমিশনার (ভূমি) অফিসের রেকর্ডভুক্ত মালিকের সাথে সাব-রেজিস্ট্রির দলিল সূত্রে প্রাপ্ত মালিকের অমিল পাওয়া গেছে। এটি প্রশাসনিক বা নামজারি সংক্রান্ত বড় ধরনের অসঙ্গতি।"
+        : "The recorded owner at the AC Land office differs from the mutation-derived deed owner. Formal reconciliation required.";
+  } else if (hasMutationStalled) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "এই দাগের একটি নামজারি আবেদন সংবিধিবদ্ধ সময়সীমা (৯০ দিন) পার হলেও এখনো পর্যালোচনাধীন অবস্থায় আটকে আছে। কোনো জমি কেনার পূর্বে নামজারি সম্পন্ন নিশ্চিত করুন।"
+        : "A mutation application on this plot has stalled in review beyond statutory limits. Ensure mutation is completed before purchase.";
+  } else if (hasAreaNotConserved) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "রেকর্ডভুক্ত অংশীদারদের মোট জমির সমষ্টি প্লটের মূল আয়তনের সাথে মিলছে না। জমি হস্তান্তর বা নামজারিতে অতিরিক্ত জমি অন্তর্ভুক্তির ঝুঁকি রয়েছে।"
+        : "The sum of citizen holdings does not match the documented plot area. Risk of boundary conflict or phantom area.";
+  } else if (hasLineageIssue) {
+    const code = lineageFinding?.sub_code || "";
+    if (code === "AREA_GROWTH") {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "আইনগত কারণ ব্যতীত পরবর্তী জরিপে দাগের জমির পরিমাণ পূর্ববর্তী মূল জরিপের চেয়ে বৃদ্ধি পেয়েছে। জরিপ শৃঙ্খল যাচাই আবশ্যক।"
+          : "Unexplained area growth detected between survey generations. Historical verification required.";
+    } else if (code === "MISSING_GENERATION") {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "পূর্ববর্তী ঐতিহাসিক জরিপ শৃঙ্খল থেকে এক বা একাধিক মধ্যবর্তী জরিপ বাদ পড়েছে। স্বত্বের ধারাবাহিকতা যাচাই করুন।"
+          : "Missing survey generation detected in lineage graph. Continuity check required.";
+    } else if (code === "ORPHAN" || code === "BAD_PARENT") {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "মূলহীন জরিপ খতিয়ান: এই ঐতিহাসিক জরিপ খতিয়ানটির কোনো পূর্ববর্তী মূল খতিয়ান বা সংযোগ পাওয়া যায়নি।"
+          : "Orphan survey khatian with no verifiable ancestor link in historical records.";
+    } else {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "ঐতিহাসিক জরিপ শৃঙ্খলে মধ্যবর্তী খতিয়ান অনুপস্থিত, মূলহীন খতিয়ান অথবা অযৌক্তিক জমির বৃদ্ধি শনাক্ত হয়েছে। মূল মালিকানার শিকড়ে ত্রুটি থাকতে পারে।"
+          : "Discrepancy detected in historical survey lineage (missing survey generation, orphan khatian, or unexplained area growth).";
+    }
+  } else if (hasRapidTransfers) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "অল্প সময়ের মধ্যে একাধিকবার জমি হস্তান্তর হয়েছে। এটি বেনামী লেনদেন বা জমি দখলের পূর্ব লক্ষণ হতে পারে।"
+        : "Plot has rapid successive transfers within a short period. Review deed history carefully.";
+  } else if (hasKhasOrAcquisition) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "এই জমি সরকারি খাস বা সরকারের অধিগ্রহণকৃত তালিকার অন্তর্ভুক্ত। এই জমি ক্রয়-বিক্রয় সম্পূর্ণ নিষিদ্ধ ও দণ্ডনীয় অপরাধ।"
+        : "Government khas or acquired land detected. Buying or selling this land is prohibited.";
+  } else if (hasActiveCase) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "এই জমিতে আদালতে বিচারাধীন দেওয়ানি বা স্বত্ব সংক্রান্ত মামলা রয়েছে। আইনি নিষ্পত্তি ব্যতীত হস্তান্তর ঝুঁকিপূর্ণ।"
+        : "Active court dispute or litigation registered against this plot.";
+  } else if (hasMissingMutation) {
+    dynamicRiskDesc =
+      lang === "bn"
+        ? "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো ঝুঁকি রয়েছে। কোনো জমি কেনার পূর্বে নামজারি সম্পন্ন নিশ্চিত করুন।"
+        : "Caution: Moderate risk detected, such as pending mutation beyond the standard time window.";
+  } else if (findings.length > 0 && findings[0].text) {
+    dynamicRiskDesc = findings[0].text;
+  } else {
+    if (level === "MEDIUM") {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো ঝুঁকি রয়েছে।"
+          : "Caution: Moderate risk detected, such as pending mutation beyond the standard time window.";
+    } else if (level === "HIGH") {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "এই জমিতে দ্রুত মালিকানা পরিবর্তন অথবা আদালতের মামলা সংক্রান্ত ঝুঁকি রয়েছে। যাচাই করে সিদ্ধান্ত নিন।"
+          : "Elevated risk: Plot has rapid successive transfers or active court disputes. Further review is recommended.";
+    } else {
+      dynamicRiskDesc =
+        lang === "bn"
+          ? "সতর্কতা! এই জমিতে দ্বৈত বিক্রয় (Double Sale), স্বত্বহীন বিক্রি অথবা দলিলের তথ্যে গরমিল শনাক্ত হয়েছে।"
+          : "Critical alert! Serious violations detected such as a double-sale attempt, unowned seller, or broken deed integrity.";
+    }
+  }
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 1. Primary Risk Card with Circular Ring */}
@@ -167,6 +461,16 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                 {t(`risk_level.${level}`, level)}
               </span>
 
+              {/* Specific Cause Badge */}
+              {specificBadge && (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${specificBadge.bg}`}
+                >
+                  <span>{specificBadge.icon}</span>
+                  <span>{specificBadge.text}</span>
+                </span>
+              )}
+
               {/* Chain OK Badge */}
               {report.chain_ok ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -191,27 +495,12 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
                     ? "জমিতে কোনো জালিয়াতি বা বিরোধের প্রমাণ নেই"
                     : "No fraud or legal disputes detected on this plot")
                 : lang === "bn"
-                ? `${t("check.risk_score")}: ${toBnDigits(score)}/${toBnDigits(100)} (${t(`risk_level.${level}`, level)})`
-                : `${t("check.risk_score")}: ${score}/100 (${level})`}
+                ? `${t("check.risk_score")}: ${toBnDigits(score)}/${toBnDigits(100)} (${dynamicRiskTitle})`
+                : `${t("check.risk_score")}: ${score}/100 (${dynamicRiskTitle})`}
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {level === "LOW" &&
-                (lang === "bn"
-                  ? "এই প্লটের রেকর্ড ও মালিকানা স্বাভাবিক। কোনো ক্রিপ্টোগ্রাফিক বা দ্বৈত বিক্রয়ের ঝুঁকি নেই।"
-                  : "The records and ownership chain on this plot are clean and intact. No double-sale or tampering risks detected.")}
-              {level === "MEDIUM" &&
-                (lang === "bn"
-                  ? "সতর্কতা: জমিতে দলিলের বিপরীতে সময়মতো নামজারি সম্পন্ন না হওয়ার মতো ঝুঁকি রয়েছে।"
-                  : "Caution: Moderate risk detected, such as pending mutation beyond the standard time window.")}
-              {level === "HIGH" &&
-                (lang === "bn"
-                  ? "এই জমিতে দ্রুত মালিকানা পরিবর্তন অথবা আদালতের মামলা সংক্রান্ত ঝুঁকি রয়েছে। যাচাই করে সিদ্ধান্ত নিন।"
-                  : "Elevated risk: Plot has rapid successive transfers or active court disputes. Further review is recommended.")}
-              {level === "CRITICAL" &&
-                (lang === "bn"
-                  ? "সতর্কতা! এই জমিতে দ্বৈত বিক্রয় (Double Sale), স্বত্বহীন বিক্রি অথবা দলিলের তথ্যে গরমিল শনাক্ত হয়েছে।"
-                  : "Critical alert! Serious violations detected such as a double-sale attempt, unowned seller, or broken deed integrity.")}
+              {dynamicRiskDesc}
             </p>
           </div>
         </div>
