@@ -135,6 +135,76 @@ function TransparencyContent() {
         </p>
       </div>
 
+      {/* Real-World Citizen Value Explainer */}
+      <div className="rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/90 via-emerald-50/50 to-sky-50/90 p-5 sm:p-6 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 space-y-4">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-300 bg-teal-100/90 px-3.5 py-1 text-xs font-bold text-teal-900 shadow-2xs dark:border-teal-700/80 dark:bg-teal-950 dark:text-teal-200">
+            💡 {lang === "bn" ? "সহজ কথায় এই ফিচারটি কী এবং কেন এটি আপনার রক্ষাকবচ?" : "Plain Language Guide: Why this protects your land"}
+          </span>
+          <p className="mt-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 leading-relaxed">
+            {lang === "bn"
+              ? "প্রতিদিন সাব-রেজিস্ট্রি অফিসে যতগুলো দলিল নিবন্ধিত হয়, দিনশেষে সেই সবকটি দলিলের একটিমাত্র অপরিবর্তনীয় গাণিতিক ডিজিটাল সিলমোহর (মার্কেল রুট) তৈরি করা হয় এবং তা জনসমক্ষে প্রকাশ করা হয়। এটি সাধারণ নাগরিকের জীবনে ৩টি যুগান্তকারী সুরক্ষা নিশ্চিত করে:"
+              : "Every day, all newly registered deeds are sealed into a single, tamper-proof mathematical fingerprint (Merkle Root) published openly. This provides 3 critical real-world guarantees:"}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1 text-xs">
+          <div className="rounded-xl border border-teal-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950/90 space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-sm">
+              <span className="text-base">📅</span>
+              <span>{lang === "bn" ? "পেছনের তারিখে ভুয়া দলিল বন্ধ" : "No Backdated Deeds"}</span>
+            </div>
+            <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
+              {lang === "bn"
+                ? "ঘুষ দিয়ে ১৫-২০ বছর আগের পেছনের তারিখে ভুয়া দলিল বানিয়ে জমি দখল করা চিরতরে অসম্ভব। প্রতিদিনের ডিজিটাল সিল জনসমক্ষে সংরক্ষিত থাকায় পেছনের তারিখে নতুন কোনো দলিল আর যুক্ত করা সম্ভব নয়।"
+                : "Mathematically prevents inserting forged backdated deeds into government registers."}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-teal-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950/90 space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-sm">
+              <span className="text-base">🔒</span>
+              <span>{lang === "bn" ? "দলিল গায়েব বা পরিবর্তন অসম্ভব" : "Tamper & Deletion Proof"}</span>
+            </div>
+            <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
+              {lang === "bn"
+                ? "সরকারি অফিসের বালাম বইয়ের পাতা ছেঁড়া বা ডাটাবেজ থেকে কোনো দলিল মুছে ফেললে পুরো চেইনের ডিজিটাল সিল ভেঙে যাবে এবং তাৎক্ষণিকভাবে জালিয়াতি ধরা পড়বে।"
+                : "If anyone deletes or modifies a registered deed in the database, the public root hash immediately breaks."}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-teal-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950/90 space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-sm">
+              <span className="text-base">📱</span>
+              <span>{lang === "bn" ? "ঘরে বসে নাগরিকের নিজ চোখে যাচাই" : "Zero-Cost Citizen Audit"}</span>
+            </div>
+            <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
+              {lang === "bn"
+                ? "কাউকে কোনো ঘুষ বা ফি না দিয়ে ঘরে বসেই যেকোনো নাগরিক নিশ্চিত হতে পারবেন যে তার দলিলটি সরকারি ডিজিটাল রেজিস্টারে নিরাপদ আছে কিনা।"
+                : "Any citizen can independently verify their deed without relying on or paying intermediaries."}
+            </p>
+          </div>
+        </div>
+
+        {/* 3 Step Visual Flow */}
+        <div className="border-t border-teal-200/70 dark:border-slate-800 pt-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center text-[11px]">
+            <div className="rounded-xl border border-teal-100 bg-white/90 p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90">
+              <span className="font-bold text-teal-800 dark:text-teal-300 block text-xs">{lang === "bn" ? "ধাপ ১: দলিল নিবন্ধন" : "Step 1: Registration"}</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[11px] font-medium">{lang === "bn" ? "দিনের সমস্ত দলিলের নিরাপদ হ্যাশ তৈরি হয়" : "All deeds hashed cryptographically"}</span>
+            </div>
+            <div className="rounded-xl border border-teal-100 bg-white/90 p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90">
+              <span className="font-bold text-teal-800 dark:text-teal-300 block text-xs">{lang === "bn" ? "ধাপ ২: দৈনিক সিলমোহর" : "Step 2: Daily Seal"}</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[11px] font-medium">{lang === "bn" ? "সব দলিল জুড়ে ১টি মারকেল রুটে স্বাক্ষর" : "Aggregated into single signed root"}</span>
+            </div>
+            <div className="rounded-xl border border-teal-100 bg-white/90 p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90">
+              <span className="font-bold text-teal-800 dark:text-teal-300 block text-xs">{lang === "bn" ? "ধাপ ৩: উন্মুক্ত অডিট" : "Step 3: Open Audit"}</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[11px] font-medium">{lang === "bn" ? "এই পেজ থেকে যে কেউ সরাসরি যাচাইযোগ্য" : "Publicly verifiable by anyone"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Latest Root Showcase Card */}
       <Card className="p-6 border-teal-200 dark:border-teal-900/60 shadow-lg shadow-teal-500/5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-5 dark:border-slate-800">
@@ -166,9 +236,14 @@ function TransparencyContent() {
 
         <div className="mt-5 space-y-3 font-mono text-xs">
           <div>
-            <span className="text-slate-400 block text-[11px] uppercase tracking-wider mb-1 font-sans font-semibold">
-              {lang === "bn" ? "মারকেল রুট হ্যাশ (SHA-256)" : "Merkle Root Hash (SHA-256)"}
-            </span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider font-sans font-semibold">
+                {lang === "bn" ? "মারকেল রুট হ্যাশ (SHA-256) — সারাদিনের দলিলের গাণিতিক সিলমোহর" : "Merkle Root Hash (SHA-256) — Daily Cumulative Seal"}
+              </span>
+              <span className="text-[10px] text-teal-600 dark:text-teal-400 font-sans font-bold">
+                {lang === "bn" ? "🔒 ১ অক্ষরের পরিবর্তন হলেও জালিয়াতি ধরা পড়বে" : "🔒 100% Tamper Evident"}
+              </span>
+            </div>
             <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-900 p-3 text-emerald-400">
               <span className="truncate">{PUBLISHED_BATCHES[0].root_hash}</span>
               <button

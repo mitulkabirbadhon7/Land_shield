@@ -1485,6 +1485,29 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Known gaps:** None.
 - **Next Step:** Conclude merge into `phase2` and merge `phase2` into `main`.
 
+---
+
+### Phase 2 UI Accessibility, High-Contrast Visibility & Citizen Explainer Polish Log
+- **What was done:**
+  - **Dark Mode Gradient Visibility Fix**:
+    * Identified root cause of unreadable washed-out text on `/metrics`, `/transparency`, and `/check`: in Tailwind CSS, `bg-gradient-to-...` sets a CSS `background-image` that renders on top of `background-color`, leaving the light teal gradient visible in dark mode.
+    * Overrode gradient stops explicitly with `dark:from-slate-900 dark:via-slate-900 dark:to-slate-950` across all explainer banners and cards.
+  - **High-Contrast Typography & Visual Hierarchy**:
+    * Upgraded all subtitle and body text classes to `text-slate-800 dark:text-slate-100 font-medium` and `text-slate-700 dark:text-slate-300 font-medium` for crystal-clear readability in both light and dark themes.
+    * Added crisp high-contrast borders (`dark:border-slate-800`) and badges (`dark:bg-slate-950/90`, `dark:bg-teal-950`).
+  - **Citizen Value Explainer Integration**:
+    * Enhanced `/metrics` with 9 real-world land fraud crime analogies explaining why sub-second automated detection protects regular citizens.
+    * Enhanced `/transparency` with a 3-step visual workflow and 3 fundamental guarantees of daily cryptographic Merkle roots.
+  - **Verification**:
+    * `npm run build` in `frontend/`: Compiled successfully in Turbopack, all 15 routes prerendered with zero errors.
+    * `pytest backend/tests`: **183 / 183 tests passed (100% green)** in 268.08s.
+    * `node frontend/tests/test_offline.mjs`: **4 / 4 offline crypto unit tests passed (100% green)**.
+- **Decisions:**
+  - Strictly enforce explicit dark gradient color stops on all gradient containers so that dark theme contrast is always 100% preserved.
+- **Known gaps:** None.
+- **Next Step:** Commit, push to `phase2-frontend`, fast-forward merge into `phase2`, and merge into `main`.
+
+
 
 
 

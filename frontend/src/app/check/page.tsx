@@ -807,7 +807,7 @@ function CitizenCheckContent() {
           </div>
 
           {/* AI Due-Diligence Report Trigger Banner */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-teal-900/40 dark:bg-slate-900/90 print:hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 print:hidden">
             <div className="flex items-center gap-3.5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-white font-extrabold text-sm shadow-md shadow-teal-600/30">
                 AI
