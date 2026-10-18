@@ -1609,6 +1609,24 @@ The following placeholders have been clearly marked in the documentation pack an
   * Re-ran `pytest`: all 183 backend tests passed (exit code 0).
 - **Next Step:** Commit and push to `main` so GitHub Actions re-runs and turns the commit status badge into a clean green checkmark (`✓ 3/3`).
 
+---
+
+### Project Brand Consistency Alignment (LandShield / ভূমি-সুরক্ষা) Log
+- **What was done:**
+  - **Full Unification to `LandShield`**:
+    * Inspected all frontend locales, layouts, and components for lingering alternate names ("BhumiPrahari" / "ভূমিপ্রহরী").
+    * Updated `frontend/src/app/layout.tsx`: metadata title unified to `ভূমি-সুরক্ষা (LandShield) - Digital Land Record & Deed Protection Platform`.
+    * Updated `frontend/src/locales/en.json`: `nav.title` set to `LandShield`, `faq.a1` and `admin.title` aligned to `LandShield`.
+    * Updated `frontend/src/locales/bn.json`: `nav.title` set to `ভূমি-সুরক্ষা (LandShield)` and `layers.subtitle` aligned to `ভূমি-সুরক্ষার বিভিন্ন নিরাপত্তা স্তর দ্বারা মূল্যায়িত ফলাফল`.
+    * Cleaned up remaining comments and test runner headers in `frontend/src/components/Header.tsx` and `backend/scripts/run_edge_cases.py`.
+  - **Verification**:
+    * Global `git grep` verified zero remaining occurrences of "BhumiPrahari" or "ভূমিপ্রহরী".
+    * `npm run lint` in frontend: 0 errors, 0 warnings.
+    * `npm test` in frontend: 4/4 offline crypto unit tests passed.
+- **Decisions:**
+  - Standardized on `LandShield` (and Bengali `ভূমি-সুরক্ষা (LandShield)`) across the entire repository to ensure 100% synchronization with the GitHub repo name, hackathon registration, and documentation.
+- **Next Step:** Commit and push to `main`.
+
 
 
 

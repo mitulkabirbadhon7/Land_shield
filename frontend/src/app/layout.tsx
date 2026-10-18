@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ভূমিপ্রহরী (BhumiPrahari) - Digital Land Record & Deed Protection Platform",
+  title: "ভূমি-সুরক্ষা (LandShield) - Digital Land Record & Deed Protection Platform",
   description:
     "Independent cryptographic verification for Bangladesh land deeds and records. Powered by Ed25519 digital signatures, SHA-256 hash chains, and explainable AI fraud detection.",
 };

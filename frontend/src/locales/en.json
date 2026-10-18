@@ -1,6 +1,6 @@
 {
   "nav": {
-    "title": "BhumiPrahari",
+    "title": "LandShield",
     "tagline": "Land Record & Deed Protection Platform",
     "home": "Home",
     "check": "Check Plot Risk",
@@ -364,16 +364,16 @@
     "title": "Frequently Asked Questions & How It Works",
     "subtitle": "Essential knowledge regarding land deed cryptographic verification and fraud prevention",
     "q1": "How does pre-purchase verification prevent double-sale fraud?",
-    "a1": "Ed25519 digital signatures and SHA-256 ledger hash chains verify historical deeds against the plot. If the land was previously transferred to someone else, BhumiPrahari instantly flags the double sale before you pay.",
+    "a1": "Ed25519 digital signatures and SHA-256 ledger hash chains verify historical deeds against the plot. If the land was previously transferred to someone else, LandShield instantly flags the double sale before you pay.",
     "q2": "Why is land mutation critical after deed registration?",
-    "a2": "Mutation officially updates the governmental record of rights (Khatian). If a deed remains unmutated beyond 90 days, the AI Rules Engine flags it as a moderate risk to prevent unauthorized secondary resales.",
     "q3": "What happens if deed payload contents are tampered with?",
+    "a2": "Mutation officially updates the governmental record of rights (Khatian). If a deed remains unmutated beyond 90 days, the AI Rules Engine flags it as a moderate risk to prevent unauthorized secondary resales.",
     "a3": "If even a single character, date, or acreage in the deed is modified, SHA-256 hash validation and the Sub-Registrar's Ed25519 signature fail, triggering an immediate red TAMPERED alert.",
     "q4": "Is citizen pre-purchase inspection free and public?",
     "a4": "Yes, citizen deed verification and plot risk checks are 100% public, instant, and free—no login required. Simply enter a Dag number or scan the QR code printed on the deed."
   },
   "admin": {
-    "title": "BhumiPrahari System Administration",
+    "title": "LandShield System Administration",
     "subtitle": "Tamper Lab cryptographic forgery demonstration & immutable system audit log",
     "tab_tamper": "Tamper Lab (Live Demo)",
     "tab_audit": "Audit Log Trail",

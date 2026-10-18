@@ -43,7 +43,7 @@ export function Header() {
           href="/"
           className="group flex items-center gap-3 transition focus:outline-hidden"
         >
-          {/* Creative BhumiPrahari Emblem (Land Parcel Facets + Sentinel Crest) */}
+          {/* LandShield Emblem (Land Parcel Facets + Sentinel Crest) */}
           <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600 p-2 shadow-md shadow-emerald-500/25 ring-1 ring-white/20 transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 group-hover:shadow-emerald-500/40">
             <svg
               className="h-full w-full text-white drop-shadow-xs"

@@ -1,6 +1,6 @@
 """
-LandShield (BhumiPrahari) Edge-Case Stress Test Suite
-=====================================================
+LandShield Edge-Case Stress Test Suite
+======================================
 Tests extreme boundary conditions, mathematical precision limits,
 Unicode diacritic normalization, state-machine vulnerabilities,
 cryptographic tampering, and role authorization edge cases.
@@ -525,7 +525,7 @@ class EdgeCaseRunner:
     # =========================================================================
     def run_all(self):
         print("=" * 80)
-        print(" LandShield (BhumiPrahari) - Systematic Edge-Case Stress Test Suite")
+        print(" LandShield - Systematic Edge-Case Stress Test Suite")
         print("=" * 80)
 
         tests = [
