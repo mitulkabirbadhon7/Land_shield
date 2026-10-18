@@ -914,7 +914,7 @@ function CitizenCheckContent() {
           </div>
 
           {/* AI Due-Diligence Report Trigger Banner */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 print:hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/90 bg-teal-50/80 p-4 sm:p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 print:hidden">
             <div className="flex items-center gap-3.5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-white font-extrabold text-sm shadow-md shadow-teal-600/30">
                 AI
@@ -925,7 +925,7 @@ function CitizenCheckContent() {
                     ? "এআই ডিউ-ডিলিজেন্স রিপোর্ট ও আইনি পরামর্শ"
                     : "AI Due-Diligence & Legal Advisory Report"}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-1">
                   {lang === "bn"
                     ? "জমির স্বত্ব, খতিয়ান, ডিজিটাল স্বাক্ষর ও জালিয়াতি ঝুঁকির পূর্ণাঙ্গ প্রিন্ট-রেডি প্রতিবেদন।"
                     : "Print-ready institutional report covering ownership, signatures, and fraud checklist."}

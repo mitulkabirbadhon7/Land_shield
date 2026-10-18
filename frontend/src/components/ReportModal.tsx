@@ -172,38 +172,38 @@ export function ReportModal({
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-xs">
                   <div>
-                    <span className="text-slate-500 block">{t("plot.dag_no")}</span>
-                    <span className="font-bold text-slate-900 dark:text-white print:text-black text-sm">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.dag_no", lang === "bn" ? "দাগ নম্বর" : "Dag No")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 print:text-black text-sm">
                       {report.plot_summary.dag_no}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">{t("plot.mouza")}</span>
-                    <span className="font-bold text-slate-900 dark:text-white print:text-black">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.mouza", lang === "bn" ? "মৌজা" : "Mouza")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 print:text-black">
                       {report.plot_summary.mouza}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">{t("plot.upazila")}</span>
-                    <span className="font-bold text-slate-900 dark:text-white print:text-black">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.upazila", lang === "bn" ? "উপজেলা" : "Upazila")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 print:text-black">
                       {report.plot_summary.upazila}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">{t("plot.district")}</span>
-                    <span className="font-bold text-slate-900 dark:text-white print:text-black">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.district", lang === "bn" ? "জেলা" : "District")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 print:text-black">
                       {report.plot_summary.district}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">{t("plot.area")}</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.area", lang === "bn" ? "জমির পরিমাণ" : "Area")}</span>
                     <span className="font-bold text-teal-700 dark:text-teal-400 print:text-black">
                       {report.plot_summary.area_decimal} {lang === "bn" ? "শতাংশ" : "dec"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">{t("plot.owner")}</span>
-                    <span className="font-semibold text-slate-900 dark:text-white print:text-black truncate block">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium block">{t("plot.owner", lang === "bn" ? "বর্তমান মালিক" : "Owner")}</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100 print:text-black truncate block">
                       {report.plot_summary.current_owner || "—"}
                     </span>
                   </div>
@@ -213,9 +213,9 @@ export function ReportModal({
               {/* Overall Assessment Score & Executive Summary */}
               <div
                 className={`rounded-xl border p-6 flex flex-col sm:flex-row items-center gap-6 ${
-                  report.risk_score >= 60
+                  report.risk_score >= 60 || report.risk_level === "HIGH"
                     ? "border-rose-200 bg-rose-50/70 dark:border-rose-900/50 dark:bg-rose-950/20 print:border-rose-400"
-                    : report.risk_score >= 25
+                    : report.risk_score >= 25 || report.risk_level === "MEDIUM"
                     ? "border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 print:border-amber-400"
                     : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20 print:border-emerald-400"
                 }`}
@@ -224,9 +224,9 @@ export function ReportModal({
                 <div className="flex flex-col items-center justify-center shrink-0">
                   <div
                     className={`flex h-20 w-20 items-center justify-center rounded-full border-4 font-extrabold text-2xl shadow-inner ${
-                      report.risk_score >= 60
+                      report.risk_score >= 60 || report.risk_level === "HIGH"
                         ? "border-rose-500 text-rose-700 bg-rose-100/80"
-                        : report.risk_score >= 25
+                        : report.risk_score >= 25 || report.risk_level === "MEDIUM"
                         ? "border-amber-500 text-amber-700 bg-amber-100/80"
                         : "border-emerald-500 text-emerald-700 bg-emerald-100/80"
                     }`}
@@ -243,18 +243,18 @@ export function ReportModal({
                   <div className="flex items-center justify-center sm:justify-start gap-2">
                     <StatusBadge
                       status={
-                        report.risk_score >= 60
+                        report.risk_score >= 60 || report.risk_level === "HIGH"
                           ? "CANCELLED"
-                          : report.risk_score >= 25
+                          : report.risk_score >= 25 || report.risk_level === "MEDIUM"
                           ? "SUPERSEDED"
                           : "VALID"
                       }
                       customLabel={
-                        report.risk_level === "HIGH"
+                        report.risk_score >= 60 || report.risk_level === "HIGH"
                           ? lang === "bn"
                             ? "উচ্চ ঝুঁকি (HIGH RISK)"
                             : "HIGH RISK"
-                          : report.risk_level === "MEDIUM"
+                          : report.risk_score >= 25 || report.risk_level === "MEDIUM"
                           ? lang === "bn"
                             ? "মাঝারি ঝুঁকি (MEDIUM RISK)"
                             : "MEDIUM RISK"

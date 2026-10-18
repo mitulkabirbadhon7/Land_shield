@@ -1507,6 +1507,27 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Known gaps:** None.
 - **Next Step:** Commit, push to `phase2-frontend`, fast-forward merge into `phase2`, and merge into `main`.
 
+---
+
+### Live Version Visibility & ReportModal Accuracy Polish Log
+- **What was done:**
+  - **Attack Benchmark Subcards Visibility**:
+    * Replaced faint styling in `frontend/src/app/metrics/page.tsx` with crisp `dark:bg-slate-950` containers and high-contrast typography (`text-slate-900 dark:text-slate-100 font-medium`).
+  - **AI Due-Diligence Trigger Banner**:
+    * Replaced gradient in `frontend/src/app/check/page.tsx` with rock-solid solid styling `bg-teal-50/80 dark:bg-slate-900` and high-contrast subtitle `text-slate-700 dark:text-slate-300 font-medium`.
+  - **ReportModal Identity Details Translation Keys**:
+    * Added missing `"plot"` namespace in `frontend/src/locales/bn.json` and `frontend/src/locales/en.json`, eliminating raw `plot.dag_no`, `plot.mouza`, etc., and replacing them with proper Bengali terms (`দাগ নম্বর`, `মৌজা`, `উপজেলা`, `জেলা`, `জমির পরিমাণ`, `বর্তমান মালিক`).
+  - **ReportModal High Risk Badge Condition Alignment**:
+    * Corrected badge logic in `frontend/src/components/ReportModal.tsx` so scores >= 60 always display "উচ্চ ঝুঁকি (HIGH RISK)" with red `CANCELLED` status badge instead of falling through to "কম ঝুঁকি".
+  - **Verification**:
+    * `npm run build` in `frontend/`: Compiled successfully in Turbopack in 1.1s, all 15 routes prerendered with zero errors.
+    * `node frontend/tests/test_offline.mjs`: **4 / 4 offline crypto unit tests passed (100% green)**.
+- **Decisions:**
+  - Ensure fallback inline labels for all modal identity fields to eliminate any risk of raw dictionary key display.
+- **Next Step:** Commit to `phase2` and fast-forward merge into `main` so the live deployment immediately updates.
+
+---
+
 ### Session P2-FIX-CRITICAL-FRAUD-AND-MUTATION-STATUS Log
 - **What was done:**
   - Pulled and fast-forwarded all latest upstream commits from `origin/phase2-frontend` (108 files updated/added across Phase 2 models, ML pipeline, attack suite, and APIs).
@@ -1538,7 +1559,8 @@ The following placeholders have been clearly marked in the documentation pack an
   - Granular fraud classification guarantees that tampered deeds, double sales, and titleless sellers are never conflated with one another.
   - A completed mutation on the latest deed certifies that the plot's current ownership is official, eliminating false "নামজারি বাকি রয়েছে" warnings.
 - **Known gaps:** None.
-- **Next Step:** User reviews and tests locally, then commits and pushes.
+- **Next Step:** Commit to `phase2-frontend` and merge into `phase2` / `main`.
+
 
 
 
