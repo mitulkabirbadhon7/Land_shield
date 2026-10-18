@@ -490,18 +490,58 @@ function CitizenCheckContent() {
 
   const findings = riskReport && Array.isArray(riskReport.findings) ? riskReport.findings : [];
 
-  // Card 1: Critical / Fraud / Double Sale
-  const hasCriticalOrFraud =
-    Boolean(riskReport?.has_critical) ||
+  // 1. Detailed fraud classification (Deed Tamper R5 vs Double Sale R1 vs Stranger Seller R2)
+  const hasIntegrityTamper =
     findings.some(
       (f) =>
-        f.severity === "CRITICAL" ||
-        f.rule_id?.startsWith("R1") ||
-        f.rule_id?.startsWith("R2") ||
-        f.rule_id?.startsWith("R5")
+        f.rule_id?.startsWith("R5") ||
+        f.layer === "integrity" ||
+        f.sub_code === "INTEGRITY" ||
+        f.sub_code === "HASH_MISMATCH" ||
+        f.sub_code === "SIGNATURE_MISMATCH" ||
+        f.sub_code === "CHAIN_BREAK" ||
+        (f.text && (f.text.includes("জাল") || f.text.includes("বিকৃত") || f.text.toLowerCase().includes("tamper") || f.text.toLowerCase().includes("hash mismatch")))
+    ) ||
+    chain.some(
+      (c) =>
+        String(c.verify_status || "").toUpperCase() === "TAMPERED" ||
+        String(c.deed_status || "").toUpperCase() === "TAMPERED"
     );
 
-  // Card 2: Government Khas Land or Acquisition
+  const hasDoubleSale = findings.some(
+    (f) =>
+      f.rule_id === "R1" ||
+      f.sub_code === "DOUBLE_SALE" ||
+      f.sub_code === "OVERSOLD" ||
+      (f.text && (f.text.includes("দ্বৈত") || f.text.toLowerCase().includes("double-sale") || f.text.toLowerCase().includes("oversold")))
+  );
+
+  const hasNotOwner = findings.some(
+    (f) =>
+      f.rule_id === "R2" ||
+      f.sub_code === "NOT_OWNER" ||
+      (f.text && (f.text.includes("স্বত্বহীন") || f.text.toLowerCase().includes("not owner") || f.text.toLowerCase().includes("not the owner")))
+  );
+
+  const hasCriticalOrFraud =
+    Boolean(riskReport?.has_critical) ||
+    hasIntegrityTamper ||
+    hasDoubleSale ||
+    hasNotOwner ||
+    findings.some((f) => f.severity === "CRITICAL");
+
+  let fraudCardText = t("check.q_fraud_ok");
+  if (hasIntegrityTamper) {
+    fraudCardText = t("check.q_fraud_tampered");
+  } else if (hasDoubleSale) {
+    fraudCardText = t("check.q_fraud_double");
+  } else if (hasNotOwner) {
+    fraudCardText = t("check.q_fraud_not_owner");
+  } else if (hasCriticalOrFraud) {
+    fraudCardText = t("check.q_fraud_bad");
+  }
+
+  // 2. Government Khas Land or Acquisition
   const isKhas = flagsList.includes("khas") || Boolean(flagsObj.is_khas);
   const isAcquisition = flagsList.includes("acquisition") || Boolean(flagsObj.is_acquisition);
   const hasKhasOrAcquisition =
@@ -516,7 +556,7 @@ function CitizenCheckContent() {
           f.text?.toLowerCase().includes("acquisition"))
     );
 
-  // Card 3: Lawsuits and Legal Disputes
+  // 3. Lawsuits and Legal Disputes
   const isDisputed = flagsList.includes("disputed") || Boolean(flagsObj.is_disputed);
   const activeCases = typeof flagsObj.active_cases_count === "number" ? flagsObj.active_cases_count : 0;
   const hasActiveCase =
@@ -530,12 +570,79 @@ function CitizenCheckContent() {
           f.text?.toLowerCase().includes("litigation"))
     );
 
-  // Card 4: Mutation status
-  const mutationRaw = (riskReport?.mutation_summary as unknown as Record<string, number | undefined>) || {};
+  // 4. Mutation status resolution
+  const mutationRaw = (riskReport?.mutation_summary as unknown as Record<string, unknown>) || {};
+  const latestMutationState = (
+    typeof mutationRaw.latest_mutation_state === "string"
+      ? mutationRaw.latest_mutation_state
+      : ""
+  ).toUpperCase();
+
+  const isMutationCompleted =
+    latestMutationState === "KHATIAN_UPDATED" ||
+    (typeof mutationRaw.mutated_deeds === "number" &&
+      mutationRaw.mutated_deeds > 0 &&
+      (!mutationRaw.missing_mutations || Number(mutationRaw.missing_mutations) === 0));
+
+  const isMutationPending =
+    ["SUBMITTED", "AUTO_CHECKED", "UNDER_REVIEW", "APPROVED", "PENDING"].includes(
+      latestMutationState
+    ) ||
+    (typeof mutationRaw.pending_mutations === "number" &&
+      Number(mutationRaw.pending_mutations) > 0 &&
+      !isMutationCompleted);
+
+  const isMutationRejected =
+    latestMutationState === "REJECTED" ||
+    (typeof mutationRaw.rejected === "number" && Number(mutationRaw.rejected) > 0);
+
   const hasMissingMutation =
-    findings.some((f) => f.rule_id?.startsWith("R3") || f.sub_code === "MISSING_MUTATION") ||
-    (typeof mutationRaw.missing_mutations === "number" && mutationRaw.missing_mutations > 0) ||
-    (typeof mutationRaw.rejected === "number" && mutationRaw.rejected > 0);
+    !isMutationCompleted &&
+    !isMutationPending &&
+    (findings.some((f) => f.rule_id?.startsWith("R3") || f.sub_code === "MISSING_MUTATION") ||
+      (typeof mutationRaw.missing_mutations === "number" && Number(mutationRaw.missing_mutations) > 0) ||
+      latestMutationState === "NONE");
+
+  let mutationCardText = t("check.q_mutation_ok");
+  let mutationCardIcon = "✅";
+  let mutationCardStyle = "border-emerald-300 bg-emerald-50/70 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200";
+
+  if (isMutationRejected) {
+    mutationCardText = t("check.q_mutation_rejected");
+    mutationCardIcon = "❌";
+    mutationCardStyle = "border-rose-300 bg-rose-50/70 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200";
+  } else if (hasMissingMutation) {
+    mutationCardText = t("check.q_mutation_pending");
+    mutationCardIcon = "📜";
+    mutationCardStyle = "border-amber-300 bg-amber-50/70 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200";
+  } else if (isMutationPending) {
+    mutationCardText = t("check.q_mutation_in_progress");
+    mutationCardIcon = "⏳";
+    mutationCardStyle = "border-sky-300 bg-sky-50/70 text-sky-900 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200";
+  } else if (isMutationCompleted) {
+    mutationCardText = t("check.q_mutation_ok");
+    mutationCardIcon = "✅";
+    mutationCardStyle = "border-emerald-300 bg-emerald-50/70 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200";
+  } else {
+    mutationCardText = t("check.q_mutation_genesis");
+    mutationCardIcon = "✅";
+    mutationCardStyle = "border-slate-200/80 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white";
+  }
+
+  // Dynamic Critical Verdict Title & Description
+  let criticalVerdictTitle = t("check.verdict_critical_title");
+  let criticalVerdictDesc = t("check.verdict_critical_desc");
+
+  if (hasIntegrityTamper) {
+    criticalVerdictTitle = t("check.verdict_critical_tamper_title");
+    criticalVerdictDesc = t("check.verdict_critical_tamper_desc");
+  } else if (hasDoubleSale) {
+    criticalVerdictTitle = t("check.verdict_critical_double_title");
+    criticalVerdictDesc = t("check.verdict_critical_double_desc");
+  } else if (hasNotOwner) {
+    criticalVerdictTitle = t("check.verdict_critical_owner_title");
+    criticalVerdictDesc = t("check.verdict_critical_owner_desc");
+  }
 
   const level = (riskReport?.level as string) || "LOW";
 
@@ -888,14 +995,14 @@ function CitizenCheckContent() {
                         {level === "LOW" && t("check.verdict_safe_title")}
                         {level === "MEDIUM" && t("check.verdict_medium_title")}
                         {level === "HIGH" && t("check.verdict_high_title")}
-                        {level === "CRITICAL" && t("check.verdict_critical_title")}
+                        {level === "CRITICAL" && criticalVerdictTitle}
                       </h2>
 
                       <p className="text-xs sm:text-sm opacity-90 font-medium max-w-2xl leading-relaxed">
                         {level === "LOW" && t("check.verdict_safe_desc")}
                         {level === "MEDIUM" && t("check.verdict_medium_desc")}
                         {level === "HIGH" && t("check.verdict_high_desc")}
-                        {level === "CRITICAL" && t("check.verdict_critical_desc")}
+                        {level === "CRITICAL" && criticalVerdictDesc}
                       </p>
                     </div>
                   </div>
@@ -942,7 +1049,7 @@ function CitizenCheckContent() {
                         {t("check.q_fraud")}
                       </span>
                       <p className="text-xs sm:text-sm font-bold mt-0.5">
-                        {hasCriticalOrFraud ? t("check.q_fraud_bad") : t("check.q_fraud_ok")}
+                        {fraudCardText}
                       </p>
                     </div>
                   </div>
@@ -992,24 +1099,21 @@ function CitizenCheckContent() {
 
                 {/* 4. Mutation Status */}
                 <div
-                  className={`rounded-xl border p-4 transition-all duration-200 shadow-2xs ${
-                    hasMissingMutation
-                      ? "border-amber-300 bg-amber-50/70 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
-                      : "border-slate-200/80 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                  }`}
+                  className={`rounded-xl border p-4 transition-all duration-200 shadow-2xs ${mutationCardStyle}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl shrink-0">{hasMissingMutation ? "📜" : "✅"}</span>
+                    <span className="text-xl shrink-0">{mutationCardIcon}</span>
                     <div>
                       <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
                         {t("check.q_mutation")}
                       </span>
                       <p className="text-xs sm:text-sm font-bold mt-0.5">
-                        {hasMissingMutation ? t("check.q_mutation_pending") : t("check.q_mutation_ok")}
+                        {mutationCardText}
                       </p>
                     </div>
                   </div>
                 </div>
+
               </div>
 
               {/* Essential Land & Plot Details (Consistent stat cards with /verify layout) */}
@@ -1375,7 +1479,7 @@ function CitizenCheckContent() {
                 <tbody>
                   <tr className="border-b border-slate-300">
                     <td className="p-2 font-semibold w-1/2">{t("check.q_fraud")}</td>
-                    <td className="p-2 font-bold w-1/2">{hasCriticalOrFraud ? t("check.q_fraud_bad") : t("check.q_fraud_ok")}</td>
+                    <td className="p-2 font-bold w-1/2">{fraudCardText}</td>
                   </tr>
                   <tr className="border-b border-slate-300">
                     <td className="p-2 font-semibold">{t("check.q_khas")}</td>
@@ -1387,7 +1491,7 @@ function CitizenCheckContent() {
                   </tr>
                   <tr>
                     <td className="p-2 font-semibold">{t("check.q_mutation")}</td>
-                    <td className="p-2 font-bold">{hasMissingMutation ? t("check.q_mutation_pending") : t("check.q_mutation_ok")}</td>
+                    <td className="p-2 font-bold">{mutationCardText}</td>
                   </tr>
                 </tbody>
               </table>

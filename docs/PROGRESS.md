@@ -1507,6 +1507,40 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Known gaps:** None.
 - **Next Step:** Commit, push to `phase2-frontend`, fast-forward merge into `phase2`, and merge into `main`.
 
+### Session P2-FIX-CRITICAL-FRAUD-AND-MUTATION-STATUS Log
+- **What was done:**
+  - Pulled and fast-forwarded all latest upstream commits from `origin/phase2-frontend` (108 files updated/added across Phase 2 models, ML pipeline, attack suite, and APIs).
+  - Fixed false-positive "দ্বৈত বিক্রয়" (Double Sale) mismatch in the public check page verdict and safety card:
+    - Updated [`frontend/src/app/check/page.tsx`](file:///c:/Land%20Project/Land_shield/frontend/src/app/check/page.tsx) to classify fraud findings into distinct categories: Cryptographic Tampering (`R5` / `HASH_MISMATCH` / `SIGNATURE_MISMATCH`), Double Sale (`R1` / `OVERSOLD`), and Seller Not Owner (`R2`).
+    - Made the top Critical Verdict Banner title and description dynamic based on the actual violation:
+      - Cryptographic Tamper: "চরম ঝুঁকি: জাল দলিল শনাক্ত" / "দলিলের অভ্যন্তরীণ তথ্য বিকৃত অথবা ডিজিটাল স্বাক্ষরে অমিল পাওয়া গেছে। এটি একটি সম্ভাব্য জাল দলিল।"
+      - Double Sale: "চরম ঝুঁকি: দ্বৈত বিক্রয় শনাক্ত" / "একই জমি একাধিকবার বিক্রয়ের প্রমাণ পাওয়া গেছে। বিক্রেতা পূর্বে বিক্রিত জমি পুনঃবিক্রয় করছেন।"
+      - Stranger Seller: "চরম ঝুঁকি: স্বত্বহীন বিক্রেতা" / "বিক্রেতার রেকর্ডে কোনো বৈধ মালিকানা স্বত্ব নেই। স্বত্বহীন বিক্রয়ের প্রমাণ রয়েছে।"
+    - Updated Card 1 to display "দলিল বিকৃত / জাল শনাক্ত" when a deed is tampered, "দ্বৈত বিক্রয় শনাক্ত" when R1 fires, and "স্বত্বহীন বিক্রেতা শনাক্ত" when R2 fires.
+  - Fixed "নামজারি বাকি রয়েছে" (Missing Mutation) persistence after AC Land officer updates khatian (`KHATIAN_UPDATED`):
+    - Added `latest_mutation_state` to `MutationSummary` schema in [`backend/app/schemas/risk.py`](file:///c:/Land%20Project/Land_shield/backend/app/schemas/risk.py) and API in [`backend/app/api/v1/risk.py`](file:///c:/Land%20Project/Land_shield/backend/app/api/v1/risk.py).
+    - When the latest active deed on a plot reaches `KHATIAN_UPDATED`, `missing_mutations` is set to 0 (since current title is officially mutated into the khatian).
+    - In [`backend/app/services/mutation_fsm.py`](file:///c:/Land%20Project/Land_shield/backend/app/services/mutation_fsm.py), ensured full sales directly update `plot.current_owner_id = deed.buyer_id` on `KHATIAN_UPDATED`.
+    - In [`backend/app/services/fraud/rules.py`](file:///c:/Land%20Project/Land_shield/backend/app/services/fraud/rules.py), updated R3 to skip deeds that are superseded by subsequent transfers (`is_superseded`).
+    - In [`frontend/src/app/check/page.tsx`](file:///c:/Land%20Project/Land_shield/frontend/src/app/check/page.tsx), made Card 4 dynamically reflect `latest_mutation_state`:
+      - `KHATIAN_UPDATED`: displays "✅ রেকর্ড হালনাগাদ ও নামজারি সম্পন্ন" with emerald styling.
+      - In progress (`SUBMITTED`, `AUTO_CHECKED`, `UNDER_REVIEW`, `APPROVED`): displays "⏳ নামজারি আবেদন প্রক্রিয়াধীন" with sky blue styling.
+      - Rejected (`REJECTED`): displays "❌ নামজারি আবেদন নামঞ্জুর" with red styling.
+      - Missing/Overdue (`R3`): displays "📜 নামজারি বাকি রয়েছে" with amber styling.
+    - Updated [`frontend/src/locales/bn.json`](file:///c:/Land%20Project/Land_shield/frontend/src/locales/bn.json) and [`frontend/src/locales/en.json`](file:///c:/Land%20Project/Land_shield/frontend/src/locales/en.json) with comprehensive bilingual translations.
+    - Fixed `any` type in `frontend/src/lib/features.ts` and `rejectedMutations` count in `frontend/src/components/RiskCard.tsx`.
+  - **Verification:**
+    - `npm run lint`: 0 errors, 0 warnings.
+    - `npm test`: 4/4 offline browser crypto unit tests passed.
+    - `npm run build`: 15/15 static pages prerendered successfully with Turbopack.
+    - `pytest backend/tests/test_risk_api.py backend/tests/test_mutations.py`: 18/18 tests passed.
+- **Decisions:**
+  - Granular fraud classification guarantees that tampered deeds, double sales, and titleless sellers are never conflated with one another.
+  - A completed mutation on the latest deed certifies that the plot's current ownership is official, eliminating false "নামজারি বাকি রয়েছে" warnings.
+- **Known gaps:** None.
+- **Next Step:** User reviews and tests locally, then commits and pushes.
+
+
 
 
 

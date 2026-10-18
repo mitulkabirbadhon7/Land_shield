@@ -8,6 +8,7 @@ from app.models.deed import Deed
 from app.models.ledger import LedgerEntry
 from app.models.mutation import Mutation
 from app.services.holdings import TOLERANCE, ledger_holdings, record_holdings
+from app.services.ledger import is_superseded
 from app.services.pipeline.base import AnalysisContext, DealSubject, Finding, Layer
 
 
@@ -144,12 +145,17 @@ class RulesLayer(Layer):
             age_days = (now_utc - deed_dt).total_seconds() / 86400.0
 
             if age_days > settings.mutation_days:
+                # If deed is superseded by a subsequent deed, it has no ongoing mutation obligation
+                if is_superseded(ctx.db, deed):
+                    continue
+
                 # Check if a completed mutation exists
                 mutation_stmt = select(Mutation).where(
                     Mutation.deed_id == deed.id,
                     Mutation.state == "KHATIAN_UPDATED",
                 )
                 has_completed_mutation = ctx.db.scalars(mutation_stmt).first() is not None
+
                 if not has_completed_mutation:
                     findings.append(
                         Finding(
