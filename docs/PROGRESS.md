@@ -1627,6 +1627,23 @@ The following placeholders have been clearly marked in the documentation pack an
   - Standardized on `LandShield` (and Bengali `ভূমি-সুরক্ষা (LandShield)`) across the entire repository to ensure 100% synchronization with the GitHub repo name, hackathon registration, and documentation.
 - **Next Step:** Commit and push to `main`.
 
+---
+
+### Home Page, Footer & Registrar Desk UI Fine-Tuning Log
+- **What was done:**
+  - **Home Page Hero Cleanup (`frontend/src/app/page.tsx`)**:
+    * Removed the top pill badge element (`hero.badge`, "জাতীয় ডিজিটাল ভূমি রেকর্ড যাচাইকরণ") to present a cleaner, less cluttered hero header.
+  - **Footer Polish (`frontend/src/components/Footer.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/bn.json`)**:
+    * Simplified the middle prototype badge to display strictly: `Used Synthetic Data`.
+    * Updated copyright text to: `All rights reserved by Team Avengers Assemble` (and Bengali: `সর্বস্বত্ব সংরক্ষিত। টিম Avengers Assemble`).
+  - **Sub-Registrar Desk (`frontend/src/app/registrar/page.tsx`)**:
+    * Removed the subtitle `হ্যাকাথন টেস্ট ডেটাসেট অনুযায়ী ফরম স্বয়ংক্রিয় পূরণ` / `Pre-fills form with hackathon test dataset` from the quick test scenario section for a more professional government-workstation appearance.
+  - **Verification**:
+    * `npm run lint`: 0 errors, 0 warnings.
+    * `npm test`: 4/4 offline crypto unit tests passed.
+    * `npm run build`: 15/15 static routes compiled cleanly.
+- **Next Step:** Commit and push to `main`.
+
 
 
 

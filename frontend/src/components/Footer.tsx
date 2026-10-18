@@ -35,12 +35,9 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Prototype synthetic data banner (Required by S12) */}
-          <div className="rounded-full border border-amber-200 bg-amber-50/80 px-3.5 py-1 text-center text-xs font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
-            <span className="font-bold mr-1.5 uppercase">
-              {t("common.prototype_badge")}:
-            </span>
-            <span>{t("common.prototype_notice")}</span>
+          {/* Synthetic data banner */}
+          <div className="rounded-full border border-amber-200 bg-amber-50/80 px-3.5 py-1 text-center text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+            <span>Used Synthetic Data</span>
           </div>
 
           {/* Quick links */}

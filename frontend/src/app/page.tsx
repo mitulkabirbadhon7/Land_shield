@@ -16,11 +16,6 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Hero Header */}
         <div className="mx-auto max-w-3xl text-center space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50/90 px-3.5 py-1 text-xs font-semibold text-emerald-800 shadow-2xs animate-fade-in-down dark:border-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>{t("hero.badge")}</span>
-          </div>
-
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white leading-tight animate-fade-in-up stagger-1">
             {t("hero.title")}
           </h1>
