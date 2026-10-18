@@ -54,3 +54,12 @@ class DeedOut(BaseModel):
 class DeedRegistrationResponse(BaseModel):
     deed: DeedOut
     verify: VerifyOut
+
+
+class DeedCertificateOut(BaseModel):
+    deed_no: str
+    online_verify_url: str
+    offline_payload: str
+    deed_hash: str
+    key_id: str
+

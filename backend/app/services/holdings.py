@@ -23,6 +23,20 @@ def _normalize_dt(val: datetime | str | None) -> datetime | None:
     return val.astimezone(timezone.utc)
 
 
+def _base_plot_area(db: Session, plot: Plot) -> float:
+    """Retrieve base surveyed area from official khatian if present, otherwise plot.area_decimal."""
+    try:
+        from app.models.khatian import Khatian
+        latest_khatian = db.scalars(
+            select(Khatian).where(Khatian.plot_id == plot.id).order_by(Khatian.id.desc())
+        ).first()
+        if latest_khatian:
+            return float(latest_khatian.area_decimal)
+    except Exception:
+        pass
+    return float(plot.area_decimal)
+
+
 def ledger_holdings(
     db: Session,
     plot: Plot,
@@ -30,10 +44,10 @@ def ledger_holdings(
 ) -> dict[int, float]:
     """Calculate current land holdings from the ledger view in sequence order.
 
-    Starts with {plot.initial_owner_id: plot.area_decimal}.
+    Starts with {plot.initial_owner_id: base_area}.
     Applies ACTIVE deeds in seq order: seller -= area_sold, buyer += area_sold.
     """
-    holdings: dict[int, float] = {plot.initial_owner_id: float(plot.area_decimal)}
+    holdings: dict[int, float] = {plot.initial_owner_id: _base_plot_area(db, plot)}
 
     stmt = (
         select(LedgerEntry, Deed)
@@ -73,7 +87,7 @@ def record_holdings(
     Completion time is the MutationEvent(to_state="KHATIAN_UPDATED").at.
     If as_of is provided, only deeds completed at or before as_of are included.
     """
-    holdings: dict[int, float] = {plot.initial_owner_id: float(plot.area_decimal)}
+    holdings: dict[int, float] = {plot.initial_owner_id: _base_plot_area(db, plot)}
 
     stmt = (
         select(LedgerEntry, Deed)

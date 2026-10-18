@@ -11,9 +11,11 @@ import { QRScanner, parseDeedFromQR } from "@/components/QRScanner";
 import { getChain, getPlot, verifyDeed } from "@/lib/api";
 import { ChainItem, DeedStatus, PlotOut, VerifyOut } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
+import { useFeatures } from "@/lib/features";
 
 function VerifyContent() {
   const { lang, t } = useLanguage();
+  const features = useFeatures();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -200,6 +202,20 @@ function VerifyContent() {
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {t("verify.subtitle")}
         </p>
+
+        {features.FEATURE_OFFLINE_QR && (
+          <div className="pt-2">
+            <Link
+              href="/verify/offline"
+              className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/80 px-3.5 py-1 text-xs font-semibold text-teal-800 transition-colors hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-300 dark:hover:bg-teal-900/60"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.166a1 1 0 111.414 1.414M3 3l18 18" />
+              </svg>
+              <span>{lang === "bn" ? "ইন্টারনেট ছাড়া অফলাইন QR যাচাই করুন →" : "Verify Offline QR without Internet →"}</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Verification Input & Scanner Bar */}
@@ -332,7 +348,7 @@ function VerifyContent() {
               <Spinner size="md" />
               <div className="space-y-2 flex-1">
                 <div className="h-4 w-48 rounded-md bg-slate-200 dark:bg-slate-800" />
-                <div className="h-3 w-72 rounded-md bg-slate-100 dark:bg-slate-850" />
+                <div className="h-3 w-72 rounded-md bg-slate-100 dark:bg-slate-800" />
               </div>
             </div>
           </div>

@@ -50,12 +50,28 @@ In Bangladesh, land disputes account for an estimated 75% of civil court cases [
 
 ### Phase 2 Roadmap Additions (Feature-Flagged)
 * Cross-office reconciliation layer (Rule R8: `OWNER_MISMATCH`, `MUTATION_STALLED`, `AREA_NOT_CONSERVED`).
-* Survey lineage directed acyclic graph (Rule R7: CS -> SA -> RS -> BS continuity).
+* Survey lineage directed acyclic graph (Rule R7: CS → SA → RS → BS continuity).
 * Offline browser QR verification using Web Crypto API.
 * Merkle tree daily transparency logs with published cryptographic roots.
 * Advisory ML risk scoring (LightGBM + SHAP) and dummy document OCR ingest.
 
 ---
+
+## Changes since Round 1
+
+> This section is updated after each merged Phase 2 session. See [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for the full log.
+
+| Session | Change |
+|---|---|
+| **P2-00** | Frontend feature-flag hook (`useFeatures()`); Phase 2 tracking tables in PROGRESS/CHANGELOG/README |
+| **P2-04** | Layered risk card breakdown, CS→SA→RS→BS survey lineage timeline, AC Land officer cross-office reconciliation portal (`/officer/reconcile`) |
+| **P2-06** | Browser-side offline QR deed verification (`/verify/offline`) using tweetnacl Ed25519 signatures, Web Crypto SHA-256 payload integrity, public key caching, and 1-click test vectors |
+| **P2-08** | Citizen AI Due-Diligence Report modal with `@media print` styling, risk score gauge, multi-layer findings breakdown, and actionable buyer checklist |
+| **P2-10** | Merkle Transparency Log portal (`/transparency`) with published daily root hashes, batch details, and interactive 3-hop inclusion proof verifier |
+| **P2-11** | System security metrics & attack benchmark portal (`/metrics`) covering A1–A9 threat vectors, 100% detection rate, and layer latency progress |
+| **P2-16** | National phased rollout strategy & cost-benefit analysis portal (`/rollout`) detailing 64-district implementation, ৳45.5 Cr budget, and 270:1 litigation ROI |
+
+
 
 ## 4. System Architecture
 

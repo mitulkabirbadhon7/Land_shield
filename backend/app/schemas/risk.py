@@ -32,6 +32,12 @@ class RiskReportOut(BaseModel):
     mutation_summary: MutationSummary = Field(default_factory=MutationSummary)
 
 
+class AnalysisReportOut(RiskReportOut):
+    layers: dict[str, list[RiskFindingOut]] = Field(default_factory=dict)
+    layers_run: list[str] = Field(default_factory=list)
+    lineage_available: bool = False
+
+
 class AlertOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
