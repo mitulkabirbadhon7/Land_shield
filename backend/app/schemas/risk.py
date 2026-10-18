@@ -19,6 +19,8 @@ class MutationSummary(BaseModel):
     mutated_deeds: int = 0
     pending_mutations: int = 0
     missing_mutations: int = 0
+    latest_mutation_state: str | None = None
+
 
 
 class RiskReportOut(BaseModel):

@@ -83,7 +83,9 @@ export interface MutationSummary {
   mutated_deeds?: number;
   pending_mutations?: number;
   missing_mutations?: number;
+  latest_mutation_state?: string | null;
 }
+
 
 export interface RiskReportOut {
   mode: "PLOT";

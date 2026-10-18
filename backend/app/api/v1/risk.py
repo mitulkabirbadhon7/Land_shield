@@ -58,7 +58,25 @@ def _assess_plot_risk(
         elif any(m.state in ["SUBMITTED", "AUTO_CHECKED", "UNDER_REVIEW", "APPROVED"] for m in mutations):
             pending_mutations += 1
 
-    missing_mutations = max(0, total_deeds - mutated_deeds - pending_mutations)
+    latest_mutation_state: str | None = None
+    if active_deeds:
+        latest_deed = active_deeds[-1]
+        latest_m = db.scalars(
+            select(Mutation)
+            .where(Mutation.deed_id == latest_deed.id)
+            .order_by(Mutation.created_at.desc())
+        ).first()
+        if latest_m:
+            latest_mutation_state = latest_m.state
+        else:
+            latest_mutation_state = "NONE"
+    else:
+        latest_mutation_state = "GENESIS"
+
+    if latest_mutation_state == "KHATIAN_UPDATED":
+        missing_mutations = 0
+    else:
+        missing_mutations = max(0, total_deeds - mutated_deeds - pending_mutations)
 
     # Format findings with natural bilingual explanations
     findings_out: list[RiskFindingOut] = []
@@ -88,6 +106,7 @@ def _assess_plot_risk(
             mutated_deeds=mutated_deeds,
             pending_mutations=pending_mutations,
             missing_mutations=missing_mutations,
+            latest_mutation_state=latest_mutation_state,
         ),
     }
 

@@ -266,3 +266,14 @@ def test_alerts_rbac_and_patch(client: TestClient, seeded_db: Session, tokens: d
         headers={"Authorization": f"Bearer {tokens['admin']}"},
     )
     assert res_invalid.status_code == 422
+
+
+def test_risk_api_latest_mutation_state_and_clean_summary(client: TestClient, seeded_db: Session):
+    # S6 has all completed mutations -> latest_mutation_state must be KHATIAN_UPDATED and missing_mutations must be 0
+    res = client.get("/api/v1/risk/plot/6")
+    assert res.status_code == 200
+    data = res.json()
+    summary = data["mutation_summary"]
+    assert summary["latest_mutation_state"] == "KHATIAN_UPDATED"
+    assert summary["missing_mutations"] == 0
+    assert summary["mutated_deeds"] >= 1

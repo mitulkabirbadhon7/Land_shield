@@ -99,7 +99,8 @@ export function RiskCard({ report, className = "" }: RiskCardProps) {
   const totalMutations = mutation.total ?? mutation.total_deeds ?? 0;
   const completedMutations = mutation.completed ?? mutation.mutated_deeds ?? 0;
   const pendingMutations = mutation.pending ?? mutation.pending_mutations ?? 0;
-  const rejectedMutations = mutation.rejected ?? mutation.missing_mutations ?? 0;
+  const rejectedMutations = mutation.rejected ?? 0;
+
 
   const toBnDigits = (num: number | string | undefined | null): string => {
     if (num === undefined || num === null) return "—";

@@ -102,7 +102,11 @@ def transition(
         db.flush()
         plot = db.get(Plot, mutation.plot_id)
         if plot:
-            recompute_current_owner(db, plot)
+            deed = db.get(Deed, mutation.deed_id)
+            if deed and deed.area_sold >= (plot.area_decimal - 1e-6):
+                plot.current_owner_id = deed.buyer_id
+            else:
+                recompute_current_owner(db, plot)
 
     db.flush()
     return mutation
