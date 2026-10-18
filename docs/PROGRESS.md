@@ -1644,6 +1644,24 @@ The following placeholders have been clearly marked in the documentation pack an
     * `npm run build`: 15/15 static routes compiled cleanly.
 - **Next Step:** Commit and push to `main`.
 
+---
+
+### Header Sizing, Cropping Fix & Pure Bangla Localization Log
+- **What was done:**
+  - **Pure Bangla Brand Display (`frontend/src/locales/bn.json`)**:
+    * Changed `nav.title` from mixed `ভূমি-সুরক্ষা (LandShield)` to pure **`ভূমি-সুরক্ষা`**.
+    * Now, when Bangla is selected, ONLY Bangla is displayed (`ভূমি-সুরক্ষা`); when English is selected, ONLY English is displayed (`LandShield`).
+  - **Header Cropping & Layout Sizing Fix (`frontend/src/components/Header.tsx`)**:
+    * Added `shrink-0`, `whitespace-nowrap`, and `leading-tight` to the brand title and tagline.
+    * Adjusted responsive display of `LTIH '26` pill badge (`hidden lg:inline-flex`) to prevent navbar crowding.
+    * Added `whitespace-nowrap truncate max-w-[200px]` to the user role badge.
+    * Completely eliminated vertical height clipping and multi-line wrapping in the navigation bar.
+  - **Verification**:
+    * `npm run lint`: 0 errors, 0 warnings.
+    * `npm test`: 4/4 passed.
+    * `npm run build`: 15/15 static routes compiled cleanly.
+- **Next Step:** Commit and push to `main`.
+
 
 
 

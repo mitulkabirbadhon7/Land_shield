@@ -96,20 +96,20 @@ export function Header() {
               />
             </svg>
           </div>
-          <div>
+          <div className="shrink-0 flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-tight text-slate-900 text-lg dark:text-white transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+              <span className="font-extrabold tracking-tight text-slate-900 text-base sm:text-lg dark:text-white transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400 whitespace-nowrap leading-tight">
                 {t("nav.title")}
               </span>
               <span
                 title="LandTech Innovation Hackathon 2026"
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 text-[10px] font-bold text-emerald-800 transition-all duration-200 group-hover:bg-emerald-100 group-hover:border-emerald-300 dark:border-emerald-800/80 dark:bg-emerald-950/80 dark:text-emerald-300 shadow-2xs"
+                className="hidden lg:inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 text-[10px] font-bold text-emerald-800 transition-all duration-200 group-hover:bg-emerald-100 group-hover:border-emerald-300 dark:border-emerald-800/80 dark:bg-emerald-950/80 dark:text-emerald-300 shadow-2xs shrink-0"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>LTIH &apos;26</span>
               </span>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight mt-0.5">
               {t("nav.tagline")}
             </p>
           </div>
@@ -168,7 +168,7 @@ export function Header() {
           {/* User Auth Portal Button */}
           {user ? (
             <div className="hidden sm:flex items-center gap-2">
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200 whitespace-nowrap truncate max-w-[200px]">
                 {user.name} ({lang === "bn"
                   ? user.role === "officer"
                     ? "কর্মকর্তা"
