@@ -685,7 +685,7 @@ function CitizenCheckContent() {
               <Spinner size="md" />
               <div className="space-y-2 flex-1">
                 <div className="h-4 w-52 rounded-md bg-slate-200 dark:bg-slate-800" />
-                <div className="h-3 w-80 rounded-md bg-slate-100 dark:bg-slate-850" />
+                <div className="h-3 w-80 rounded-md bg-slate-100 dark:bg-slate-800" />
               </div>
             </div>
           </div>
@@ -807,7 +807,7 @@ function CitizenCheckContent() {
           </div>
 
           {/* AI Due-Diligence Report Trigger Banner */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-teal-900/40 dark:bg-slate-850 print:hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-teal-200/80 bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-teal-50/90 p-4 sm:p-5 shadow-xs dark:border-teal-900/40 dark:bg-slate-900/90 print:hidden">
             <div className="flex items-center gap-3.5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-white font-extrabold text-sm shadow-md shadow-teal-600/30">
                 AI

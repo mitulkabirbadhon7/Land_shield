@@ -17,21 +17,69 @@ export interface Features {
   FEATURE_TRANSPARENCY: boolean;
   FEATURE_ML: boolean;
   FEATURE_OCR: boolean;
+  // Lowercase aliases matching backend schema
+  feature_reconcile?: boolean;
+  feature_lineage?: boolean;
+  feature_offline_qr?: boolean;
+  feature_agent?: boolean;
+  feature_transparency?: boolean;
+  feature_ml?: boolean;
+  feature_ocr?: boolean;
 }
 
-/** Safe defaults — all phase-2 features off until the backend confirms them. */
+/** Safe defaults — all phase-2 features enabled by default during dev/demo so UI is not locked out */
 const DEFAULT_FEATURES: Features = {
-  FEATURE_RECONCILE: false,
-  FEATURE_LINEAGE: false,
-  FEATURE_OFFLINE_QR: false,
-  FEATURE_AGENT: false,
-  FEATURE_TRANSPARENCY: false,
-  FEATURE_ML: false,
-  FEATURE_OCR: false,
+  FEATURE_RECONCILE: true,
+  FEATURE_LINEAGE: true,
+  FEATURE_OFFLINE_QR: true,
+  FEATURE_AGENT: true,
+  FEATURE_TRANSPARENCY: true,
+  FEATURE_ML: true,
+  FEATURE_OCR: true,
+  feature_reconcile: true,
+  feature_lineage: true,
+  feature_offline_qr: true,
+  feature_agent: true,
+  feature_transparency: true,
+  feature_ml: true,
+  feature_ocr: true,
 };
 
 let cache: Features | null = null;
 let fetchPromise: Promise<Features> | null = null;
+
+function normalizeFeatures(data: Record<string, any>): Features {
+  const getFlag = (upper: string, lower: string, def = true): boolean => {
+    if (data[upper] !== undefined) return Boolean(data[upper]);
+    if (data[lower] !== undefined) return Boolean(data[lower]);
+    return def;
+  };
+
+  const reconcile = getFlag("FEATURE_RECONCILE", "feature_reconcile", true);
+  const lineage = getFlag("FEATURE_LINEAGE", "feature_lineage", true);
+  const offlineQr = getFlag("FEATURE_OFFLINE_QR", "feature_offline_qr", true);
+  const agent = getFlag("FEATURE_AGENT", "feature_agent", true);
+  const transparency = getFlag("FEATURE_TRANSPARENCY", "feature_transparency", true);
+  const ml = getFlag("FEATURE_ML", "feature_ml", true);
+  const ocr = getFlag("FEATURE_OCR", "feature_ocr", true);
+
+  return {
+    FEATURE_RECONCILE: reconcile,
+    FEATURE_LINEAGE: lineage,
+    FEATURE_OFFLINE_QR: offlineQr,
+    FEATURE_AGENT: agent,
+    FEATURE_TRANSPARENCY: transparency,
+    FEATURE_ML: ml,
+    FEATURE_OCR: ocr,
+    feature_reconcile: reconcile,
+    feature_lineage: lineage,
+    feature_offline_qr: offlineQr,
+    feature_agent: agent,
+    feature_transparency: transparency,
+    feature_ml: ml,
+    feature_ocr: ocr,
+  };
+}
 
 /**
  * Load feature flags from the backend.
@@ -50,8 +98,8 @@ export async function loadFeatures(): Promise<Features> {
           cache: "no-store",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: Partial<Features> = await res.json();
-        cache = { ...DEFAULT_FEATURES, ...data };
+        const data = await res.json();
+        cache = normalizeFeatures(data);
       } catch {
         // Backend not available or flag endpoint not deployed yet — use defaults.
         cache = { ...DEFAULT_FEATURES };

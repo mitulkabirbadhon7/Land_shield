@@ -450,7 +450,7 @@ function MetricsContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
-                <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-850/50">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "আক্রমণ কৌশল (Threat Vector)" : "Threat Vector"}
                   </span>
@@ -459,7 +459,7 @@ function MetricsContent() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-850/50">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "প্রতিরক্ষা ব্যবস্থা (Defense Mechanism)" : "Defense Mechanism"}
                   </span>
@@ -468,7 +468,7 @@ function MetricsContent() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-850/50">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "ফলাফল (Systemic Outcome)" : "Systemic Outcome"}
                   </span>
@@ -483,7 +483,7 @@ function MetricsContent() {
       </Card>
 
       {/* Evaluator Reproduction Guide */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-850/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             {lang === "bn" ? "মূল্যায়নকারী ও বিচারকদের জন্য নির্দেশনা" : "Independent Evaluation Guide for Judges"}

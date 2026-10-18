@@ -52,7 +52,7 @@ export function Accordion({
               aria-expanded={isOpen}
               aria-controls={`accordion-panel-${item.id}`}
               id={`accordion-btn-${item.id}`}
-              className="flex w-full items-center justify-between p-4 sm:p-5 text-left transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-850/50 focus:outline-hidden"
+              className="flex w-full items-center justify-between p-4 sm:p-5 text-left transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-800/50 focus:outline-hidden"
             >
               <div className="flex items-center gap-3">
                 <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">

@@ -254,7 +254,7 @@ function RolloutContent() {
       </Card>
 
       {/* Institutional Governance Framework */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-6 dark:border-slate-800 dark:bg-slate-850/50 space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-6 dark:border-slate-800 dark:bg-slate-900/80 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           {lang === "bn" ? "প্রাতিষ্ঠানিক অংশীদারিত্ব ও দায়িত্ব বণ্টন" : "Inter-Ministerial Governance Framework"}
         </h3>

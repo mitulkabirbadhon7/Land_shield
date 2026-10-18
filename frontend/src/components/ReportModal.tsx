@@ -166,7 +166,7 @@ export function ReportModal({
               </div>
 
               {/* Plot Identification Summary Grid */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-850/50 print:border-slate-300 print:bg-white">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-900/80 print:border-slate-300 print:bg-white">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
                   {lang === "bn" ? "জমির পরিচিতি বিবরণী" : "Plot Identity Details"}
                 </h3>
@@ -330,7 +330,7 @@ export function ReportModal({
               </div>
 
               {/* Actionable Buyer Checklist */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-850/40 print:border-slate-300 print:bg-white">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/60 print:border-slate-300 print:bg-white">
                 <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 print:text-black uppercase tracking-wider mb-2.5">
                   {lang === "bn"
                     ? "ক্রেতার জন্য করণীয় নির্দেশিকা (Action Checklist)"

@@ -184,7 +184,7 @@ function TransparencyContent() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-850">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/90">
               <span className="text-slate-400 block text-[11px] font-sans font-semibold">
                 {lang === "bn" ? "মাস্টার কি আইডি (Key ID)" : "Master Key ID"}
               </span>
@@ -193,7 +193,7 @@ function TransparencyContent() {
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-850">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/90">
               <span className="text-slate-400 block text-[11px] font-sans font-semibold">
                 {lang === "bn" ? "ডিজিটাল স্বাক্ষর (Ed25519)" : "Ed25519 Signature"}
               </span>

@@ -348,7 +348,7 @@ function VerifyContent() {
               <Spinner size="md" />
               <div className="space-y-2 flex-1">
                 <div className="h-4 w-48 rounded-md bg-slate-200 dark:bg-slate-800" />
-                <div className="h-3 w-72 rounded-md bg-slate-100 dark:bg-slate-850" />
+                <div className="h-3 w-72 rounded-md bg-slate-100 dark:bg-slate-800" />
               </div>
             </div>
           </div>
