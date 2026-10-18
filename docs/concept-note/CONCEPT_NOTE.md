@@ -120,7 +120,7 @@ flowchart TD
 | **Offline Verification** | Impossible without physical volume book | Impossible without live network | **Edge browser crypto (0ms, 100% offline)** |
 | **Citizen Pre-Purchase Check** | Paid middlemen and informal porchas | Complex wallet / blockchain hashes | **Bilingual 0–100 risk score & AI legal report** |
 | **Inter-Office Reconciliation** | Manual paper dispatch (months of delay) | Full system replacement required | **Automated non-invasive middleware radar (R8)** |
-| **Transaction Processing Cost** | High indirect bureaucratic extortion | $2 – $25 per transaction gas fee | **৳0.00 transaction fee, sub-second latency** |
+| **Transaction Processing Cost** | High indirect bureaucratic extortion | $2 – $25 per transaction gas fee | **Zero incremental transaction fee, sub-second latency** |
 
 ---
 
@@ -172,11 +172,11 @@ flowchart LR
 
 1. **Sub-Registrar Desk Integration:** Connects into the local Sub-Registry workstation software. When registration staff enter deed parameters and click "Submit", the LandShield pre-registration hook executes. If fraud is detected, registration is blocked with a clear bilingual violation notice.
 2. **e-Mutation Webhook Integration:** Upon successful deed registration, LandShield issues an authenticated webhook to `mutation.land.gov.bd`, automatically initiating an e-mutation draft and eliminating the citizen's need to apply manually.
-3. **Union Digital Center (UDC) Enablement:** Rural citizens lacking smartphones can visit any of Bangladesh's 5,000+ Union Digital Centers. UDC entrepreneurs enter the Dag number into `/check` and print the institutional **AI Due-Diligence Report** for a nominal ৳20 fee.
+3. **Union Digital Center (UDC) Enablement:** Rural citizens lacking smartphones can visit any of Bangladesh's 5,000+ Union Digital Centers. UDC entrepreneurs enter the Dag number into `/check` and print the institutional **AI Due-Diligence Report** for a nominal citizen service charge.
 
 ---
 
-## 7. Nationwide Phased Rollout & Financial Feasibility
+## 7. Nationwide Phased Rollout & Operational Implementation
 
 LandShield includes an audited national rollout plan modeled in our `/rollout` portal across all 64 districts and 500+ Upazilas over a 24-month horizon:
 
@@ -186,14 +186,15 @@ LandShield includes an audited national rollout plan modeled in our `/rollout` p
 |   Months 1 – 6          | --> |   Months 7 – 14         | --> |   Months 15 – 24        |
 |   * 3 Upazilas (Pilot)  |     |   * Dhaka Division      |     |   * 64 Districts        |
 |   * Software Middleware |     |   * Cloud KMS Key Rings |     |   * 500+ Upazila AC Land|
-|   * Budget: ৳2.5 Crore  |     |   * Budget: ৳12.0 Crore |     |   * Budget: ৳31.0 Crore |
+|   * Baseline Integration|     |   * Inter-Office Radar  |     |   * Full LSG Integration|
 +-------------------------+     +-------------------------+     +-------------------------+
 ```
 
-### Financial Feasibility & Economic Return:
-* **Total National Implementation Budget:** **৳45.5 Crore BDT** (covering cloud infrastructure, dual-monitor workstation hardening across 500 sub-registry offices, HSM cryptographic key infrastructure, and staff training).
-* **Direct Annual Public Savings:** **৳12,285 Crore BDT** saved annually by citizens in legal fees, surveyor bribes, and lost productivity.
-* **Return on Investment (ROI):** **270 : 1** in direct societal and judicial dispute reduction.
+### Operational Rollout Milestones & Capacity Building:
+* **Phase 1 (Months 1–6): Pilot Deployment & Baseline Integration:** Deploy LandShield as non-invasive middleware across 3 selected Upazila Sub-Registry and AC Land offices; establish local cryptographic key generation, dual-monitor registrar workstation integration, and staff operational onboarding.
+* **Phase 2 (Months 7–14): Regional Scaling & Automated Reconciliation:** Expand deployment across all Upazilas of Dhaka Division; integrate Cloud KMS / HSM key rings, automated daily Merkle audit root publishing, and the cross-departmental reconciliation radar (R8).
+* **Phase 3 (Months 15–24): Nationwide Rollout & Full LSG Integration:** Deploy across all 64 districts and 500+ Upazila AC Land offices; connect directly with `land.gov.bd`, `eporcha`, and e-Mutation webhooks; achieve nationwide real-time deed verification and zero-backdating protection.
+* **Measurable Institutional Impact:** Drastic reduction in fraudulent deed registrations, elimination of paper backdating, instantaneous cross-office record synchronization, and direct reduction of land-related civil litigation backlogs.
 
 ---
 

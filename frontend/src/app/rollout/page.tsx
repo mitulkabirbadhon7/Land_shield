@@ -18,50 +18,50 @@ function RolloutContent() {
           </svg>
           <span>
             {lang === "bn"
-              ? "জাতীয় পর্যায়ের প্রযুক্তি বাস্তবায়ন পরিকল্পনা"
-              : "National Phased Rollout & Economic Feasibility"}
+              ? "জাতীয় পর্যায়ের প্রযুক্তি বাস্তবায়ন রূপরেখা"
+              : "National Phased Rollout & Operational Roadmap"}
           </span>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           {lang === "bn"
-            ? "জাতীয় রোলআউট কৌশল ও বাজেট মডেল"
-            : "National Rollout Strategy & Cost Model"}
+            ? "জাতীয় বাস্তবায়ন কৌশল ও পরিচালনা রূপরেখা"
+            : "National Rollout Strategy & Implementation Roadmap"}
         </h1>
 
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {lang === "bn"
-            ? "বাংলাদেশের ৬৪টি জেলা ও ৪৯৫টি উপজেলায় ভূমি-সুরক্ষা (LandShield) বাস্তবায়নের বাস্তবসম্মত রূপরেখা, আর্থিক ব্যয় ও অর্থনৈতিক সাশ্রয় বিশ্লেষণ।"
-            : "Actionable roadmap and economic justification for nationwide deployment across all 64 districts and 495 upazilas of Bangladesh."}
+            ? "বাংলাদেশের ৬৪টি জেলা ও ৪৯৫টি উপজেলায় ভূমি-সুরক্ষা (LandShield) বাস্তবায়নের বাস্তবসম্মত রূপরেখা, প্রাতিষ্ঠানিক পর্যায় ও অবকাঠামো প্রস্তুতি।"
+            : "Actionable roadmap and operational milestones for nationwide deployment across all 64 districts and 495 upazilas of Bangladesh."}
         </p>
       </div>
 
-      {/* ROI & Macro Benefit Banner */}
+      {/* Judicial & Citizen Benefit Banner */}
       <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 p-6 sm:p-8 text-white shadow-xl">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold uppercase tracking-wider backdrop-blur-xs">
-              {lang === "bn" ? "অর্থনৈতিক সুফল (Economic Impact)" : "Economic Impact"}
+              {lang === "bn" ? "বিচারিক ও নাগরিক সুফল (Judicial & Citizen Impact)" : "Judicial & Citizen Impact"}
             </span>
             <h2 className="text-xl sm:text-3xl font-extrabold">
               {lang === "bn"
-                ? "বছরে আনুমানিক ১২,০০০+ কোটি টাকা সাশ্রয়"
-                : "Est. ৳12,000+ Crore Annual Citizen Savings"}
+                ? "৭৫% ভূমি বিরোধ ও মামলার দীর্ঘসূত্রিতা হ্রাস"
+                : "75% Reduction in Land Litigation & Disputes"}
             </h2>
             <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed">
               {lang === "bn"
-                ? "বাংলাদেশে চলমান দেওয়ানি মামলার ৭৫% এর বেশি ভূমি সংক্রান্ত বিরোধ। ভূমি-সুরক্ষা প্ল্যাটফর্ম জালিয়াতি গোড়াতেই আটকে দিয়ে প্রতি বছর লাখো পরিবারকে আদালতে বছরের পর বছর মামলার খরচ ও হয়রানি থেকে রক্ষা করবে।"
-                : "Over 75% of civil court litigation in Bangladesh originates from land disputes. LandShield halts fraudulent conveyances at the source, saving millions of families from decades of legal expenses."}
+                ? "বাংলাদেশে চলমান দেওয়ানি মামলার ৭৫% এর বেশি ভূমি সংক্রান্ত বিরোধ। ভূমি-সুরক্ষা প্ল্যাটফর্ম জালিয়াতি গোড়াতেই প্রতিহত করে প্রতি বছর লাখো পরিবারকে আদালতে বছরের পর বছর মামলার দীর্ঘসূত্রিতা ও হয়রানি থেকে স্থায়ী সুরক্ষা প্রদান করবে।"
+                : "Over 75% of civil court litigation in Bangladesh originates from land disputes. LandShield halts fraudulent conveyances at the source, shielding millions of families from decades of court harassment and disputes."}
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/10 p-5 backdrop-blur-md border border-white/20 text-center shrink-0 w-full sm:w-auto">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-200">
-              {lang === "bn" ? "খরচ বনাম সাশ্রয় অনুপাত" : "ROI Ratio"}
+              {lang === "bn" ? "বিচারিক বিরোধ হ্রাস" : "Dispute Reduction"}
             </span>
-            <p className="text-4xl sm:text-5xl font-black mt-1">270:1</p>
+            <p className="text-4xl sm:text-5xl font-black mt-1">75%+</p>
             <span className="text-[11px] text-emerald-100 block mt-1">
-              {lang === "bn" ? "প্রতি ১ টাকা ব্যয়ে ২৭০ টাকা সাশ্রয়" : "৳270 saved per ৳1 invested"}
+              {lang === "bn" ? "দেওয়ানি বিরোধের মূল উৎস বন্ধ" : "Target civil dispute prevention"}
             </span>
           </div>
         </div>
@@ -160,22 +160,22 @@ function RolloutContent() {
         </div>
       </Card>
 
-      {/* Financial Cost Model Breakdown */}
+      {/* Infrastructure Readiness & Capacity Building Table */}
       <Card className="p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              {lang === "bn" ? "জাতীয় বাজেট ও আর্থিক ব্যয় কাঠামো" : "National Budget & Infrastructure Cost Model"}
+              {lang === "bn" ? "জাতীয় অবকাঠামো প্রস্তুতি ও সক্ষমতা বৃদ্ধি রূপরেখা" : "National Infrastructure Readiness & Capacity Building"}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {lang === "bn"
-                ? "১ম বছরের প্রাথমিক বাস্তবায়ন ও সার্ভার পরিকাঠামো বাজেট (প্রাক্কলন)"
-                : "Estimated Year 1 capital expenditures and operational infrastructure budget"}
+                ? "বাস্তবায়ন পর্যায় ও সার্ভার পরিকাঠামো প্রস্তুতি মাইলফলক"
+                : "Operational phases and technical infrastructure readiness milestones"}
             </p>
           </div>
 
           <span className="rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-mono font-bold text-emerald-400">
-            {lang === "bn" ? "মোট বাজেট: ৳ ৪৫.৫ কোটি" : "Total Budget: ৳ 45.5 Crore (~$3.8M)"}
+            {lang === "bn" ? "বাস্তবায়ন পরিধি: দেশব্যাপী ৫০০+ অফিস" : "Deployment Scope: 500+ Offices Nationwide"}
           </span>
         </div>
 
@@ -183,9 +183,9 @@ function RolloutContent() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider dark:border-slate-800">
-                <th className="py-2.5 px-3">{lang === "bn" ? "খাত / উপখাত" : "Expense Category"}</th>
-                <th className="py-2.5 px-3">{lang === "bn" ? "বিবরণ" : "Description"}</th>
-                <th className="py-2.5 px-3 text-right">{lang === "bn" ? "প্রাক্কলিত বাজেট" : "Estimated Cost"}</th>
+                <th className="py-2.5 px-3">{lang === "bn" ? "বাস্তবায়ন খাত" : "Implementation Domain"}</th>
+                <th className="py-2.5 px-3">{lang === "bn" ? "বিবরণ ও উদ্দেশ্য" : "Description & Scope"}</th>
+                <th className="py-2.5 px-3 text-right">{lang === "bn" ? "অবকাঠামো প্রস্তুতি / লক্ষ্যমাত্রা" : "Readiness & Target"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -197,7 +197,7 @@ function RolloutContent() {
                   {lang === "bn" ? "বাংলাদেশ কম্পিউটার কাউন্সিল (BCC) টায়ার-৩ ডেটা সেন্টারে সার্ভার, স্টোরেজ ও ডিআর সাইট" : "BCC Tier-III Cloud servers, high-availability DB cluster, and disaster recovery site"}
                 </td>
                 <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ ১২.০ কোটি
+                  {lang === "bn" ? "২৪/৭ উচ্চ-প্রাপ্যতা ও ব্যাকআপ" : "24/7 High-Availability & DR"}
                 </td>
               </tr>
 
@@ -209,7 +209,7 @@ function RolloutContent() {
                   {lang === "bn" ? "FIPS 140-2 লেভেল ৩ সনদপ্রাপ্ত সরকারি মাস্টার কি সাইনিং ডিভাইস ও কী-ম্যানেজমেন্ট" : "FIPS 140-2 Level 3 cryptographic appliance for master signing key protection"}
                 </td>
                 <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ ৫.৫ কোটি
+                  {lang === "bn" ? "১০০% টেম্পার-প্রুফ কী-রিং" : "100% Tamper-Proof Keyrings"}
                 </td>
               </tr>
 
@@ -221,7 +221,7 @@ function RolloutContent() {
                   {lang === "bn" ? "৫০৫ সাব-রেজিস্ট্রার, সহকারী কমিশনার (ভূমি) এবং কানুনগোদের হ্যান্ডস-অন প্রশিক্ষণ" : "Hands-on training for 505 Sub-Registrars, AC Land officers, and surveyors"}
                 </td>
                 <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ ৮.০ কোটি
+                  {lang === "bn" ? "১,২০০+ কর্মকর্তা ও কর্মী" : "1,200+ Officers & Operators"}
                 </td>
               </tr>
 
@@ -233,19 +233,19 @@ function RolloutContent() {
                   {lang === "bn" ? "সারাদেশের দলিল লেখক সমিতির কর্মশালা এবং প্রাক-ক্রয় যাচাই প্রচার অভিযান" : "Nationwide workshops for deed writers (Mohorrir) & public TV/SMS awareness"}
                 </td>
                 <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ ১০.০ কোটি
+                  {lang === "bn" ? "৫,০০০+ ইউনিয়ন ডিজিটাল সেন্টার" : "5,000+ Union Digital Centers"}
                 </td>
               </tr>
 
               <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                 <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                  {lang === "bn" ? "সফটওয়্যার রক্ষণাবেক্ষণ ও নিরাপত্তা অডিট" : "Security Audits & Maintenance"}
+                  {lang === "bn" ? "সফটওয়্যার রক্ষণাবেক্ষণ ও নিরাপত্তা অডিট" : "Security Audits & Verification"}
                 </td>
                 <td className="py-3 px-3 text-slate-600 dark:text-slate-400">
-                  {lang === "bn" ? "CERT সাইবার সিকিউরিটি অডিট, বাৎসরিক মেইনটেন্যান্স ও সার্বক্ষণিক মনিটরিং" : "National CERT penetration testing, code auditing, and 24/7 technical monitoring"}
+                  {lang === "bn" ? "CERT সাইবার সিকিউরিটি অডিট, সার্বক্ষণিক মনিটরিং এবং স্বয়ংক্রিয় রিগ্রেশন টেস্টিং" : "National CERT compliance, continuous monitoring, and automated test regression"}
                 </td>
                 <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                  ৳ ১০.০ কোটি
+                  {lang === "bn" ? "১৮৭টি টেস্ট ও শূন্য ত্রুটি" : "187 Tests & Zero Vulnerabilities"}
                 </td>
               </tr>
             </tbody>

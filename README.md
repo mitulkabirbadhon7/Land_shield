@@ -83,7 +83,7 @@ In Bangladesh, land disputes account for approximately 75% of all civil litigati
 * **Public Merkle Transparency Log (`/transparency`):** Daily published Merkle root hashes with interactive 3-hop cryptographic inclusion proof verifier.
 * **AI Due-Diligence & Legal Advisory Report Modal:** Print-ready institutional legal opinion generated from verified database facts with zero hallucination.
 * **Attack Benchmark Matrix (`/metrics`):** Audited performance across 9 adversarial threat vectors (A1–A9) showing 100% detection rate and 28ms average pipeline latency.
-* **National Phased Rollout & Cost Model (`/rollout`):** 3-phase national rollout plan across 500 upazilas within a ৳45.5 Crore budget and 270:1 litigation savings ROI.
+* **National Phased Rollout & Implementation Portal (`/rollout`):** 3-phase national rollout plan across 500 upazilas with zero-downtime middleware integration and institutional capacity building.
 
 ---
 
@@ -99,7 +99,7 @@ In Bangladesh, land disputes account for approximately 75% of all civil litigati
 | **P2-08** | Institutional AI Due-Diligence Report modal with print-ready CSS (`window.print()`) | Delivered one-click legal opinion summaries for prospective buyers. |
 | **P2-10** | Daily Merkle Transparency Log portal (`/transparency`) | Proved mathematical impossibility of inserting backdated forged deeds into government registers. |
 | **P2-11** | Security metrics & attack benchmark matrix (`/metrics`) | Audited 100% detection rate across A1–A9 attacks with 28ms pipeline latency. |
-| **P2-16** | Phased national rollout strategy & cost-benefit portal (`/rollout`) | Detailed realistic ৳45.5 Cr deployment across 64 districts with 270:1 ROI. |
+| **P2-16** | Phased national rollout strategy & implementation portal (`/rollout`) | Detailed 3-phase operational deployment across 64 districts and 500+ Upazilas. |
 | **P2-Polish** | Accessibility, high-contrast dark mode hardening, and bilingual localization alignment | Guaranteed 100% WCAG-compliant readability across light and dark themes on all devices. |
 
 ---

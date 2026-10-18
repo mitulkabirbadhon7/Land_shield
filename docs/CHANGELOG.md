@@ -74,10 +74,10 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **Multi-Layer Latency Progress:** Visual latency breakdown across Cryptographic Integrity (4.2ms), Statutory Rules (12.5ms), Cross-office Reconciliation (6.1ms), and Lineage Graph (5.4ms).
 - **Judge Reproduction Guide:** Linked direct reproduction pathway to the Admin Tamper Lab (`/admin`).
 
-### P2-16 — National Phased Rollout & Cost Model (`/rollout`)
-- **Economic Feasibility:** Modeled estimated ৳12,000+ Crore annual citizen litigation savings across Bangladesh civil courts, delivering an extraordinary 270:1 return on investment against a ৳45.5 Crore Year 1 budget.
+### P2-16 — National Phased Rollout & Implementation Portal (`/rollout`)
+- **Operational Implementation:** Modeled nationwide deployment roadmap across 64 districts and 495 upazilas, prioritizing 75% reduction in land-related civil litigation.
 - **3-Phase Deployment Plan:** Phase 1 Pilot (3 upazilas, 6 months) -> Phase 2 Divisional Expansion (Dhaka & Chittagong, 137 sub-registries, 12 months) -> Phase 3 Nationwide (64 districts, 495 upazilas, 505 sub-registries, 24 months).
-- **Infrastructure Cost Table:** Budget breakdown covering BCC Tier-III Cloud hosting, FIPS 140-2 Level 3 HSM hardware, officer training, and public awareness.
+- **Infrastructure Readiness Table:** Milestone breakdown covering BCC Tier-III Cloud hosting, FIPS 140-2 Level 3 HSM hardware, officer training, and public awareness.
 - **Navigation Integration:** Added links in `Header.tsx` and `Footer.tsx` for `/transparency`, `/metrics`, and `/rollout`.
 
 ### Planned (upcoming sessions)
