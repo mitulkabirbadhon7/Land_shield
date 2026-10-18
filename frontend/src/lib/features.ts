@@ -48,7 +48,7 @@ const DEFAULT_FEATURES: Features = {
 let cache: Features | null = null;
 let fetchPromise: Promise<Features> | null = null;
 
-function normalizeFeatures(data: Record<string, any>): Features {
+function normalizeFeatures(data: Record<string, unknown>): Features {
   const getFlag = (upper: string, lower: string, def = true): boolean => {
     if (data[upper] !== undefined) return Boolean(data[upper]);
     if (data[lower] !== undefined) return Boolean(data[lower]);

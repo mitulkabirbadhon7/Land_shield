@@ -1594,6 +1594,21 @@ The following placeholders have been clearly marked in the documentation pack an
   - Ensure the document adheres strictly to the official LandTech 2026 maximum 4-page PDF limit with zero table bloat.
 - **Next Step:** Commit and push to `main`.
 
+---
+
+### GitHub CI Actions (Red Cross X 2/3) Inspection & Resolution Log
+- **Root Cause Analysis of the Red X (`X 2/3` on GitHub Commits)**:
+  * Inspected GitHub Actions CI workflow `.github/workflows/ci.yml`. The workflow triggers on every push and runs two automated jobs: `backend-test` (Python 3.11, pytest) and `frontend-build` (Node 20, npm ci, `npm run lint`, `npm run build`).
+  * Running `npm run lint` locally revealed the exact failure:
+    `frontend/src/lib/features.ts:51:49: error Unexpected any. Specify a different type @typescript-eslint/no-explicit-any`.
+  * Because ESLint failed with exit code 1, GitHub Actions marked the `frontend-build` job as failed (red X), causing GitHub to display `X 2/3` checks passed on every recent commit!
+- **Resolution**:
+  * Fixed `frontend/src/lib/features.ts`: replaced `normalizeFeatures(data: Record<string, any>)` with type-safe `normalizeFeatures(data: Record<string, unknown>)`.
+  * Re-ran `npm run lint`: passed cleanly with **0 errors and 0 warnings** (exit code 0).
+  * Re-ran `npm run build`: compiled cleanly with 15/15 static routes (exit code 0).
+  * Re-ran `pytest`: all 183 backend tests passed (exit code 0).
+- **Next Step:** Commit and push to `main` so GitHub Actions re-runs and turns the commit status badge into a clean green checkmark (`✓ 3/3`).
+
 
 
 
