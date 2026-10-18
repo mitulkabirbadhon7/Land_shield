@@ -1578,6 +1578,22 @@ The following placeholders have been clearly marked in the documentation pack an
   - Avoid speculative financial claims during hackathon evaluation; focus exclusively on verifiable technical architecture, statutory compliance, and operational feasibility.
 - **Next Step:** Provide human git commands for commit and push to `main`.
 
+---
+
+### Concept Note 3–4 Page Proposal Streamlining Log
+- **What was done:**
+  - **Proposal Formatting & Page-Budget Optimization (`docs/concept-note/CONCEPT_NOTE.md`)**:
+    * Re-architected the whitepaper into a crisp, high-density 3.5 to 4 page (~1,570 words) formal technical proposal conforming strictly to Rule Book Section 1 guidelines (maximum 4-page PDF).
+    * Removed tall vertical Mermaid blocks and bulky ASCII tables that previously caused the document to expand to 11 pages when printed to PDF.
+    * Converted architectural data flows into clean, high-density text and compact horizontal flow diagrams that render cleanly on single printed pages.
+    * Preserved all critical judge evaluation criteria: Team Avengers Assemble profiles, 4-layer verification pipeline details, 9 attack vector benchmarks (100% defense), 3-phase national rollout milestones, and mandatory synthetic data and AI usage disclosures.
+  - **Verification**:
+    * Measured document length: 101 lines, 1,574 words (~3.5–4 standard printable PDF pages).
+    * Zero budget / currency mentions (`git grep` clean).
+- **Decisions:**
+  - Ensure the document adheres strictly to the official LandTech 2026 maximum 4-page PDF limit so the team faces zero risk of formatting penalty or disqualification.
+- **Next Step:** Commit and push to `main`.
+
 
 
 
