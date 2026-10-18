@@ -1,133 +1,88 @@
 # LandShield: Cryptographic Land Registry, Autonomous Fraud Interception & Citizen Verification Framework
 
-> **Hackathon:** LandTech Innovation Hackathon 2026 | **Track:** Digital Land Records, Verification & Digitization  
-> **Organizers:** Dept. of CSE & CSE-TECH, Daffodil International University (DIU) | **Supported by:** Dept. of Law, DIU  
-> **Document Type:** Official Concept Note & Technical Proposal (Round 1 Submission) | **Length:** 3.5 – 4 Standard Formatted Pages
-
----
-
-### Team & Mentorship Profile — Avengers Assemble
-
-| Role | Name | ID / Designation | Department & Institution | Contact Email |
-|:---|:---|:---|:---|:---|
-| **Team Leader** | **Md Mitul Kabir Badhon** | `0242310005101635` | Dept. of CSE, Daffodil International University | `mitulkabirbadhon7@gmail.com` |
-| **Teammate** | **Sabbir Hossan Sani** | `0242310005101776` | Dept. of CSE, Daffodil International University | `sani2305101776@diu.edu.bd` |
-| **Faculty Mentor** | **Tanzina Afroz Rimi** | Lecturer (Senior Scale) | Dept. of CSE, Daffodil International University | `tanzinaafroz.cse@diu.edu.bd` |
-| **Industry Mentor**| **Rahat Shahriar Reyad** | Industry Specialist | CSE-TECH, Daffodil International University | `reyad2305101691@diu.edu.bd` |
+> **LandTech Innovation Hackathon 2026** | **Track:** Digital Land Records, Verification & Digitization  
+> **Organizers:** Dept. of CSE & CSE-TECH, Daffodil International University | **Supported by:** Dept. of Law, DIU  
+> **Submission Document:** Official Concept Note & Technical Proposal (Round 1) | **Target Length:** 3–4 Pages  
+> **Team:** **Avengers Assemble** (Md Mitul Kabir Badhon, Sabbir Hossan Sani)  
+> **Mentors:** Tanzina Afroz Rimi (Faculty Mentor), Rahat Shahriar Reyad (Industry Support Mentor)
 
 ---
 
 ## 1. Executive Summary & Problem Diagnosis
 
-Land administration in Bangladesh suffers from multi-decade civil litigation backlogs, physical volume book (বালাম বই) tampering, unrecorded multiple sales of identical plots, and institutional desynchronization between deed registration (Ministry of Law) and land mutation (Ministry of Land). Today, over **75% of all civil court cases in Bangladesh (approx. 3.2 million pending disputes) originate directly from land fraud and conflicting titles**, paralyzing economic growth and trapping generations of citizens in predatory legal battles.
+Over **75% of civil court litigation in Bangladesh (approx. 3.2 million pending cases) stems directly from land disputes and conflicting titles**, paralyzing economic growth and trapping generations of citizens in predatory legal battles. This crisis is sustained by four systemic vulnerabilities:
 
-### Four Structural Root Causes:
-1. **Inter-Ministerial Silo:** Sub-Registry offices execute deeds under the *Registration Act, 1908* without real-time synchronization with Upazila AC Land offices (*State Acquisition and Tenancy Act, 1950*). Dishonest sellers exploit the multi-month mutation gap to sell the same parcel repeatedly.
-2. **Physical Register Vulnerabilities:** Paper volume books are vulnerable to torn pages, fraudulent insertions, and backdated colonial-era deed claims.
-3. **Multi-Generational Survey Discrepancies:** Land titles transitioned through sequential surveys (CS ➔ SA ➔ RS ➔ BS). Unverified lineage gaps allow fraudulent proxy sellers to claim ancestral rights.
-4. **Information Asymmetry:** Ordinary citizens cannot independently verify title authenticity before purchase without paying middlemen and unofficial fees.
+* **Inter-Departmental Silo:** Sub-Registry offices (Ministry of Law) execute deed registration without real-time synchronization with Upazila AC Land offices (Ministry of Land). Dishonest sellers exploit this multi-month mutation gap to sell identical land parcels to multiple buyers.
+* **Physical Volume Book Vulnerability:** Colonial-era paper registers (বালাম বই) are prone to page tearing, physical alteration, and backdated forged deed insertions.
+* **Cadastral Lineage Gaps:** Missing records and unverified ancestral transfers across historical surveys (CS ➔ SA ➔ RS ➔ BS) enable fraudulent proxy claims.
+* **Citizen Information Asymmetry:** Prospective buyers cannot independently verify title legitimacy, boundary conservation, or legal encumbrances prior to transaction payment without paying unofficial middlemen.
 
-**The LandShield Proposition:** Rather than proposing an expensive, legally fraught public blockchain overhaul, **LandShield** deploys as lightweight, secure middleware connecting existing portals (`land.gov.bd`, `eporcha`, e-Mutation). It combines deterministic cryptographic signing, mathematical area conservation, and an autonomous 4-layer fraud prevention engine to stop land crimes at the registrar's desk while empowering citizens with instant title due diligence.
-
----
-
-## 2. Proposed Solution & The 4-Layer Autonomous Verification Pipeline
-
-LandShield establishes a zero-trust verification pipeline where **mathematics and statutory property law dictate transaction validity**, executing in **28ms average pipeline latency**:
-
-```text
-[ Citizen / Buyer ]        [ Sub-Registrar Desk ]        [ AC Land Mutation ]
-        │                            │                             │
-        ▼                            ▼                             ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                     LANDSHIELD AUTONOMOUS PIPELINE                       │
-│                                                                          │
-│  Layer 1: Cryptographic Integrity (RFC 8785 Canonical JSON + Ed25519)    │
-│  Layer 2: Domain Statutory Rules (R1 Double Sale, R2 Stranger, R3-R6)    │
-│  Layer 3: Inter-Office Reconciliation Radar (R8 Ownership Desync)       │
-│  Layer 4: Cadastral Survey Lineage DAG (R7 CS ➔ SA ➔ RS ➔ BS Graph)     │
-└──────────────────────────────────────────────────────────────────────────┘
-        │                            │                             │
-        ▼                            ▼                             ▼
-[ Instant AI Report ]       [ HTTP 409 Fraud Block ]      [ Daily Merkle Ledger ]
-```
-
-### The 4 Verification Layers:
-* **Layer 1: Cryptographic Integrity (4.2ms):** Canonical serialization (RFC 8785) ensures deterministic byte matching. Each deed is signed using Ed25519 asymmetric cryptography and bound to the preceding deed's SHA-256 hash. Any single-byte alteration invalidates the cryptographic proof.
-* **Layer 2: Domain Statutory Rules (12.5ms):** Enforces statutory property law:
-  * *Rule R1 (Double Sale / Area Conservation):* Mathematically verifies that seller balance satisfies $\sum(\text{sold}) \le \text{holding}$.
-  * *Rule R2 (Recorded Ownership):* Authenticates seller identity against official khatian records, blocking stranger/proxy transfers.
-  * *Rules R3–R6:* Flags rapid flips (3+ transfers in 30 days), unmutated deeds (>90 days), and khas/disputed/acquired parcels.
-* **Layer 3: Inter-Office Reconciliation Radar (6.1ms):** Continuously audits Sub-Registry deeds against AC Land records, alerting officers to ownership divergences and stalled mutation applications.
-* **Layer 4: Cadastral Survey Lineage DAG (5.4ms):** Analyzes historical survey continuity across CS (1910–1940), SA (1956–1963), RS (1966–1990), and BS (1990–present) surveys, detecting skipped generations and illegal parcel expansions.
-
-### Offline & Public Transparency Innovations:
-* **Zero-Connectivity Browser Verifier (`/verify/offline`):** Remote citizens and sub-registry officers verify offline 2D QR deeds entirely client-side using TweetNaCl WebAssembly crypto without internet access.
-* **Daily Merkle Transparency Log (`/transparency`):** Aggregates daily deeds into a single cryptographic Merkle Root published daily, rendering historical backdated insertions mathematically impossible.
+**The Solution:** LandShield is a secure, lightweight middleware connecting directly into Bangladesh's operational portals (`land.gov.bd`, `eporcha`, e-Mutation). Rather than proposing an unfeasible public blockchain, LandShield uses standard cryptographic primitives (Ed25519, RFC 8785 canonical SHA-256 hash chaining, and daily public Merkle transparency roots) to stop fraud before registration and provide instant pre-purchase verification for citizens.
 
 ---
 
-## 3. Technical Specifications & Government Platform Integration
+## 2. The 4-Layer Autonomous Verification Pipeline
 
-| Dimension | Specification & Implementation |
-|:---|:---|
-| **Frontend Architecture** | Next.js 16 (App Router, Turbopack), TypeScript, Tailwind CSS v4, Bilingual i18n (Bangla/English) |
-| **Backend & Cryptography** | FastAPI (Python 3.11/3.13), PyNaCl (libsodium Ed25519 signatures, SHA-256 RFC 8785 canonical hash) |
-| **Database & Persistence** | PostgreSQL 15 (Production) / SQLite (Dev) with SQLAlchemy 2.0 ORM; Daily Merkle Root Ledger |
-| **Security & Privacy** | Argon2id password hashing, Stateless JWT HS256, Dynamic Rate Limiting (SlowAPI), NID masking |
-| **Verification Speed** | **28.2 ms average latency** across all 4 pipeline layers; zero external dependencies for verification |
+LandShield executes an automated verification pipeline with **28ms average latency**:
 
-### Integration with Existing Government Infrastructure:
-1. **Sub-Registrar Workstation Hook:** Injects into local registry software. When staff click "Register", the LandShield hook runs. Fraud triggers an instantaneous **HTTP 409 `FRAUD_BLOCKED`**, aborting the transaction before database commit.
-2. **e-Mutation Webhook Integration:** Upon valid deed registration, LandShield issues an authenticated webhook to `mutation.land.gov.bd`, auto-drafting mutation cases and ending citizen manual submission delays.
-3. **Union Digital Center (UDC) Access:** Rural citizens without smartphones visit any of Bangladesh's 5,000+ UDCs, where operators run a 10-second check on `/check` and print the institutional **AI Due-Diligence Report**.
+* **Layer 1: Cryptographic Integrity (4.2ms):** Uses RFC 8785 canonical serialization and Ed25519 digital signatures. Every deed is chained to the preceding deed's SHA-256 hash. Any single-byte tampering in the database immediately triggers a cryptographic invalidation alert (`TAMPERED`).
+* **Layer 2: Statutory Rules Engine (12.5ms):** Enforces statutory property law:
+  * *Rule R1 (Double Sale / Area Conservation):* Mathematically enforces $\sum(\text{sold\_area}) \le \text{holding\_area}$.
+  * *Rule R2 (Recorded Ownership):* Matches seller identity against official khatian holdings, blocking stranger and impersonator sales with **HTTP 409 `FRAUD_BLOCKED`**.
+  * *Rules R3–R6:* Flags rapid syndicate flips (3+ transfers in 30 days), unmutated deeds (>90 days), and government Khas/disputed land.
+* **Layer 3: Inter-Office Reconciliation Radar (6.1ms):** Continuously cross-audits Sub-Registry deeds against AC Land khatian updates, identifying ownership divergences and stalled mutation records.
+* **Layer 4: Cadastral Survey Lineage DAG (5.4ms):** Analyzes historical survey continuity across CS (1910–1940), SA (1956–1963), RS (1966–1990), and BS (1990–present) surveys, detecting missing generational links and illegal area inflation.
 
----
-
-## 4. Empirical Performance & Attack Defense Benchmark
-
-LandShield was audited using an automated attack suite simulating 9 prevalent real-world land crime scenarios in Bangladesh:
-
-| Threat Vector | Simulated Threat Scenario | Autonomous Defense Mechanism | Audited Outcome |
-|:---:|:---|:---|:---:|
-| **A1** | Double sale of previously transferred plot | Layer 2: Area conservation (`balance = 0.00`) | **100% Blocked (HTTP 409)** |
-| **A2** | Stranger / impersonator selling land | Layer 2: NID & khatian title cross-match | **100% Blocked (HTTP 409)** |
-| **A3** | Area overshoot (selling 15 dec from 10 dec) | Layer 2: Mathematical boundary check | **100% Blocked (HTTP 409)** |
-| **A4** | Single-byte alteration of deed area in DB | Layer 1: SHA-256 canonical hash verification | **100% Detected (`TAMPERED`)** |
-| **A5** | Ledger chain rewriting / backdating | Layer 1: Genesis-walking hash chain validation | **100% Detected (`COMPROMISED`)** |
-| **A6** | Rapid syndicate flip (money laundering) | Layer 2: 30-day velocity sliding window | **100% Flagged (High Risk)** |
-| **A7** | Illegal sale of government Khas/disputed land | Layer 2: Statutory encumbrance registry lookup | **100% Blocked (HTTP 409)** |
-| **A8** | Stalled mutation exceeding statutory 90 days | Layer 3: Cross-office reconciliation check | **100% Flagged (Medium Risk)** |
-| **A9** | Missing generational survey ancestor in chain | Layer 4: Lineage DAG continuity graph analysis | **100% Flagged (Lineage Gap)** |
-
-* **Benchmark Summary:** **187 total automated tests passed (100% green)** | **100% threat detection rate** | **0.0% false positive rate** | **28.2ms pipeline execution speed**.
+### Key Citizen & Offline Capabilities:
+* **Offline Zero-Net Verifier (`/verify/offline`):** Enables remote citizens and field officers to verify 2D QR deeds in the browser using TweetNaCl WebAssembly crypto without active internet connection.
+* **Public Merkle Transparency Log (`/transparency`):** Publishes daily cryptographic root hashes, making the insertion of backdated historical forged deeds mathematically impossible.
+* **Citizen Due-Diligence (`/check`):** Provides prospective buyers with a 0–100 risk score, ownership timeline, and an instant print-ready AI Due-Diligence & Legal Advisory Report.
 
 ---
 
-## 5. Nationwide Phased Rollout & Operational Implementation
+## 3. Technology Stack & Government Platform Integration
 
-LandShield is modeled for a progressive, zero-disruption 24-month national rollout across all 64 districts and 500+ Upazilas:
-
-```text
-[ Phase 1: Pilot (Months 1–6) ]   ➔   [ Phase 2: Regional (Months 7–14) ]   ➔   [ Phase 3: National (Months 15–24) ]
-• 3 Upazilas (Mirpur, Savar, Gazipur)  • Dhaka Division Expansion (137 Offices)   • All 64 Districts & 500+ Upazilas
-• Software Middleware Integration       • Cloud KMS / HSM Master Keyrings          • Full Land Service Gateway Integration
-• Registrar Dual-Monitor Stations      • Daily Published Merkle Root Log          • 100% Digitized Deed Verification
-```
-
-### Operational Milestones & Capacity Building:
-* **Govt Cloud & High Availability:** Deployed on Bangladesh Computer Council (BCC) Tier-III Cloud with 24/7 disaster recovery.
-* **Hardware Security Modules (HSM):** FIPS 140-2 Level 3 certified cryptographic appliances for ministerial signing key protection.
-* **Staff Capacity Building:** Comprehensive operational training for 505 Sub-Registrars, AC Land officers, and surveyors.
-* **Deed Writer & Public Adoption:** Collaboration with local Mohorrir associations and nationwide verification awareness via UDCs.
-* **Target Impact:** **75% reduction in land-related civil litigation** within 3 years of national implementation.
+* **Frontend:** Next.js 16 (App Router, Turbopack), TypeScript, Tailwind CSS v4, Bilingual localization (Bangla/English).
+* **Backend & Security:** FastAPI (Python 3.11), PyNaCl (Ed25519, SHA-256), SQLAlchemy 2.0, PostgreSQL 15 / SQLite, Argon2id, stateless JWT with role-based access control (Registrar, AC Land Officer, Admin).
+* **Sub-Registrar Desk Integration:** Injects a pre-registration validation hook into local registry software, halting double-selling right at the registration counter before database commit.
+* **e-Mutation Webhook:** Automatically drafts e-mutation applications upon successful deed registration, eliminating citizen manual application delays.
+* **Union Digital Centers (UDC):** Enables rural citizens without smartphones to obtain instant printed verification reports from 5,000+ digital centers nationwide.
 
 ---
 
-## 6. Regulatory Compliance, Synthetic Data & AI Disclosure
+## 4. Empirical Benchmark & Adversarial Attack Defense
 
-* **Mandatory Synthetic Data Compliance (Rule Book Section 8):** In strict accordance with LandTech 2026 regulations, all evaluated data consists exclusively of **100% synthetic records** (300 parcels, 120 citizen personas). Zero real citizen names, NIDs, phone numbers, or genuine government records were scraped, queried, or collected.
-* **Zero Penetration Testing:** All security and tamper demonstrations are performed strictly within isolated prototype sandbox containers.
-* **Privacy by Design:** Citizen names and NIDs on all public endpoints are cryptographically masked (`M***d R***n`, `*********1234`).
-* **AI Tool Disclosure (Rule Book Section 9):** Development utilized Google Antigravity IDE (Gemini 3.8 Flash) for architecture design, test scaffolding, and documentation, and GitHub Copilot for inline TypeScript syntax. Runtime advisory summaries use an LLM API constrained strictly to deterministic database facts with offline template fallback. Both team members have verified and tested every code symbol.
+Audited across an automated test suite simulating the 9 most prevalent real-world land crimes in Bangladesh:
+
+* **A1: Double Sale Attempt** ➔ Layer 2 area conservation halts transaction (**100% Blocked, HTTP 409**).
+* **A2: Stranger / Impersonator Sale** ➔ Layer 2 NID & title mismatch halts transaction (**100% Blocked, HTTP 409**).
+* **A3: Area Overshoot Fraud** ➔ Layer 2 mathematical boundary check halts transaction (**100% Blocked, HTTP 409**).
+* **A4: Single-Byte DB Tampering** ➔ Layer 1 SHA-256 canonical hash mismatch detects tamper (**100% Detected, `TAMPERED`**).
+* **A5: Historical Chain Rewriting** ➔ Layer 1 genesis-walking hash chain detects corruption (**100% Detected, `COMPROMISED`**).
+* **A6: Rapid Syndicate Flipping** ➔ Layer 2 30-day velocity window flags high risk (**100% Flagged High Risk**).
+* **A7: Khas / Disputed Land Sale** ➔ Layer 2 statutory encumbrance registry blocks registration (**100% Blocked, HTTP 409**).
+* **A8: Stalled Mutation (>90 Days)** ➔ Layer 3 cross-office reconciliation radar flags delay (**100% Flagged Medium Risk**).
+* **A9: Survey Generation Break** ➔ Layer 4 lineage DAG detects missing historical ancestor (**100% Flagged Lineage Gap**).
+
+**Audited Results:** **187 automated tests passed (100% green)** | **100% threat detection rate** | **0.0% false positive rate** | **28.2ms average pipeline execution latency**.
+
+---
+
+## 5. 3-Phase National Implementation Roadmap
+
+LandShield is engineered for progressive, zero-downtime deployment across Bangladesh's 64 districts and 500+ Upazilas:
+
+* **Phase 1: Controlled Pilot (Months 1–6):** Deploy non-invasive middleware across 3 pilot Upazilas (Mirpur, Savar, Gazipur Sadar); integrate Sub-Registrar desk validation hooks and AC Land mutation workflows; train 15 pilot officers.
+* **Phase 2: Regional Scaling (Months 7–14):** Expand deployment across all Upazilas of Dhaka Division (137 sub-registries); deploy Cloud KMS / HSM keyrings; publish daily Merkle audit roots; activate inter-office reconciliation radar.
+* **Phase 3: Nationwide Deployment (Months 15–24):** Expand across all 64 districts and 500+ Upazilas; integrate with `land.gov.bd` Land Service Gateway (LSG) and Smart Land Card; onboard 5,000+ Union Digital Centers.
+* **Target Societal Impact:** **75% reduction in land-related civil litigation** and court harassment within 3 years.
+
+---
+
+## 6. Compliance, Synthetic Data & AI Disclosure
+
+* **Synthetic Data Compliance (Rule Book Section 8):** In strict adherence to hackathon rules, all evaluations use **100% synthetic dummy data** (300 parcels, 120 citizen personas). Zero real citizen names, NIDs, phone numbers, or genuine government records were collected or scraped.
+* **Zero Penetration Testing:** All security and tamper experiments were executed exclusively on isolated local prototype containers.
+* **Privacy by Design:** Citizen names and NIDs are cryptographically masked on all public endpoints (`M***d R***n`, `*********1234`).
+* **AI Tool Usage (Rule Book Section 9):** Google Antigravity IDE (Gemini 3.8 Flash) was used for architectural scaffolding, automated test generation, and documentation drafting; GitHub Copilot was used for TypeScript syntax autocomplete. Runtime advisory summaries use an LLM API strictly constrained to deterministic database facts with offline template fallback. Both student members verified and tested every code symbol.
 * **Open Source Licensing:** Released under the permissive **MIT License** for sovereign government adoption.
