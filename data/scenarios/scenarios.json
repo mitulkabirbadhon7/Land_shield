@@ -103,5 +103,63 @@
       "expected_status": "VALID",
       "description": "Owner A sells 10 decimals to B and 10 decimals to C out of 30, keeping 10"
     }
+  },
+  "phase2": {
+    "L1": {
+      "id": "L1",
+      "name": "Missing SA Survey Generation",
+      "plot_id": 21,
+      "expected_rule": "R7_MISSING_GENERATION",
+      "expected_status": "HIGH_RISK",
+      "description": "Historical survey chain skips SA generation (CS -> RS -> BS)"
+    },
+    "L2": {
+      "id": "L2",
+      "name": "Orphan RS Survey Khatian",
+      "plot_id": 22,
+      "expected_rule": "R7_ORPHAN",
+      "expected_status": "HIGH_RISK",
+      "description": "RS survey khatian has no documented parent in earlier surveys"
+    },
+    "L3": {
+      "id": "L3",
+      "name": "Unjustified Area Expansion",
+      "plot_id": 23,
+      "expected_rule": "R7_AREA_GROWTH",
+      "expected_status": "HIGH_RISK",
+      "description": "Documented plot area expands from 20 to 35 decimals across surveys without lawful basis"
+    },
+    "R1": {
+      "id": "R1",
+      "name": "Record Owner Differs from Mutation History",
+      "plot_id": 24,
+      "expected_rule": "R8_OWNER_MISMATCH",
+      "expected_status": "HIGH_RISK",
+      "description": "Plot current_owner_id in AC Land registry differs from largest deed record holder"
+    },
+    "R2": {
+      "id": "R2",
+      "name": "Mutation Stalled Beyond Statutory Limit",
+      "plot_id": 25,
+      "expected_rule": "R8_MUTATION_STALLED",
+      "expected_status": "HIGH_RISK",
+      "description": "Mutation application has remained stuck in review longer than MUTATION_DAYS"
+    },
+    "R3": {
+      "id": "R3",
+      "name": "Area Holdings Not Conserved",
+      "plot_id": 26,
+      "expected_rule": "R8_AREA_NOT_CONSERVED",
+      "expected_status": "HIGH_RISK",
+      "description": "Sum of citizen deed holdings does not equal recorded plot area"
+    },
+    "C1": {
+      "id": "C1",
+      "name": "Clean Survey Lineage & Reconciliation",
+      "plot_id": 27,
+      "expected_rule": null,
+      "expected_status": "VALID",
+      "description": "Perfect chain of title across all 4 historical surveys (CS -> SA -> RS -> BS) with area conservation"
+    }
   }
 }

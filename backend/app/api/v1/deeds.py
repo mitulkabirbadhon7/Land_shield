@@ -8,11 +8,11 @@ from app.deps import require_role
 from app.models.deed import Deed
 from app.models.person import Person
 from app.models.user import User
-from app.schemas.deeds import DeedCreate, DeedOut, DeedRegistrationResponse, VerifyOut
+from app.schemas.deeds import DeedCertificateOut, DeedCreate, DeedOut, DeedRegistrationResponse, VerifyOut
 from app.services.crypto import load_or_create_key
 from app.services.deeds import register_deed, verify_deed
 from app.services.qr import build_qr_url, qr_png
-from app.utils.masking import mask_name
+from app.utils.privacy import person_view
 
 router = APIRouter(prefix="/deeds", tags=["deeds"])
 
@@ -55,8 +55,8 @@ def create_deed(
         plot_id=deed.plot_id,
         seller_id=deed.seller_id,
         buyer_id=deed.buyer_id,
-        seller_name=mask_name(seller.display_name if seller else None),
-        buyer_name=mask_name(buyer.display_name if buyer else None),
+        seller_name=person_view(seller, None).name,
+        buyer_name=person_view(buyer, None).name,
         area_sold=deed.area_sold,
         deed_type=deed.deed_type,
         sub_registry=deed.sub_registry,
@@ -119,3 +119,65 @@ def get_deed_qr(
     qr_url = build_qr_url(deed.deed_no, deed.deed_hash)
     png_bytes = qr_png(qr_url)
     return Response(content=png_bytes, media_type="image/png")
+
+
+@router.get("/{deed_no}/qr-offline")
+def get_deed_qr_offline(
+    deed_no: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("registrar", "admin")),
+):
+    """Generate and return a high-density offline QR code PNG. Registrar/Admin only, gated by feature flag."""
+    if not settings.feature_offline_qr:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Offline QR feature is disabled",
+        )
+
+    stmt = select(Deed).where(Deed.deed_no == deed_no)
+    deed = db.scalars(stmt).first()
+    if deed is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deed not found",
+        )
+
+    try:
+        from app.services.offline_qr import build_offline_payload, qr_offline_png
+
+        payload = build_offline_payload(deed)
+        png_bytes = qr_offline_png(payload)
+        return Response(content=png_bytes, media_type="image/png")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+
+
+@router.get("/{deed_no}/certificate", response_model=DeedCertificateOut)
+def get_deed_certificate(
+    deed_no: str,
+    db: Session = Depends(get_db),
+):
+    """Public certificate endpoint returning online verification link and Base64URL offline payload."""
+    stmt = select(Deed).where(Deed.deed_no == deed_no)
+    deed = db.scalars(stmt).first()
+    if deed is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deed not found",
+        )
+
+    from app.services.offline_qr import build_offline_payload
+
+    payload = build_offline_payload(deed)
+    online_url = build_qr_url(deed.deed_no, deed.deed_hash)
+
+    return DeedCertificateOut(
+        deed_no=deed.deed_no,
+        online_verify_url=online_url,
+        offline_payload=payload,
+        deed_hash=deed.deed_hash,
+        key_id=deed.signer_key_id or "",
+    )

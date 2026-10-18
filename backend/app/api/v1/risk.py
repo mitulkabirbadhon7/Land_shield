@@ -8,7 +8,7 @@ from app.db import get_db
 from app.models.deed import Deed
 from app.models.mutation import Mutation
 from app.models.plot import Plot
-from app.schemas.risk import MutationSummary, RiskFindingOut, RiskReportOut
+from app.schemas.risk import AnalysisReportOut, MutationSummary, RiskFindingOut, RiskReportOut
 from app.services.deeds import verify_chain
 from app.services.fraud.explain import explain
 from app.services.pipeline.base import AnalysisContext
@@ -22,7 +22,8 @@ def _assess_plot_risk(
     plot_id: int,
     lang: str,
     db: Session,
-) -> RiskReportOut:
+    extended: bool = False,
+) -> RiskReportOut | AnalysisReportOut:
     plot = db.get(Plot, plot_id)
     if not plot:
         raise HTTPException(status_code=404, detail="Plot not found")
@@ -74,21 +75,44 @@ def _assess_plot_risk(
             )
         )
 
-    return RiskReportOut(
-        mode="PLOT",
-        score=report.get("score", 0),
-        level=report.get("level", "LOW"),
-        has_critical=report.get("has_critical", False),
-        findings=findings_out,
-        chain_ok=chain_ok,
-        flags=plot.flags or [],
-        mutation_summary=MutationSummary(
+    base_args = {
+        "mode": "PLOT",
+        "score": report.get("score", 0),
+        "level": report.get("level", "LOW"),
+        "has_critical": report.get("has_critical", False),
+        "findings": findings_out,
+        "chain_ok": chain_ok,
+        "flags": plot.flags or [],
+        "mutation_summary": MutationSummary(
             total_deeds=total_deeds,
             mutated_deeds=mutated_deeds,
             pending_mutations=pending_mutations,
             missing_mutations=missing_mutations,
         ),
-    )
+    }
+
+    if extended:
+        layers_out: dict[str, list[RiskFindingOut]] = {}
+        for layer_name, layer_raw_findings in report.get("layers", {}).items():
+            layers_out[layer_name] = [
+                RiskFindingOut(
+                    rule_id=f.get("rule_id", ""),
+                    sub_code=f.get("sub_code"),
+                    layer=f.get("layer", ""),
+                    severity=f.get("severity", ""),
+                    deed_no=f.get("deed_no"),
+                    text=explain(f, lang=lang),
+                )
+                for f in layer_raw_findings
+            ]
+        return AnalysisReportOut(
+            **base_args,
+            layers=layers_out,
+            layers_run=report.get("layers_run", []),
+            lineage_available=report.get("lineage_available", False),
+        )
+
+    return RiskReportOut(**base_args)
 
 
 @router.get("/risk/plot/{plot_id}", response_model=RiskReportOut)
@@ -98,15 +122,15 @@ def get_plot_risk(
     db: Session = Depends(get_db),
 ) -> RiskReportOut:
     """Public risk assessment for a specific land plot."""
-    return _assess_plot_risk(plot_id=plot_id, lang=lang, db=db)
+    return _assess_plot_risk(plot_id=plot_id, lang=lang, db=db, extended=False)
 
 
-@router.get("/analysis/plot/{plot_id}", response_model=RiskReportOut)
+@router.get("/analysis/plot/{plot_id}", response_model=AnalysisReportOut)
 def get_plot_analysis(
     plot_id: int,
     lang: str = Query("bn", pattern="^(bn|en)$"),
     db: Session = Depends(get_db),
-) -> RiskReportOut:
-    """Public analysis alias returning the exact same body as /risk/plot/{plot_id}."""
-    return _assess_plot_risk(plot_id=plot_id, lang=lang, db=db)
+) -> AnalysisReportOut:
+    """Public extended analysis carrying layers, layers_run, and lineage_available."""
+    return _assess_plot_risk(plot_id=plot_id, lang=lang, db=db, extended=True)
 

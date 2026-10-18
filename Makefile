@@ -20,6 +20,18 @@ run:
 seed:
 	cd backend && python scripts/seed.py --reset
 
+attack:
+	python backend/scripts/attack_suite.py
+
+evaluate:
+	python backend/scripts/evaluate.py
+
+train:
+	python backend/ml/train.py
+
+smoke:
+	python scripts/smoke_test.py
+
 up:
 	docker compose up --build -d
 

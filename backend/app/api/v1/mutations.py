@@ -17,7 +17,7 @@ from app.schemas.mutations import (
     MutationTransition,
 )
 from app.services.mutation_fsm import auto_check, start_mutation, transition
-from app.utils.masking import mask_name
+from app.utils.privacy import person_view
 
 router = APIRouter(prefix="/mutations", tags=["mutations"])
 
@@ -26,9 +26,10 @@ def _build_mutation_out(
     mutation: Mutation,
     db: Session,
     include_auto_check: bool = False,
+    viewer: User | None = None,
 ) -> MutationOut:
     applicant = db.get(Person, mutation.applicant_id)
-    applicant_name = mask_name(applicant.display_name) if applicant else None
+    pv = person_view(applicant, viewer)
 
     deed = db.get(Deed, mutation.deed_id)
     deed_no = deed.deed_no if deed else None
@@ -46,9 +47,9 @@ def _build_mutation_out(
         deed_no=deed_no,
         plot_id=mutation.plot_id,
         state=mutation.state,
-        applicant_id=mutation.applicant_id,
-        applicant_name=applicant_name,
-        officer_id=mutation.officer_id,
+        applicant_id=pv.identifier if not pv.is_masked else None,
+        applicant_name=pv.name,
+        officer_id=mutation.officer_id if not pv.is_masked else None,
         requires_override=mutation.requires_override,
         created_at=mutation.created_at,
         updated_at=mutation.updated_at,
@@ -74,7 +75,7 @@ def create_mutation(
 
     db.commit()
     db.refresh(mutation)
-    return _build_mutation_out(mutation, db, include_auto_check=True)
+    return _build_mutation_out(mutation, db, include_auto_check=True, viewer=current_user)
 
 
 @router.post("/{mutation_id}/transition", response_model=MutationOut)
@@ -103,7 +104,7 @@ def transition_mutation(
 
     db.commit()
     db.refresh(mutation)
-    return _build_mutation_out(mutation, db, include_auto_check=True)
+    return _build_mutation_out(mutation, db, include_auto_check=True, viewer=current_user)
 
 
 @router.get("", response_model=list[MutationOut])
@@ -119,7 +120,7 @@ def list_mutations(
     stmt = stmt.order_by(Mutation.created_at.desc())
     mutations = db.scalars(stmt).all()
 
-    return [_build_mutation_out(m, db, include_auto_check=True) for m in mutations]
+    return [_build_mutation_out(m, db, include_auto_check=True, viewer=current_user) for m in mutations]
 
 
 @router.get("/{mutation_id}", response_model=MutationOut)
@@ -134,4 +135,4 @@ def get_mutation(
         raise HTTPException(status_code=404, detail="Mutation not found")
 
     is_privileged = current_user is not None and current_user.role in ["officer", "admin"]
-    return _build_mutation_out(mutation, db, include_auto_check=is_privileged)
+    return _build_mutation_out(mutation, db, include_auto_check=is_privileged, viewer=current_user)

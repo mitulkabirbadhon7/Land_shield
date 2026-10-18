@@ -19,4 +19,5 @@ class Deed(Base):
     signature: Mapped[str] = mapped_column(String(128), nullable=False)
     signer_key_id: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="ACTIVE", nullable=False)  # "ACTIVE" | "CANCELLED"
+    price_bdt: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     tamper_backup: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)  # Tamper Lab only

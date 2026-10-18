@@ -1,0 +1,40 @@
+{
+  "evaluation_date": "2026-10-17T20:39:49.540946+00:00",
+  "elapsed_seconds": 2.19,
+  "benchmark_dataset": {
+    "total_plots": 300,
+    "clean_plots": 210,
+    "anomalous_plots": 90,
+    "dataset_type": "100% Synthetic Demo Dataset"
+  },
+  "medium_threshold": {
+    "tp": 90,
+    "fp": 0,
+    "tn": 210,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "fpr": 0.0,
+    "f1_score": 1.0
+  },
+  "high_threshold": {
+    "tp": 90,
+    "fp": 0,
+    "tn": 210,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "fpr": 0.0,
+    "f1_score": 1.0
+  },
+  "category_detection_rates": {
+    "DOUBLE_SALE": "15/15 (100.0%)",
+    "STRANGER_SELLER": "15/15 (100.0%)",
+    "GOV_RESTRICTION": "15/15 (100.0%)",
+    "LINEAGE_GAP": "15/15 (100.0%)",
+    "LINEAGE_AREA_GROWTH": "15/15 (100.0%)",
+    "RECONCILE_MISMATCH": "15/15 (100.0%)"
+  },
+  "false_positives_count": 0,
+  "false_positives": []
+}
