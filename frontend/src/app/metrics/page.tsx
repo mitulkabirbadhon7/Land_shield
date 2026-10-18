@@ -502,29 +502,29 @@ function MetricsContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
-                  <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-950">
+                  <span className="text-slate-600 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "আক্রমণ কৌশল (Threat Vector)" : "Threat Vector"}
                   </span>
-                  <p className="text-slate-700 dark:text-slate-300 mt-0.5">
+                  <p className="text-slate-900 dark:text-slate-100 font-medium mt-1 leading-relaxed">
                     {b.threat_vector[lang as "bn" | "en"]}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
-                  <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-950">
+                  <span className="text-slate-600 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "প্রতিরক্ষা ব্যবস্থা (Defense Mechanism)" : "Defense Mechanism"}
                   </span>
-                  <p className="text-slate-700 dark:text-slate-300 mt-0.5">
+                  <p className="text-slate-900 dark:text-slate-100 font-medium mt-1 leading-relaxed">
                     {b.defense_mechanism[lang as "bn" | "en"]}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 dark:border-slate-800/80 dark:bg-slate-900/80">
-                  <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-950">
+                  <span className="text-slate-600 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
                     {lang === "bn" ? "ফলাফল (Systemic Outcome)" : "Systemic Outcome"}
                   </span>
-                  <p className="font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                  <p className="font-bold text-emerald-700 dark:text-emerald-400 mt-1 leading-relaxed">
                     {b.expected_outcome[lang as "bn" | "en"]}
                   </p>
                 </div>

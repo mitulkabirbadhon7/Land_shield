@@ -132,6 +132,14 @@
     "HIGH": "High Risk (High Danger of Dispute)",
     "CRITICAL": "Critical Risk (Fraud or Legal Obstacle)"
   },
+  "plot": {
+    "dag_no": "Dag No",
+    "mouza": "Mouza",
+    "upazila": "Upazila",
+    "district": "District",
+    "area": "Land Area",
+    "owner": "Current Owner"
+  },
   "check": {
     "title": "Citizen Pre-Purchase Land Risk Check",
     "subtitle": "Inspect official ownership, fraud risk score, and historical transfer ledger by Dag number, Mouza, or Plot ID.",
