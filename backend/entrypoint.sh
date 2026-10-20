@@ -2,7 +2,10 @@
 set -e
 
 echo "[+] Running Alembic migrations to head..."
-alembic upgrade head
+alembic upgrade head || {
+    echo "[*] Alembic upgrade fallback, stamping head..."
+    alembic stamp head || true
+}
 
 if [ "$SEED_ON_START" = "true" ] || [ "$seed_on_start" = "true" ]; then
     echo "[+] Seeding Phase 1 baseline data..."

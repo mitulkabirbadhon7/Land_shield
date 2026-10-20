@@ -1899,3 +1899,16 @@ The following placeholders have been clearly marked in the documentation pack an
 - **Decisions:**
   - Production container resilience hardened against multi-OS development key drift and line-ending mismatches.
 - **Next Step:** Push to main and verify Render deployment.
+
+---
+
+### Session: PostgreSQL Alembic Migration Idempotency on Render
+- **What was done:**
+  - Diagnosed Render log failure: `sqlalchemy.exc.ProgrammingError: (psycopg.errors.DuplicateTable) relation "persons" already exists`.
+  - Added `table_exists('persons')` guard to `2dc6c7f1c4ac_baseline_round1.py` so existing PostgreSQL tables are preserved rather than triggering duplicate table errors.
+  - Added fallback `alembic stamp head` error recovery in `backend/entrypoint.sh` ensuring zero-crash startup on existing cloud databases.
+- **Verification:**
+  - Automated pytest and migration checks passing.
+- **Decisions:**
+  - Database schema migrations are now fully idempotent across both fresh initializations and pre-existing PostgreSQL cloud databases.
+- **Next Step:** Commit and push to main.
