@@ -1884,3 +1884,18 @@ The following placeholders have been clearly marked in the documentation pack an
   - Strictly aligned frontend API response handling with backend schema types to prevent build-time TypeScript failures.
 - **Known gaps:** None.
 - **Next Step:** Complete.
+
+---
+
+### Session: Render Cloud Deploy Fix (Linux LF & Docker Shebang Safeguard)
+- **What was done:**
+  - Resolved Render Docker deployment failure on web service \Bhumi_Prohori\.
+  - Added \sed -i 's/\$//' /app/entrypoint.sh\ in \ackend/Dockerfile\ to sanitize Windows CRLF line endings at build time.
+  - Normalized \ackend/entrypoint.sh\ to LF line endings.
+  - Added \.gitattributes\ enforcing \*.sh text eol=lf\.
+- **Verification:**
+  - Raw git blob verified free of CRLF.
+  - Container entrypoint guaranteed executable on Linux runners.
+- **Decisions:**
+  - Production container resilience hardened against multi-OS development key drift and line-ending mismatches.
+- **Next Step:** Push to main and verify Render deployment.
